@@ -31,11 +31,18 @@ function makeCartoDBMap(elem){
     jQuery.getJSON(ajaxurl,{
         'action' : 'carto_ajax',
         'table' : dmMap.table, 
-        'lookup' : dmMap.lookup
+        'lookup' : dmMap.lookup,
+        'cartodb_id' : jQuery('input[name=cartodb_lookup_value]').val()
     }).then(function(success){
         dmMap.allpoints = L.geoJson(success).addTo(dmMap.map);
         dmMap.origpoints = success;
         dmMap.map.fitBounds(dmMap.allpoints.getBounds());
+
+        if(jQuery('input[name=cartodb_lookup_value]').val() !== ''){
+            if(success.features.length === 1){
+                setLookupMeta(success.features[0]);
+            }
+        }
     });
 
     jQuery('.db_lookup_ac').on('keypress',function(e){
@@ -66,13 +73,11 @@ function makeCartoDBMap(elem){
 
                 dmMap.map.fitBounds(dmMap.allpoints.getBounds());
 
-                var suggestions = [];
+                var suggestions = success.features;
 
-                for(var i = 0;i<success.features.length;i++){
-                    suggestions.push({
-                        'label' : success.features[i].properties[dmMap.lookup],
-                        'value' : success.features[i].properties[dmMap.lookup]
-                    });
+                for(var i = 0;i<suggestions.length;i++){
+                    suggestions[i]['label'] = suggestions[i].properties[dmMap.lookup];
+                    suggestions[i]['value'] = suggestions[i].properties[dmMap.lookup];
                 }
 
                 localresponse(suggestions);
@@ -83,6 +88,22 @@ function makeCartoDBMap(elem){
         },
         minLength: 2,
         select: function( event, ui ) {
+            jQuery('input[name=cartodb_lookup_value]').val(ui.item.properties.cartodb_id);
+            jQuery('input[name=cartodb_lookup_label]').val(ui.item.label);
+            dmMap.allpoints.clearLayers();
+            dmMap.allpoints.addData(ui.item);
+            setLookupMeta(ui.item);
         }
     });
+}
+
+function setLookupMeta(feature){
+        var html = '<ul>';
+        var props = feature.properties;
+        for(var k in props){
+            html += '<li><strong>' + k + '</strong> - ' + props[k] + '</li>';
+        }
+        html += '</ul>';
+
+        jQuery('.dm_lookup_meta').html(html);
 }
