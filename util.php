@@ -73,5 +73,11 @@ function cartoSQL($sql,$json = TRUE){
 
     $url = 'https://' . $un . '.cartodb.com/api/v2/sql?' . http_build_query($querystring);
 
-    return json_decode(curl_request($url));
+    $ret = curl_request($url);
+
+    if($json){
+        return json_decode($ret);
+    }else{
+        return $ret;
+    }
 }
