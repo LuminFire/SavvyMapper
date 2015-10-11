@@ -5,6 +5,16 @@ jQuery(document).ready(function(){
     if(dmMapDiv.length > 0){
         makeCartoDBMap(dmMapDiv);
     }
+
+    var dmPageMapDiv = jQuery('.dm_page_map_div');
+    if(dmPageMapDiv.length > 0){
+        makeCartoDBPageMap(dmPageMapDiv);
+    }
+
+    var dmArchiveMapDiv = jQuery('.dm_archive_map');
+    if(dmArchiveMapDiv.length > 0){
+        makeArchivePageMap(dmArchiveMapDiv);
+    }
 });
 
 function makeCartoDBMap(elem){
@@ -16,17 +26,7 @@ function makeCartoDBMap(elem){
     dmMap.table = jQuery('.db_lookupbox').data('table');
     dmMap.lookup = jQuery('.db_lookupbox').data('lookup');
 
-    var subDomains;
-    if(window.location.protocol === 'https:'){
-        subDomains = ['otile1-s','otile2-s','otile3-s','otile4-s'];
-    } else{
-        subDomains = ['otile1','otile2','otile3','otile4'];
-    }
-    new L.TileLayer('//{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
-        maxZoom: 18, 
-        attribution: 'Tiles from <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
-        subdomains: subDomains
-    }).addTo(dmMap.map);
+    setupBasemap().addTo(dmMap.map);
 
     jQuery.getJSON(ajaxurl,{
         'action' : 'carto_ajax',
@@ -106,4 +106,56 @@ function setLookupMeta(feature){
         html += '</ul>';
 
         jQuery('.dm_lookup_meta').html(html);
+}
+
+function makeCartoDBPageMap(elem){
+    var lat = 0;
+    var lng = 0;
+    var zoom = 1;
+
+    dmMap.map = L.map(elem[0]).setView([lat,lng],zoom); 
+    setupBasemap().addTo(dmMap.map);
+
+    var g = L.geoJson(dm_singleFeature,{
+        onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.popup_contents);
+        }
+    }).addTo(dmMap.map);
+    dmMap.map.fitBounds(g.getBounds());
+}
+
+function makeArchivePageMap(elem){
+    var lat = 0;
+    var lng = 0;
+    var zoom = 1;
+
+    dmMap.map = L.map(elem[0]).setView([lat,lng],zoom); 
+    setupBasemap().addTo(dmMap.map);
+
+    jQuery.getJSON(ajaxurl,{
+        'action': 'carto_archive',
+        'table' : elem.data('table')
+    }).then(function(success){
+        L.getJSON(success,{
+            onEachFeature: function (feature, layer) {
+                layer.on('click',function(e){
+                    console.log(arguments);
+                });
+            }
+        }).addTo(dmMap.map);
+    });
+}
+
+function setupBasemap(){
+    var subDomains;
+    if(window.location.protocol === 'https:'){
+        subDomains = ['otile1-s','otile2-s','otile3-s','otile4-s'];
+    } else{
+        subDomains = ['otile1','otile2','otile3','otile4'];
+    }
+    return new L.TileLayer('//{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
+        maxZoom: 18, 
+        attribution: 'Tiles from <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
+        subdomains: subDomains
+    });
 }

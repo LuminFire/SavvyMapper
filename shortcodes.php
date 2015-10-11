@@ -24,3 +24,41 @@ function dm_get_attr($atts){
     }
     return '';
 }
+
+add_shortcode('dm-map','dm_get_map');
+function dm_get_map(){
+    if(is_archive()){
+        return;
+    }
+    global $cartoObj;
+    global $post;
+
+    // TODO: Replace this global with a singleton probably
+    if(!isset($cartoObj)){
+        $mappings = get_option('dm_table_mapping');
+        $target_table = $mappings[$post->post_type]['table'];
+        $lookup_field = $mappings[$post->post_type]['lookup'];
+
+        $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
+        $cartodb_label = get_post_meta($post->ID,'cartodb_lookup_label',TRUE);
+        $cartoObj = cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
+    }
+    $html = '';
+
+    $popup_contents = '<table class="leafletpopup">';
+    foreach($cartoObj->features[0]->properties as $k => $v){
+        $popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
+    }
+    $popup_contents .= '</table>';
+
+    $cartoObj->features[0]->popup_contents = $popup_contents;
+
+
+    $props = $cartoObj->features[0]->properties;
+    $html .= '<div class="dm_page_map_div">';
+    $html .= '</div>';
+    $html .= '<script>';
+    $html .= 'var dm_singleFeature = ' . json_encode($cartoObj->features[0]) . ';';
+    $html .= '</script>';
+    return $html;
+}

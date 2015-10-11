@@ -11,3 +11,11 @@
     padding-right: 10px;
 }
 
+.dm_page_map_div {
+    width: 100%;
+    height: 450px;
+}
+
+.leafletpopup {
+    min-width: 250px;
+}

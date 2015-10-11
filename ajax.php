@@ -1,5 +1,28 @@
 <?php
 
+add_action('wp_ajax_carto_archive','getCartoArchiveGeoJSON');
+add_action('wp_admin_ajax_carto_archive','getCartoArchiveGeoJSON');
+function getCartoArchiveGeoJSON(){
+    global $wpdb;
+    $res = $wpdb->get_results( "SELECT 
+        pm.meta_value
+        FROM 
+        wp_posts p,
+        wp_postmeta pm
+        WHERE 
+        p.post_type='".$post_type."' AND 
+        p.post_status='publish' AND
+        pm.post_id=p.ID AND
+        pm.meta_key='cartodb_lookup_value'");
+
+    $ids = Array();
+    foreach($res as $one){
+        $ids[] = $one->meta_value;
+    }
+
+
+}
+
 
 add_action( 'wp_ajax_carto_ajax', 'getCartoGeoJSON' );
 add_action( 'wp_admin_ajax_carto_ajax', 'getCartoGeoJSON' );

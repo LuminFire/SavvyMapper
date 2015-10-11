@@ -11,6 +11,7 @@ require_once(__DIR__ . '/options.php');
 require_once(__DIR__ . '/metabox.php');
 require_once(__DIR__ . '/ajax.php');
 require_once(__DIR__ . '/shortcodes.php');
+require_once(__DIR__ . '/archive.php');
 
 function dm_load_scripts() {
     wp_enqueue_style('leafletcss',plugin_dir_url(__FILE__) . '/leaflet/leaflet.css'); 
