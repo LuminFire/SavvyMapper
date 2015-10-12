@@ -19,3 +19,12 @@
 .leafletpopup {
     min-width: 250px;
 }
+
+.dm_archive_map {
+    height: 450px;
+    width: 100%;
+}
+
+.hentry.archivemapwrap {
+    padding-top: 0;
+}

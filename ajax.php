@@ -4,7 +4,11 @@ add_action('wp_ajax_carto_archive','getCartoArchiveGeoJSON');
 add_action('wp_admin_ajax_carto_archive','getCartoArchiveGeoJSON');
 function getCartoArchiveGeoJSON(){
     global $wpdb;
+    $post_type = $_GET['post_type'];
+    $table = $_GET['table'];
+
     $res = $wpdb->get_results( "SELECT 
+        p.ID,
         pm.meta_value
         FROM 
         wp_posts p,
@@ -17,10 +21,33 @@ function getCartoArchiveGeoJSON(){
 
     $ids = Array();
     foreach($res as $one){
-        $ids[] = $one->meta_value;
+        $ids[$one->meta_value] = $one->ID;
     }
 
+    $json = cartoSQL('SELECT * FROM ' . $table . ' WHERE cartodb_id IN (' . implode(',',array_keys($ids)) . ')');
 
+    if(is_null($json)){
+        http_response_code(500);
+        exit();
+    }
+
+    $post_type_info = get_post_type_object($post_type);
+
+    foreach($json->features as &$feature){
+        $permalink = get_permalink($ids[$feature->properties->cartodb_id]);
+
+        $popup_contents = '<table class="leafletpopup">';
+        $popup_contents .= '<tr><th colspan="2"><a href="' . $permalink . '">View ' .$post_type_info->labels->singular_name .'</a></tr>';
+        foreach($feature->properties as $k => $v){
+            $popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
+        }
+        $popup_contents .= '</table>';
+        $feature->popup_contents = $popup_contents;
+    }
+
+    header("Content-Type: application/json");
+    print json_encode($json);
+    exit();
 }
 
 

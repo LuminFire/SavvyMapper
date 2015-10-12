@@ -34,7 +34,18 @@ function makeCartoDBMap(elem){
         'lookup' : dmMap.lookup,
         'cartodb_id' : jQuery('input[name=cartodb_lookup_value]').val()
     }).then(function(success){
-        dmMap.allpoints = L.geoJson(success).addTo(dmMap.map);
+        dmMap.allpoints = L.geoJson(success,{
+            onEachFeature: function (feature, layer) {
+                layer.on('click',function(e){
+                    var feature = e.target.feature;
+                    jQuery('input[name=cartodb_lookup_value]').val(feature.properties.cartodb_id);
+                    jQuery('input[name=cartodb_lookup_label]').val(feature.properties[dmMap.lookup]);
+                    dmMap.allpoints.clearLayers();
+                    dmMap.allpoints.addData(feature);
+                    setLookupMeta(feature);
+                });
+            }
+        }).addTo(dmMap.map);
         dmMap.origpoints = success;
         dmMap.map.fitBounds(dmMap.allpoints.getBounds());
 
@@ -49,6 +60,7 @@ function makeCartoDBMap(elem){
         if(jQuery('.db_lookup_ac').val().length < 2){
             dmMap.allpoints.clearLayers();
             dmMap.allpoints.addData(dmMap.origpoints);
+
         }
     });
 
@@ -98,14 +110,14 @@ function makeCartoDBMap(elem){
 }
 
 function setLookupMeta(feature){
-        var html = '<ul>';
-        var props = feature.properties;
-        for(var k in props){
-            html += '<li><strong>' + k + '</strong> - ' + props[k] + '</li>';
-        }
-        html += '</ul>';
+    var html = '<ul>';
+    var props = feature.properties;
+    for(var k in props){
+        html += '<li><strong>' + k + '</strong> - ' + props[k] + '</li>';
+    }
+    html += '</ul>';
 
-        jQuery('.dm_lookup_meta').html(html);
+    jQuery('.dm_lookup_meta').html(html);
 }
 
 function makeCartoDBPageMap(elem){
@@ -134,15 +146,16 @@ function makeArchivePageMap(elem){
 
     jQuery.getJSON(ajaxurl,{
         'action': 'carto_archive',
-        'table' : elem.data('table')
+        'table' : elem.data('table'),
+        'post_type' : elem.data('post_type'),
     }).then(function(success){
-        L.getJSON(success,{
+        dmMap.allpoints = L.geoJson(success,{
             onEachFeature: function (feature, layer) {
-                layer.on('click',function(e){
-                    console.log(arguments);
-                });
+                layer.bindPopup(feature.popup_contents);
             }
         }).addTo(dmMap.map);
+
+        dmMap.map.fitBounds(dmMap.allpoints.getBounds());
     });
 }
 
