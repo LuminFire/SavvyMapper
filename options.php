@@ -92,7 +92,8 @@ function dm_pluginPage_mapping_table(){
     $settings = get_option( 'dm_settings' );
     $mappings = get_option('dm_table_mapping');
 
-    $tables = cartoSQL("SELECT * FROM CDB_UserTables()");
+    $tables = cartoSQL("SELECT * FROM CDB_UserTables()",FALSE);
+    $tables = json_decode($tables);
     $post_types = get_post_types(Array('public'   => true,));
     ksort($post_types);
 

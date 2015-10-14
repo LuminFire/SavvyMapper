@@ -31,6 +31,8 @@ function dm_make_meta_box($post,$metabox){
         print '<label>Look up ' . $lookup_field . ': </label><input class="db_lookup_ac" name="cartodb_lookup_label" value="' . $cartodb_label . '">';
         print '<input type="hidden" name="cartodb_lookup_value" value="' . $cartodb_id . '">';
         wp_nonce_field( 'dm_meta_box', 'dm_meta_box_nonce' );
+        print '<div class="shortcodehints"><h3>Available Shortcodes</h3><ul><li><strong>[dm-attr <i>attribute name</i>]</strong> -- Show the value of the specified attribute</li>';
+        print '<li><strong>[dm-map]</strong> -- Show the feature on the map</li></ul></div>';
         print '<div class="dm_lookup_meta">';
         print '</div>';
     print '</div>';
