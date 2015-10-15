@@ -180,5 +180,7 @@ function set_cdb_column_opts(e){
     var val = select.val();
     if(cdb_tables_and_columns[val]){
         select.closest('tr').find("td.dm_cdb_field_select_td").html(cdb_tables_and_columns[val]);
+    }else if(val === ''){
+        select.closest('tr').find("td.dm_cdb_field_select_td").html(cdb_tables_and_columns['dm_empty_select_list']);
     }
 }

@@ -126,6 +126,7 @@ function dm_pluginPage_mapping_table(){
     foreach($tables as $table => $fields){
         $cdb_tables_and_columns[$table] = makeCDBFieldSelect($tables,$table);
     }
+    $cdb_tables_and_columns['dm_empty_select_list'] = makeCDBFieldSelect($tables);
     print '<script type="text/javascript">var cdb_tables_and_columns = ' . json_encode($cdb_tables_and_columns) . ';</script>';
 
     $post_types = get_post_types(Array('public'   => true,));
