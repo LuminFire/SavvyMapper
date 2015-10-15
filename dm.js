@@ -15,6 +15,8 @@ jQuery(document).ready(function(){
     if(dmArchiveMapDiv.length > 0){
         makeArchivePageMap(dmArchiveMapDiv);
     }
+
+    jQuery('.dm_cdb_table_select').on('change',set_cdb_column_opts);
 });
 
 function makeCartoDBMap(elem){
@@ -171,4 +173,12 @@ function setupBasemap(){
         attribution: 'Tiles from <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
         subdomains: subDomains
     });
+}
+
+function set_cdb_column_opts(e){
+    var select = jQuery(e.target);
+    var val = select.val();
+    if(cdb_tables_and_columns[val]){
+        select.closest('tr').find("td.dm_cdb_field_select_td").html(cdb_tables_and_columns[val]);
+    }
 }
