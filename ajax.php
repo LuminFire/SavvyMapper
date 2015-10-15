@@ -71,7 +71,8 @@ function getCartoGeoJSON(){
 
     $sql .= " ORDER BY " . $_GET['lookup'];
 
-    $sql .= " LIMIT 500";
+    // no limits. We've got clustering
+    // $sql .= " LIMIT 500";
 
     $json = cartoSQL($sql);
 

@@ -37,7 +37,7 @@ function dm_make_meta_box($post,$metabox){
         print '</div>';
     print '</div>';
 
-    print '<div class="dm_map_div"></div>';
+    print '<div class="dm_metabox_map_div"></div>';
 }
 
 function dm_save_meta($post_id){
