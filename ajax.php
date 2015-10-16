@@ -21,10 +21,13 @@ function getCartoArchiveGeoJSON(){
 
     $ids = Array();
     foreach($res as $one){
-        $ids[$one->meta_value] = $one->ID;
+        if($one->meta_value){
+            $ids[$one->meta_value] = $one->ID;
+        }
     }
 
-    $json = cartoSQL('SELECT * FROM ' . $table . ' WHERE cartodb_id IN (' . implode(',',array_keys($ids)) . ')');
+    $sql = 'SELECT * FROM ' . $table . ' WHERE cartodb_id IN (' . implode(',',array_keys($ids)) . ')';
+    $json = cartoSQL($sql);
 
     if(is_null($json)){
         http_response_code(500);

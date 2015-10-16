@@ -20,7 +20,7 @@ function dm_get_attr($atts){
 
     $props = $cartoObj->features[0]->properties;
     if(isset($props->{$atts[0]})){
-        return $props->{$atts[0]};
+        return '<span class="dapper-attr">' . $props->{$atts[0]} . '</span>';
     }
     return '';
 }

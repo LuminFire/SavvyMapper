@@ -27,6 +27,7 @@ function dm_load_scripts() {
     wp_enqueue_script('leafletjs',plugin_dir_url(__FILE__) . '/leaflet/leaflet.js');    
     wp_enqueue_script('markercluster-js',plugin_dir_url(__FILE__) . '/leaflet/leaflet.markercluster.js');    
     wp_enqueue_script('dmjs',plugin_dir_url(__FILE__) . '/dm.js',Array('jquery')); 
+    wp_enqueue_script('dminit',plugin_dir_url(__FILE__) . '/init.js',Array('jquery','dmjs')); 
     wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
     wp_enqueue_script('jquery-ui-js',plugin_dir_url(__FILE__) . '/jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
 }
