@@ -1,8 +1,8 @@
 <?php
 
 // Customizations to the archive page
-add_action('loop_start','make_archive_map_maybe');
-function make_archive_map_maybe($query){
+add_action('loop_start','dm_make_archive_map_maybe');
+function dm_make_archive_map_maybe($query){
     if(!is_archive()){
         return;
     }

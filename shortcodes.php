@@ -15,7 +15,7 @@ function dm_get_attr($atts){
 
         $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
         $cartodb_label = get_post_meta($post->ID,'cartodb_lookup_label',TRUE);
-        $cartoObj = cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
+        $cartoObj = dm_cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
     }
 
     $props = $cartoObj->features[0]->properties;
@@ -37,7 +37,7 @@ function dm_get_map(){
 
         $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
         $cartodb_label = get_post_meta($post->ID,'cartodb_lookup_label',TRUE);
-        $cartoObj = cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
+        $cartoObj = dm_cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
     }
     $html = '';
 

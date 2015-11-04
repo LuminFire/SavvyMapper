@@ -108,7 +108,7 @@ function dm_pluginPage_mapping_table(){
     $settings = get_option( 'dm_settings' );
     $mappings = get_option('dm_table_mapping');
 
-    $tables_raw = cartoSQL("SELECT * FROM CDB_UserTables()",FALSE);
+    $tables_raw = dm_cartoSQL("SELECT * FROM CDB_UserTables()",FALSE);
     $tables_raw = json_decode($tables_raw);
 
     $tables = Array();
@@ -116,7 +116,7 @@ function dm_pluginPage_mapping_table(){
         $tables[$table->cdb_usertables] = Array();
     }
 
-    $columns = cartoSQL("select table_name,column_name from information_schema.columns where table_name IN ('" . implode("','",array_keys($tables)) . "')",FALSE);
+    $columns = dm_cartoSQL("select table_name,column_name from information_schema.columns where table_name IN ('" . implode("','",array_keys($tables)) . "')",FALSE);
     $columns = json_decode($columns);
     foreach($columns->rows as $column){
         $tables[$column->table_name][] = $column->column_name;
@@ -146,7 +146,7 @@ function dm_pluginPage_mapping_table(){
 
         print '<tr><td><input type="hidden" name="dm_post_type[]" value="' . $post_type . '">'. $post_type_object->labels->singular_name .'</td>';
 
-        $cdb_select = makeCDBTableSelect($tables,$selected);
+        $cdb_select = dm_makeCDBTableSelect($tables,$selected);
         print '<td>' . $cdb_select . '</td>';
         
         $cdb_field_select = makeCDBFieldSelect($tables,$selected,$lookup_field);
@@ -174,7 +174,7 @@ function dm_options_page(  ) {
 
 }
 
-function makeCDBTableSelect($opts,$selected = NULL){
+function dm_makeCDBTableSelect($opts,$selected = NULL){
     $cdb_select = '<select name="dm_cdb_table[]" class="dm_cdb_table_select">';
     $cdb_select .= '<option value="">--</option>';
     foreach($opts as $table => $fields){

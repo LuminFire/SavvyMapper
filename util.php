@@ -12,7 +12,7 @@
  *
  * @return A dict with all the requst info, if debug is TRUE. Otherwise just returns the response body
  */
-function curl_request( $url, $data = Array(), $debug = FALSE){
+function dm_curl_request( $url, $data = Array(), $debug = FALSE){
 
     $post = curl_init();
     curl_setopt($post, CURLOPT_URL, $url);
@@ -56,7 +56,7 @@ function curl_request( $url, $data = Array(), $debug = FALSE){
     return $response['body'];
 }
 
-function cartoSQL($sql,$json = TRUE){
+function dm_cartoSQL($sql,$json = TRUE){
 
     $options = get_option( 'dm_settings' );
     $un = $options['dm_cartodb_username'];
@@ -73,7 +73,7 @@ function cartoSQL($sql,$json = TRUE){
 
     $url = 'https://' . $un . '.cartodb.com/api/v2/sql?' . http_build_query($querystring);
 
-    $ret = curl_request($url);
+    $ret = dm_curl_request($url);
 
     if($json){
         return json_decode($ret);
@@ -142,7 +142,7 @@ function dm_fetch_and_format_features($sql){
         exit();
     }
 
-    $json = cartoSQL($sql);
+    $json = dm_cartoSQL($sql);
 
     if(is_null($json)){
         http_response_code(500);

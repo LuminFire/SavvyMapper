@@ -38,7 +38,7 @@ function dm_getCartoGeoJSON(){
     // no limits. We've got clustering
     // $sql .= " LIMIT 500";
 
-    $json = cartoSQL($sql);
+    $json = dm_cartoSQL($sql);
 
     if(is_null($json)){
         http_response_code(500);
