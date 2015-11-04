@@ -1,29 +1,27 @@
 // When the page loads look for any maps we should initialize
-DM = new DapperMapper();
+DM = {};
 jQuery(document).ready(function(){
 
     // The map in the metabox on an edit page
     // Let the user select a feature
-    var dmMapDiv = jQuery('.dm_metabox_map_div');
-    if(dmMapDiv.length > 0){
-        DM._makeCartoDBMetaboxMap(dmMapDiv);
-    }
+    jQuery('.dm_metabox_map_div').each(function(){
+        var tmpdm = new DapperMapper();
+        tmpdm._makeCartoDBMetaboxMap(this);
+        DM[tmpdm.id] = tmpdm;
+    });
 
-    // The map on a page (probably from a shortcode)
-    // Show the single related feature
-    var dmPageMapDiv = jQuery('.dm_page_map_div');
-    if(dmPageMapDiv.length > 0){
-        DM._makeCartoDBPageMap(dmPageMapDiv);
-    }
+    // Show page and archive maps
+    jQuery('.dm_map_div').each(function(){
+        var tmpdm = new DapperMapper();
+        tmpdm._basicMapSetup(this);
+        DM[tmpdm.id] = tmpdm;
+    });
 
-    // The map on an archive page
-    // Show all features
-    var dmArchiveMapDiv = jQuery('.dm_archive_map');
-    if(dmArchiveMapDiv.length > 0){
-        DM._makeArchivePageMap(dmArchiveMapDiv);
+    if(DM._cdb_tables_and_columns !== undefined){
+        var tmpdm = new DapperMapper();
+        DM[tmpdm.id] = tmpdm;
+        jQuery('.dm_cdb_table_select').on('change',tmpdm.table_select._setCDBColumnOpts);
     }
-
-    jQuery('.dm_cdb_table_select').on('change',DM._setCDBColumnOpts);
 });
 
 

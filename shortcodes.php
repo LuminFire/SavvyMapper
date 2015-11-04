@@ -27,15 +27,11 @@ function dm_get_attr($atts){
 
 add_shortcode('dm-map','dm_get_map');
 function dm_get_map(){
-    if(is_archive()){
-        return;
-    }
     global $cartoObj;
     global $post;
 
     // TODO: Replace this global with a singleton probably
     if(!isset($cartoObj)){
-        $mappings = get_option('dm_table_mapping');
         $target_table = $mappings[$post->post_type]['table'];
         $lookup_field = $mappings[$post->post_type]['lookup'];
 
@@ -55,10 +51,12 @@ function dm_get_map(){
 
 
     $props = $cartoObj->features[0]->properties;
-    $html .= '<div class="dm_page_map_div">';
-    $html .= '</div>';
+
+    $html .= '<div class="dm_map_div dm_page_map_div" data-post_type="'. $post->post_type . '" data-postid="'.$post->ID.'"></div>';
+    /*
     $html .= '<script>';
     $html .= 'var dm_singleFeature = ' . json_encode($cartoObj->features[0]) . ';';
     $html .= '</script>';
+     */
     return $html;
 }

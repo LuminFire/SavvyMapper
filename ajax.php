@@ -1,11 +1,18 @@
 <?php
 
-add_action('wp_ajax_carto_archive','getCartoArchiveGeoJSON');
-add_action('wp_admin_ajax_carto_archive','getCartoArchiveGeoJSON');
+add_action('wp_ajax_carto_page','getCartoPageGeoJSON');
+add_action('wp_admin_ajax_carto_page','getCartoPageGeoJSON');
 function getCartoArchiveGeoJSON(){
     global $wpdb;
-    $post_type = $_GET['post_type'];
+
+    $page_type = $_GET['type'];
     $table = $_GET['table'];
+
+    if($page_type === 'archive'){
+        $post_type = $_GET['post_type'];
+    }else if($page_type == 'page'){
+        $postid = $_GET['postid'];
+    }
 
     $res = $wpdb->get_results( "SELECT 
         p.ID,
@@ -54,8 +61,8 @@ function getCartoArchiveGeoJSON(){
 }
 
 
-add_action( 'wp_ajax_carto_ajax', 'getCartoGeoJSON' );
-add_action( 'wp_admin_ajax_carto_ajax', 'getCartoGeoJSON' );
+add_action( 'wp_ajax_carto_metabox', 'getCartoGeoJSON' );
+add_action( 'wp_admin_ajax_carto_metabox', 'getCartoGeoJSON' );
 function getCartoGeoJSON(){
     // $_GET['table'];
     // $_GET['lookup'];
