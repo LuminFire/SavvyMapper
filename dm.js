@@ -164,7 +164,7 @@ DapperMapper.prototype = {
     _setCDBColumnOpts: function(e){
         var select = jQuery(e.target);
         var val = select.val();
-        if(DM.cdb_tables_and_columns[val]){
+        if(DM._cdb_tables_and_columns[val]){
             select.closest('tr').find("td.dm_cdb_field_select_td").html(DM._cdb_tables_and_columns[val]);
         }else if(val === ''){
             select.closest('tr').find("td.dm_cdb_field_select_td").html(DM._cdb_tables_and_columns['dm_empty_select_list']);

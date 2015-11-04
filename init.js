@@ -20,7 +20,7 @@ jQuery(document).ready(function(){
     if(DM._cdb_tables_and_columns !== undefined){
         var tmpdm = new DapperMapper();
         DM[tmpdm.id] = tmpdm;
-        jQuery('.dm_cdb_table_select').on('change',tmpdm.table_select._setCDBColumnOpts);
+        jQuery('.dm_cdb_table_select').on('change',tmpdm._setCDBColumnOpts);
     }
 });
 
