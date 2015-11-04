@@ -123,16 +123,16 @@ function dm_get_sql_for_archive_post($post_type){
 }
 
 function dm_get_sql_for_single_post($postid){
-        $post = get_post($postid);
-        $mappings = get_option('dm_table_mapping');
-        $target_table = $mappings[$post->post_type]['table'];
-        $lookup_field = $mappings[$post->post_type]['lookup'];
-        $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
+    $post = get_post($postid);
+    $mappings = get_option('dm_table_mapping');
+    $target_table = $mappings[$post->post_type]['table'];
+    $lookup_field = $mappings[$post->post_type]['lookup'];
+    $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
 
-        if(!empty($target_table) && !empty($lookup_field) && !empty($cartodb_id)){
-            $sql = 'SELECT * FROM "' . $target_table . '" WHERE "cartodb_id"=\'' . $cartodb_id . "'";
-            return $sql;
-        }
+    if(!empty($target_table) && !empty($lookup_field) && !empty($cartodb_id)){
+        $sql = 'SELECT * FROM "' . $target_table . '" WHERE "cartodb_id"=\'' . $cartodb_id . "'";
+        return $sql;
+    }
 }
 
 function dm_fetch_and_format_features($sql){
@@ -167,4 +167,24 @@ function dm_fetch_and_format_features($sql){
     print json_encode($json);
     exit();
 
+}
+
+function dm_makePostCDBOjb($the_post = NULL){
+    global $post;
+    global $cartoObj;
+
+    if(isset($cartoObj)){
+        return $cartoObj;
+    }
+
+    $the_post = (is_null($the_post) ? $post : $the_post);
+    $mappings = get_option('dm_table_mapping');
+    $target_table = $mappings[$the_post->post_type]['table'];
+    $lookup_field = $mappings[$the_post->post_type]['lookup'];
+
+    $cartodb_id = get_post_meta($the_post->ID,'cartodb_lookup_value',TRUE);
+    $cartodb_label = get_post_meta($the_post->ID,'cartodb_lookup_label',TRUE);
+    $cartoObj = dm_cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
+
+    return $cartoObj;
 }
