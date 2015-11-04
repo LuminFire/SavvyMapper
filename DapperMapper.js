@@ -230,17 +230,15 @@ DapperMapper.prototype = {
         
         this.map = L.map(elem[0]).setView([lat,lng],zoom); 
         this._setupBasemap().addTo(this.map);
-        this.archive_type = elem.data('post_type');
+        this.archive_type = elem.data('archive_type');
         this.post_id = elem.data('postid');
 
-        if(elem.data('post_type') !== undefined || elem.data('postid') !== undefined){
+        if(elem.data('archive_type') !== undefined || elem.data('postid') !== undefined){
 
             var promise = jQuery.getJSON(ajaxurl,{
                 'action': 'carto_query',
-                'type'  : 'archive',
-                'table' : elem.data('table'),
-                'post_type' : elem.data('post_type'),
-                'postid' : elem.data('postid')
+                'post_type' : elem.data('archive_type'),
+                'post_id' : elem.data('post_id')
             });
             
             promise = promise.then(function(success){

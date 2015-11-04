@@ -1,69 +1,25 @@
 <?php
 
-add_action('wp_ajax_carto_page','getCartoPageGeoJSON');
-add_action('wp_admin_ajax_carto_page','getCartoPageGeoJSON');
-function getCartoArchiveGeoJSON(){
+add_action('wp_ajax_carto_query','dm_getCartoPageGeoJSON');
+add_action('wp_admin_ajax_carto_query','dm_getCartoPageGeoJSON');
+function dm_getCartoArchiveGeoJSON(){
     global $wpdb;
 
-    $page_type = $_GET['type'];
-    $table = $_GET['table'];
-
-    if($page_type === 'archive'){
-        $post_type = $_GET['post_type'];
-    }else if($page_type == 'page'){
-        $postid = $_GET['postid'];
+    if(isset($_GET['archive_type'])){
+        $post_type = $_GET['archive_type'];
+        $sql = dm_get_sql_for_archive_post($post_type);
+    }else if(isset($_GET['post_id'])){
+        $post_id = $_GET['post_id'];
+        $sql = dm_get_sql_for_single_post($post_id);
     }
 
-    $res = $wpdb->get_results( "SELECT 
-        p.ID,
-        pm.meta_value
-        FROM 
-        wp_posts p,
-        wp_postmeta pm
-        WHERE 
-        p.post_type='".$post_type."' AND 
-        p.post_status='publish' AND
-        pm.post_id=p.ID AND
-        pm.meta_key='cartodb_lookup_value'");
-
-    $ids = Array();
-    foreach($res as $one){
-        if($one->meta_value){
-            $ids[$one->meta_value] = $one->ID;
-        }
-    }
-
-    $sql = 'SELECT * FROM ' . $table . ' WHERE cartodb_id IN (' . implode(',',array_keys($ids)) . ')';
-    $json = cartoSQL($sql);
-
-    if(is_null($json)){
-        http_response_code(500);
-        exit();
-    }
-
-    $post_type_info = get_post_type_object($post_type);
-
-    foreach($json->features as &$feature){
-        $permalink = get_permalink($ids[$feature->properties->cartodb_id]);
-
-        $popup_contents = '<table class="leafletpopup">';
-        $popup_contents .= '<tr><th colspan="2"><a href="' . $permalink . '">View ' .$post_type_info->labels->singular_name .'</a></tr>';
-        foreach($feature->properties as $k => $v){
-            $popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
-        }
-        $popup_contents .= '</table>';
-        $feature->popup_contents = $popup_contents;
-    }
-
-    header("Content-Type: application/json");
-    print json_encode($json);
-    exit();
+    dm_fetch_and_format_features($sql);
 }
 
 
-add_action( 'wp_ajax_carto_metabox', 'getCartoGeoJSON' );
-add_action( 'wp_admin_ajax_carto_metabox', 'getCartoGeoJSON' );
-function getCartoGeoJSON(){
+add_action( 'wp_ajax_carto_metabox', 'dm_getCartoGeoJSON' );
+add_action( 'wp_admin_ajax_carto_metabox', 'dm_getCartoGeoJSON' );
+function dm_getCartoGeoJSON(){
     // $_GET['table'];
     // $_GET['lookup'];
 

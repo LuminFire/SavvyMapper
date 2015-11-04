@@ -81,3 +81,84 @@ function cartoSQL($sql,$json = TRUE){
         return $ret;
     }
 }
+
+function dm_get_cdbids_for_post_type($post_type){
+    $res = $wpdb->get_results( "SELECT 
+        p.ID,
+        pm.meta_value
+        FROM 
+        wp_posts p,
+        wp_postmeta pm
+        WHERE 
+        p.post_type='".$post_type."' AND 
+        p.post_status='publish' AND
+        pm.post_id=p.ID AND
+        pm.meta_key='cartodb_lookup_value'");
+
+    $ids = Array();
+    foreach($res as $one){
+        if($one->meta_value){
+            $ids[$one->meta_value] = $one->ID;
+        }
+    }
+    return $ids;
+}
+
+function dm_get_sql_for_archive_post($post_type){
+    $ids = dm_get_cdbids_for_post_type($post_type);
+    $mappings = get_option('dm_table_mapping');
+    $target_table = $mappings[$post_type]['table'];
+
+    if(!empty($target_table)){
+        $sql = 'SELECT * FROM ' . $target_table . ' WHERE cartodb_id IN (' . implode(',',array_keys($ids)) . ')';
+    }
+
+    return $sql;
+}
+
+function dm_get_sql_for_single_post($postid){
+        $post = get_post($postid);
+        $mappings = get_option('dm_table_mapping');
+        $target_table = $mappings[$post->post_type]['table'];
+        $lookup_field = $mappings[$post->post_type]['lookup'];
+        $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
+
+        if(!empty($target_table) && !empty($lookup_field) && !empty($cartodb_id)){
+            $sql = 'SELECT * FROM ' . $target_table . ' WHERE ' . $lookup_field . '=' . $cartodb_id;
+            return $sql;
+        }
+}
+
+function dm_fetch_and_format_features($sql){
+
+    if(!empty($sql)){
+        http_response_code(500);
+        exit();
+    }
+
+    $json = cartoSQL($sql);
+
+    if(is_null($json)){
+        http_response_code(500);
+        exit();
+    }
+
+    $post_type_info = get_post_type_object($post_type);
+
+    foreach($json->features as &$feature){
+        $permalink = get_permalink($ids[$feature->properties->cartodb_id]);
+
+        $popup_contents = '<table class="leafletpopup">';
+        $popup_contents .= '<tr><th colspan="2"><a href="' . $permalink . '">View ' .$post_type_info->labels->singular_name .'</a></tr>';
+        foreach($feature->properties as $k => $v){
+            $popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
+        }
+        $popup_contents .= '</table>';
+        $feature->popup_contents = $popup_contents;
+    }
+
+    header("Content-Type: application/json");
+    print json_encode($json);
+    exit();
+
+}

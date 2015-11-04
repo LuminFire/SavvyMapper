@@ -52,7 +52,7 @@ function dm_get_map(){
 
     $props = $cartoObj->features[0]->properties;
 
-    $html .= '<div class="dm_map_div dm_page_map_div" data-post_type="'. $post->post_type . '" data-postid="'.$post->ID.'"></div>';
+    $html .= '<div class="dm_map_div dm_page_map_div" data-post_id="'.$post->ID.'"></div>';
     /*
     $html .= '<script>';
     $html .= 'var dm_singleFeature = ' . json_encode($cartoObj->features[0]) . ';';
