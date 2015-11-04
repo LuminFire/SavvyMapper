@@ -231,13 +231,13 @@ DapperMapper.prototype = {
         this.map = L.map(elem[0]).setView([lat,lng],zoom); 
         this._setupBasemap().addTo(this.map);
         this.archive_type = elem.data('archive_type');
-        this.post_id = elem.data('postid');
+        this.post_id = elem.data('post_id');
 
-        if(elem.data('archive_type') !== undefined || elem.data('postid') !== undefined){
+        if(elem.data('archive_type') !== undefined || elem.data('post_id') !== undefined){
 
             var promise = jQuery.getJSON(ajaxurl,{
                 'action': 'carto_query',
-                'post_type' : elem.data('archive_type'),
+                'archive_type' : elem.data('archive_type'),
                 'post_id' : elem.data('post_id')
             });
             

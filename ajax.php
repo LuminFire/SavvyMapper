@@ -1,10 +1,8 @@
 <?php
 
-add_action('wp_ajax_carto_query','dm_getCartoPageGeoJSON');
-add_action('wp_admin_ajax_carto_query','dm_getCartoPageGeoJSON');
-function dm_getCartoArchiveGeoJSON(){
-    global $wpdb;
-
+add_action('wp_ajax_carto_query','dm_ajaxCartoQuery');
+add_action('wp_admin_ajax_carto_query','dm_ajaxCartoQuery');
+function dm_ajaxCartoQuery(){
     if(isset($_GET['archive_type'])){
         $post_type = $_GET['archive_type'];
         $sql = dm_get_sql_for_archive_post($post_type);

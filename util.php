@@ -83,6 +83,7 @@ function cartoSQL($sql,$json = TRUE){
 }
 
 function dm_get_cdbids_for_post_type($post_type){
+    global $wpdb;
     $res = $wpdb->get_results( "SELECT 
         p.ID,
         pm.meta_value
@@ -105,12 +106,17 @@ function dm_get_cdbids_for_post_type($post_type){
 }
 
 function dm_get_sql_for_archive_post($post_type){
-    $ids = dm_get_cdbids_for_post_type($post_type);
     $mappings = get_option('dm_table_mapping');
+    if(!isset($mappings[$post_type])){
+        http_response_code(404);
+        exit();
+    }
+
+    $ids = dm_get_cdbids_for_post_type($post_type);
     $target_table = $mappings[$post_type]['table'];
 
     if(!empty($target_table)){
-        $sql = 'SELECT * FROM ' . $target_table . ' WHERE cartodb_id IN (' . implode(',',array_keys($ids)) . ')';
+        $sql = 'SELECT * FROM "' . $target_table . '" WHERE "cartodb_id" IN (' . implode(',',array_keys($ids)) . ')';
     }
 
     return $sql;
@@ -124,14 +130,14 @@ function dm_get_sql_for_single_post($postid){
         $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
 
         if(!empty($target_table) && !empty($lookup_field) && !empty($cartodb_id)){
-            $sql = 'SELECT * FROM ' . $target_table . ' WHERE ' . $lookup_field . '=' . $cartodb_id;
+            $sql = 'SELECT * FROM "' . $target_table . '" WHERE "cartodb_id"=\'' . $cartodb_id . "'";
             return $sql;
         }
 }
 
 function dm_fetch_and_format_features($sql){
 
-    if(!empty($sql)){
+    if(empty($sql)){
         http_response_code(500);
         exit();
     }

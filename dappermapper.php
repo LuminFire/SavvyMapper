@@ -30,7 +30,7 @@ function dm_load_scripts() {
     wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
     wp_enqueue_script('markercluster-js',$plugin_dir_url . 'leaflet/leaflet.markercluster.js',Array('cartodbjs'));
     wp_enqueue_script('dmjs',$plugin_dir_url . 'DapperMapper.js',Array('jquery'),Array('cartodbjs','markercluster-js')); 
-    wp_enqueue_script('dminit',$plugin_dir_url . 'init.js',Array('jquery','dmjs'),Array('dmjs')); 
+    wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs'),Array('dmjs')); 
     wp_enqueue_script('jquery-ui-js',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
 }
 add_action( 'wp_enqueue_scripts', 'dm_load_scripts' );
