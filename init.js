@@ -17,10 +17,13 @@ jQuery(document).ready(function(){
         DM[tmpdm.id] = tmpdm;
     });
 
-    if(DM._cdb_tables_and_columns !== undefined){
+    if(jQuery('.dm_cdb_table_select').length > 0){
         var tmpdm = new DapperMapper();
         DM[tmpdm.id] = tmpdm;
-        jQuery('.dm_cdb_table_select').on('change',tmpdm._setCDBColumnOpts);
+        tmpdm._cdb_tables_and_columns = cdb_tables_and_columns;
+        jQuery('.dm_cdb_table_select').on('change',function(e){
+            tmpdm._setCDBColumnOpts(e);
+        });
     }
 });
 
