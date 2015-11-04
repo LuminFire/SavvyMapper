@@ -16,24 +16,22 @@ require_once(__DIR__ . '/shortcodes.php');
 require_once(__DIR__ . '/archive.php');
 
 function dm_load_scripts() {
-    // wp_localize_script( 'dmajaxurl', 'dmajax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+    wp_localize_script( 'dmajaxurl', 'dmajax', array( 'dmajax' => admin_url( 'admin-ajax.php' ) ) );
 
-    /* wp_enqueue_style('leafletcss',plugin_dir_url(__FILE__) . '/leaflet/leaflet.css');  */
-    // cartodb includes leaflet
+    $plugin_dir_url = plugin_dir_url(__FILE__);
+
     wp_enqueue_style('cartodbcss','http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css');
-    wp_enqueue_style('markercluster-css',plugin_dir_url(__FILE__) . '/leaflet/MarkerCluster.css'); 
-    wp_enqueue_style('markercluster-default-css',plugin_dir_url(__FILE__) . '/leaflet/MarkerCluster.Default.css'); 
-    wp_enqueue_style('dmcss',plugin_dir_url(__FILE__) . '/dm.css'); 
-    wp_enqueue_style('jquery-ui-css',plugin_dir_url(__FILE__) . '/jqui/jquery-ui-1.11.4/jquery-ui.min.css',Array('jquery'));
+    wp_enqueue_style('markercluster-css',$plugin_dir_url . 'leaflet/MarkerCluster.css'); 
+    wp_enqueue_style('markercluster-default-css',$plugin_dir_url . 'leaflet/MarkerCluster.Default.css'); 
+    wp_enqueue_style('dmcss',$plugin_dir_url . 'dm.css'); 
+    wp_enqueue_style('jquery-ui-css',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.css',Array('jquery'));
 
 
-    /* wp_enqueue_script('leafletjs',plugin_dir_url(__FILE__) . '/leaflet/leaflet.js');  */
-    // cartodb includes leaflet
     wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
-    wp_enqueue_script('markercluster-js',plugin_dir_url(__FILE__) . '/leaflet/leaflet.markercluster.js',Array('cartodbjs'));
-    wp_enqueue_script('dmjs',plugin_dir_url(__FILE__) . '/dm.js',Array('jquery'),Array('cartodbjs','markercluster-js')); 
-    wp_enqueue_script('dminit',plugin_dir_url(__FILE__) . '/init.js',Array('jquery','dmjs'),Array('dmjs')); 
-    wp_enqueue_script('jquery-ui-js',plugin_dir_url(__FILE__) . '/jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
+    wp_enqueue_script('markercluster-js',$plugin_dir_url . 'leaflet/leaflet.markercluster.js',Array('cartodbjs'));
+    wp_enqueue_script('dmjs',$plugin_dir_url . 'dm.js',Array('jquery'),Array('cartodbjs','markercluster-js')); 
+    wp_enqueue_script('dminit',$plugin_dir_url . 'init.js',Array('jquery','dmjs'),Array('dmjs')); 
+    wp_enqueue_script('jquery-ui-js',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
 }
 add_action( 'wp_enqueue_scripts', 'dm_load_scripts' );
 add_action( 'admin_enqueue_scripts', 'dm_load_scripts' );

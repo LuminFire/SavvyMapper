@@ -40,6 +40,7 @@ DapperMapper.prototype = {
     * Also sets up other metabox interactions
     */
     _makeCartoDBMetaboxMap: function (elem){
+        var _this = this;
         this._basicMapSetup(elem);
 
         this._meta.table = jQuery('.db_lookupbox').data('table');
@@ -47,12 +48,12 @@ DapperMapper.prototype = {
 
         this.layers.allgeoms = L.geoJson(null,{
             onEachFeature: function (feature, layer) {
-                feature.label = feature.properties[this._meta.lookup];
-                feature.value = feature.properties[this._meta.lookup];
+                feature.label = feature.properties[_this._meta.lookup];
+                feature.value = feature.properties[_this._meta.lookup];
                 layer.on('click',function(e){
                     var feature = e.target.feature;
                     jQuery('input[name=cartodb_lookup_value]').val(feature.properties.cartodb_id);
-                    jQuery('input[name=cartodb_lookup_label]').val(feature.properties[this._meta.lookup]);
+                    jQuery('input[name=cartodb_lookup_label]').val(feature.properties[_this._meta.lookup]);
                     _this._setMetaboxLayerVisibility(feature);
                     _this._setLookupMeta(feature);
                 });
@@ -232,7 +233,7 @@ DapperMapper.prototype = {
         this.archive_type = elem.data('post_type');
         this.post_id = elem.data('postid');
 
-        if(elem.data('post_type') !== '' || elem.data('postid') !== ''){
+        if(elem.data('post_type') !== undefined || elem.data('postid') !== undefined){
 
             var promise = jQuery.getJSON(ajaxurl,{
                 'action': 'carto_query',
@@ -243,7 +244,7 @@ DapperMapper.prototype = {
             });
             
             promise = promise.then(function(success){
-                _this.layers.allgeoms = L.geoJson(success,{
+                _this.layers.thegeom = L.geoJson(success,{
                     onEachFeature: function (feature, layer) {
                         layer.bindPopup(feature.popup_contents);
                     }
