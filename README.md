@@ -1,6 +1,19 @@
 Documentation
 =============
 
+Setup and Configuration
+-----------------------
+
+ * Install this plugin the standard WordPress way
+
+Known Bugs
+----------
+
+This plugin loads cartodb.js which includes its own copy of Leaflet. If other 
+plugins are also loading leaflet, there will likely be conflicts. These conflicts
+may manifest themselves in various ways including not finding loaded plugins.
+
+
 
 TODO
 ----
@@ -9,13 +22,13 @@ TODO
 
  * Needs to be good enough for users to get something done with just the plugin
  * And expose enough functionality for developers to really make them need it
-
-Setup and Configuration
------------------------
-
-
-
-
+ * Use L.noConflict 
+ * Add [dm show="map" onarchive="hide"]
+ * Add [dm show="map" viz=[list,of,viz,urls]]
+ * Add [dm show="map" popup="false"]
+ * Add [dm show="map" callback="function_name"]
+ * Let user set map ID in DapperMapper() init function
+ * Consider a singleton instead of prefixed functions
 
 
 Usage
@@ -25,7 +38,7 @@ Usage
 
 #### Displaying CartoDB attributes
 
-[dm attr=""]
+[dm attr="/attribute name/"]
 
 ##### Styling CartoDB attributes
 
@@ -37,14 +50,27 @@ Attributes printed with shortcodes will be wrapped with span with the class 'dap
 
 #### Displaying the current post's map
 
-[dm map="true"]
+[dm show="map"]
 
 
 ### The DM Object
 
-DapperMapper stores all of its properties and functions in a global ```DM``` object.
+This plugin provides a DapperMapper javascript object and also creates a global ```DM``` object.
+
+The DM object holds all the DapperMapper instances, as initialized by dm_init.js. When DapperMapper
+creates a map, it adds a data-mapId attribute with the DapperMapper instance ID to the map element. 
+
+So, DM.dmap0 corresponds to <div ... data-mapId="dmap0">. 
+
+This allows multiple maps to appear on the same page.
+
+Each DM.dmap* object has the following properties
 
 #### Public properties:
+
+##### DM.id
+
+The DapperMapper instance ID (dmap0, etc.). The instance will have an ID, even if no map is shown.
 
 ##### DM.layers
 

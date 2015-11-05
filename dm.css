@@ -1,3 +1,7 @@
+table.dm_settings th {
+    text-align: left;
+}
+
 .dm_metabox_map_div, .db_lookupbox {
     min-height: 400px;
     min-width: 250px;
@@ -5,6 +9,10 @@
     box-sizing: border-box;
     display: inline-block;
     vertical-align: top;
+}
+
+.dm_vizbox textarea{
+    width: 100%;
 }
 
 .dm_metabox_map_div {

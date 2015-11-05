@@ -17,9 +17,39 @@ function dm_settings_init(  ) {
     if(isset($_POST)){
         if(isset($_POST['dm_cdb_table'])){
             $mappings = Array();
+            // Clean up visualizations
+            foreach($_POST['dm_cdb_visualizations'] as $i => $vis){
+                // Split on newlines and commas. They're supposed to use newlines, but people are going to not listen
+                $tmpv = preg_split("|[\s,]|",$vis);
+
+                // Trim whitespace
+                $tmpv = array_map('trim',$tmpv);
+
+                // Sanitize all URLs
+                $tmpv = array_map(function($u){
+                    $valid = filter_var($u,FILTER_SANITIZE_URL);
+                    return $valid;
+                },$tmpv);
+
+                // Remove any falsey entries
+                $tmpv = array_filter($tmpv,function($u){
+                    // strip illegal chars
+                    $valid = filter_var($u,FILTER_SANITIZE_URL);
+                    return filter_var($u,FILTER_VALIDATE_URL);      
+                });
+
+                // Make a newline delimited list of visualizations
+                $_POST['dm_cdb_visualizations'][$i] = implode("\n",$tmpv);
+            }
+
             foreach($_POST['dm_cdb_table'] as $i => $cdb_tablename){
                 if($cdb_tablename){
-                    $mappings[$_POST['dm_post_type'][$i]] = Array('table' => $_POST['dm_cdb_table'][$i], 'lookup' => $_POST['dm_lookup_field'][$i]);
+                    $mappings[$_POST['dm_post_type'][$i]] = Array(
+                        'table' => $_POST['dm_cdb_table'][$i], 
+                        'lookup' => $_POST['dm_lookup_field'][$i],
+                        'visualizations' => $_POST['dm_cdb_visualizations'][$i],
+                        'show_markers' => (isset($_POST['dm_show_markers_' . $i]) ? 1 : 0),
+                    );
                 }
             }
             update_option('dm_table_mapping',$mappings);
@@ -132,18 +162,25 @@ function dm_pluginPage_mapping_table(){
     $post_types = get_post_types(Array('public' => true,));
     ksort($post_types);
 
-    print '<table>';
+    print '<table class="dm_settings">';
     print '<tr><th>Post Type</th><th>CartoDB Table</th><th>CartoDB Lookup Field</th></tr>';
+
+    $count = 0;
     foreach($post_types as $post_type){
         $post_type_object = get_post_type_object($post_type);
         $selected = FALSE;
         $lookup_field = '';
+        $visualizations = '';
+        $show_markers = 'checked';
 
         if(isset($mappings[$post_type])){
             $selected = $mappings[$post_type]['table'];
             $lookup_field = $mappings[$post_type]['lookup'];
+            $visualizations = $mappings[$post_type]['visualizations'];
+            $show_markers = ($mappings[$post_type]['show_markers'] === 0 ? '' : 'checked');
         }
 
+        // The CDB association row
         print '<tr><td><input type="hidden" name="dm_post_type[]" value="' . $post_type . '">'. $post_type_object->labels->singular_name .'</td>';
 
         $cdb_select = dm_makeCDBTableSelect($tables,$selected);
@@ -151,6 +188,17 @@ function dm_pluginPage_mapping_table(){
         
         $cdb_field_select = makeCDBFieldSelect($tables,$selected,$lookup_field);
         print '<td class="dm_cdb_field_select_td">'.$cdb_field_select.'</td></tr>';
+
+
+        // The visualization row
+        print '<tr class="dm_vizbox"><td></td><td>Visualizations</td>';
+        print '<td><textarea name="dm_cdb_visualizations[]" placeholder="One CartoDB visualization per line">'.$visualizations.'</textarea></td></tr>';
+
+        // Show points row
+        print '<tr class="dm_showpoints"><td></td><td>Show markers</td>';
+        print '<td><input type="checkbox" name="dm_show_markers_'.$count.'" ' . $show_markers . ' value="1"></td></tr>';
+
+        $count++;
     }
     print "</table>";
 }
@@ -197,5 +245,3 @@ function makeCDBFieldSelect($tables,$tablename,$selected = NULL){
 
     return $cdb_select;
 }
-
-?>

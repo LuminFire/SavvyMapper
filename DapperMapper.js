@@ -226,7 +226,7 @@ DapperMapper.prototype = {
         elem = jQuery(elem);
         
         // Set map id
-        elem.data('mapId',this._mapID);
+        elem.data('mapId',this.id);
         
         this.map = L.map(elem[0]).setView([lat,lng],zoom); 
         this._setupBasemap().addTo(this.map);
