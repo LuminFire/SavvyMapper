@@ -6,7 +6,12 @@ function dm_shortcodes($scatts){
 
     extract(shortcode_atts(Array(
         'attr' => NULL,
-        'show' => NULL
+        'show' => NULL,
+        'onarchive' => 'show',
+        'vis' => '',
+        'popup' => TRUE,
+        'callback' => '',
+        'marker' => TRUE,
     ),$scatts));
 
     $cartoObj = dm_makePostCDBOjb();

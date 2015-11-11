@@ -10,14 +10,21 @@ function DapperMapper() {
 DapperMapper.prototype = {
     // Meta info we use internally. 
 
-    _init:  function(){
+    _init:  function(args){
+        args = jQuery.extend({
+            id: false,
+        },args || {});
         this.layers = {}; // A dict of layers we initialize so that people can style and interact with them
         this.data = {}; // Raw data we want to save for later use, saved here so other scan interact with it
         this._meta =  {};
         this.map = null; // The leaflet map object
         this.archive_type = null;
         this.post_id = null;
-        this.id = 'dmap' + this.__proto__._curId++;
+        if(args.id !== false){
+            this.id = args.id;
+        }else{
+            this.id = 'dmap' + this.__proto__._curId++;
+        }
     },
 
     /* Public functions */
