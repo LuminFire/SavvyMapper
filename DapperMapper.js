@@ -240,6 +240,13 @@ DapperMapper.prototype = {
         this.archive_type = elem.data('archive_type');
         this.post_id = elem.data('post_id');
 
+        if(elem.data('vizes') !== undefined){
+            var vizes = elem.data('vizes').split(',');
+            for(var v = 0;v<vizes.length;v++){
+                this.addVisualization(vizes[v]);
+            }
+        }
+
         if(elem.data('archive_type') !== undefined || elem.data('post_id') !== undefined){
 
             var promise = jQuery.getJSON(ajaxurl,{
@@ -254,7 +261,6 @@ DapperMapper.prototype = {
                         layer.bindPopup(feature.popup_contents);
                     }
                 }).addTo(_this.map);
-
             });
 
             promise = promise.then(function(){

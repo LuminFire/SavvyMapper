@@ -26,6 +26,7 @@ function dm_make_meta_box($post,$metabox){
 
     $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
     $cartodb_label = get_post_meta($post->ID,'cartodb_lookup_label',TRUE);
+    $visualizations = implode(',',explode("\n",$mappings[$post->post_type]['visualizations']));
 
     print '<div class="db_lookupbox" data-table="'. $target_table .'" data-lookup="'. $lookup_field .'">';
         print '<label>Look up ' . $lookup_field . ': </label><input class="db_lookup_ac" name="cartodb_lookup_label" value="' . $cartodb_label . '">';
@@ -37,7 +38,7 @@ function dm_make_meta_box($post,$metabox){
         print '</div>';
     print '</div>';
 
-    print '<div class="dm_metabox_map_div"></div>';
+    print '<div class="dm_metabox_map_div" data-vizes="'.$visualizations.'"></div>';
 }
 
 function dm_save_meta($post_id){

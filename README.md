@@ -20,19 +20,23 @@ We can't use noConflict until Leaflet.markercluster [Issue #387](https://github.
 TODO
 ----
 
- * Documentation
+### MVP
 
- * Needs to be good enough for users to get something done with just the plugin
- * And expose enough functionality for developers to really make them need it
+ * Documentation
  * Add [dm show="map" onarchive="hide"]
  * Add [dm show="map" viz=[list,of,viz,urls]]
  * Add [dm show="map" popup="false"]
  * Add [dm show="map" callback="function_name"]
- * Let user set map ID in DapperMapper() init function
+
+### Future Release
  * Consider a singleton instead of prefixed functions
  * Let users set basemaps
  * Un-blogged points
  * Carto submission form shortcode
+
+### Descriptive
+ * Needs to be good enough for users to get something done with just the plugin
+ * And expose enough functionality for developers to really make them need it
 
 
 Usage
@@ -72,19 +76,15 @@ Each DM.dmap* object has the following properties
 
 #### Public properties:
 
-<<<<<<< HEAD
-##### DM.id
+##### DapperMapper.id
 
 The DapperMapper instance ID (dmap0, etc.). The instance will have an ID, even if no map is shown.
 
-##### DM.layers
-=======
 ##### DapperMapper.id
 
 The DapperMapper instance ID (dmap0, etc.). The instance will have an ID, even if no map is shown.
 
 ##### DapperMapper.layers
->>>>>>> ef56f4c
 
 A dictionary of layers added to the map. The keys are layer names, the values are the layer objects. 
 
