@@ -13,6 +13,8 @@ This plugin loads cartodb.js which includes its own copy of Leaflet. If other
 plugins are also loading leaflet, there will likely be conflicts. These conflicts
 may manifest themselves in various ways including not finding loaded plugins.
 
+We can't use noConflict until Leaflet.markercluster [Issue #387](https://github.com/Leaflet/Leaflet.markercluster/issues/387) is fixed.
+
 
 
 TODO
@@ -22,7 +24,6 @@ TODO
 
  * Needs to be good enough for users to get something done with just the plugin
  * And expose enough functionality for developers to really make them need it
- * Use L.noConflict 
  * Add [dm show="map" onarchive="hide"]
  * Add [dm show="map" viz=[list,of,viz,urls]]
  * Add [dm show="map" popup="false"]
@@ -32,7 +33,6 @@ TODO
  * Let users set basemaps
  * Un-blogged points
  * Carto submission form shortcode
- * Fix missing ajaxurl when not logged in as admin
 
 
 Usage

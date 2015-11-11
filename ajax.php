@@ -1,7 +1,7 @@
 <?php
 
 add_action('wp_ajax_carto_query','dm_ajaxCartoQuery');
-add_action('wp_admin_ajax_carto_query','dm_ajaxCartoQuery');
+add_action('wp_ajax_nopriv_carto_query','dm_ajaxCartoQuery');
 function dm_ajaxCartoQuery(){
     if(isset($_GET['archive_type'])){
         $post_type = $_GET['archive_type'];
@@ -16,7 +16,7 @@ function dm_ajaxCartoQuery(){
 
 
 add_action( 'wp_ajax_carto_metabox', 'dm_getCartoGeoJSON' );
-add_action( 'wp_admin_ajax_carto_metabox', 'dm_getCartoGeoJSON' );
+add_action( 'wp_ajax_nopriv_carto_metabox', 'dm_getCartoGeoJSON' );
 function dm_getCartoGeoJSON(){
     // $_GET['table'];
     // $_GET['lookup'];
