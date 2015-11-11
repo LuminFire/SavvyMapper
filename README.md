@@ -20,19 +20,11 @@ We can't use noConflict until Leaflet.markercluster [Issue #387](https://github.
 TODO
 ----
 
-### MVP
-
- * Documentation
- * Add [dm show="map" onarchive="hide"]
- * Add [dm show="map" viz=[list,of,viz,urls]]
- * Add [dm show="map" popup="false"]
- * Add [dm show="map" callback="function_name"]
-
-### Future Release
  * Consider a singleton instead of prefixed functions
  * Let users set basemaps
  * Un-blogged points
  * Carto submission form shortcode
+ * Triggers on map div for various events
 
 ### Descriptive
  * Needs to be good enough for users to get something done with just the plugin
@@ -59,6 +51,29 @@ Attributes printed with shortcodes will be wrapped with span with the class 'dap
 #### Displaying the current post's map
 
 [dm show="map"]
+
+The Map shortcode has the following optional attributes: 
+
+    * onarchive = (show|hide) 
+        * show -- Show this map on the archive page
+        * hide -- Hide this post's map when the current page is an archive page
+    * vizes = ('',false|'url,url,url') 
+        * Empty String ('') -- The default visualizations will be used
+        * A comma separated string of CartoDB .viz URLs  -- These will be appended to the default visualizations list and shown on the map 
+        * false -- Don't load the default visualizations on this map
+    * marker = (show|hide)
+        * show -- Show the default Leaflet.js marker (or line or polygon) for this post's associated feature
+        * hide -- Make the feature invisible. 
+    * popup = ('true'|'false')
+        * true -- Show the attributes popup when the feature is clicked
+        * false -- Don't show the attributes popup when the feature is clicked
+        * NOTE: If you include a CartoDB visualization which includes a popup, that popup will still work, regardless of this setting
+    * zoom = ('default'|1-19ish)
+        * default -- Fit the map bounds to the feature's bounding box
+        * 1-19ish -- Set map zoom level manually. Most slippy basemaps support levels 1-19, but some go to 21 or beyond.
+    * lat = ('default'|latitude), lng = ('default'|latitude)
+        * Set the centerpoint of the map
+
 
 
 ### The DM Object

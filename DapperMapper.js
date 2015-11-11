@@ -225,12 +225,28 @@ DapperMapper.prototype = {
     },
 
     _basicMapSetup: function(elem){
-        var lat = 0;
-        var lng = 0;
-        var zoom = 1;
-        var _this = this;
-
         elem = jQuery(elem);
+
+        // Fetch lat/lng/zoom
+        var lat = elem.data('lat') || 'default';
+        var lng = elem.data('lng') || 'default';
+        var zoom = elem.data('zoom') || 'default';
+        var fitBounds = true;
+
+        // then make sure they're sane
+        if(lat !== 'default' || lng !== 'default' || zoom !== 'default'){
+            fitBounds = false;
+        }
+        lat = (parseFloat(lat) == lat ? lat : 0);
+        lng = (parseFloat(lng) == lng ? lng : 0);
+        zoom = (parseFloat(zoom) == zoom ? zoom : 0);
+
+
+        var callback = elem.data('callback') || undefined;
+        var marker_type = elem.data('marker') || undefined;
+        var popup = elem.data('popup');
+        popup = (popup === false || popup == 'false' ? false : true);
+        var _this = this;
         
         // Set map id
         elem.data('mapId',this.id);
@@ -258,14 +274,22 @@ DapperMapper.prototype = {
             promise = promise.then(function(success){
                 _this.layers.thegeom = L.geoJson(success,{
                     onEachFeature: function (feature, layer) {
-                        layer.bindPopup(feature.popup_contents);
+                        if(popup){
+                            layer.bindPopup(feature.popup_contents);
+                        }
                     }
                 }).addTo(_this.map);
             });
 
-            promise = promise.then(function(){
-                _this.map.fitBounds(_this.layers.thegeom.getBounds());
-            });
+            if(fitBounds){
+                promise = promise.then(function(){
+                    _this.map.fitBounds(_this.layers.thegeom.getBounds());
+                });
+            }else{
+                promise = promise.then(function(){
+                    _this.map.setView(new L.LatLNg(lat,lng),zoom);
+                });
+            }
 
             return promise;
         }
