@@ -71,7 +71,7 @@ The Map shortcode has the following optional attributes:
     * zoom = (default|1-19ish)
         * default -- Fit the map bounds to the feature's bounding box
         * 1-19ish -- Set map zoom level manually. Most slippy basemaps support levels 1-19, but some go to 21 or beyond.
-    * lat = ('default'|latitude), lng = ('default'|latitude)
+    * lat = ('default'|latitude), lng = ('default'|longitude)
         * Set the centerpoint of the map
 
 
