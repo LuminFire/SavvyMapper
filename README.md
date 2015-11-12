@@ -54,25 +54,25 @@ Attributes printed with shortcodes will be wrapped with span with the class 'dap
 
 The Map shortcode has the following optional attributes: 
 
-    * onarchive = (show|hide) 
-        * show -- Show this map on the archive page
-        * hide -- Hide this post's map when the current page is an archive page
-    * vizes = ('',false|'url,url,url') 
-        * Empty String ('') -- The default visualizations will be used
-        * A comma separated string of CartoDB .viz URLs  -- These will be appended to the default visualizations list and shown on the map 
-        * false -- Don't load the default visualizations on this map
-    * marker = (true|false)
-        * true -- Show the default Leaflet.js marker (or line or polygon) for this post's associated feature
-        * false -- Make the feature invisible. 
-    * popup = (true|false)
-        * true -- Show the attributes popup when the feature is clicked
-        * false -- Don't show the attributes popup when the feature is clicked
-        * NOTE: If you include a CartoDB visualization which includes a popup, that popup will still work, regardless of this setting
-    * zoom = (default|1-19ish)
-        * default -- Fit the map bounds to the feature's bounding box
-        * 1-19ish -- Set map zoom level manually. Most slippy basemaps support levels 1-19, but some go to 21 or beyond.
-    * lat = ('default'|latitude), lng = ('default'|longitude)
-        * Set the centerpoint of the map
+* onarchive = (show|hide) 
+    * show -- Show this map on the archive page
+    * hide -- Hide this post's map when the current page is an archive page
+* vizes = ('',false|'url,url,url') 
+    * Empty String ('') -- The default visualizations will be used
+    * A comma separated string of CartoDB .viz URLs  -- These will be appended to the default visualizations list and shown on the map 
+    * false -- Don't load the default visualizations on this map
+* marker = (true|false)
+    * true -- Show the default Leaflet.js marker (or line or polygon) for this post's associated feature
+    * false -- Make the feature invisible. 
+* popup = (true|false)
+    * true -- Show the attributes popup when the feature is clicked
+    * false -- Don't show the attributes popup when the feature is clicked
+    * NOTE: If you include a CartoDB visualization which includes a popup, that popup will still work, regardless of this setting
+* zoom = (default|1-19ish)
+    * default -- Fit the map bounds to the feature's bounding box
+    * 1-19ish -- Set map zoom level manually. Most slippy basemaps support levels 1-19, but some go to 21 or beyond.
+* lat = ('default'|latitude), lng = ('default'|longitude)
+    * Set the centerpoint of the map
 
 
 
@@ -83,7 +83,7 @@ This plugin provides a DapperMapper javascript object and also creates a global 
 The DM object holds all the DapperMapper instances, as initialized by dm_init.js. When DapperMapper
 creates a map, it adds a data-mapId attribute with the DapperMapper instance ID to the map element. 
 
-So, DM.dmap0 corresponds to <div ... data-mapId="dmap0">. 
+So, DM.dmap0 corresponds to ```<div ... data-mapId="dmap0">```. 
 
 This allows multiple maps to appear on the same page.
 
