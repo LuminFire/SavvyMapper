@@ -39,7 +39,7 @@ function dm_settings_init(  ) {
                 });
 
                 // Make a newline delimited list of visualizations
-                $_POST['dm_cdb_visualizations'][$i] = implode("\n",trim(tmpv));
+                $_POST['dm_cdb_visualizations'][$i] = implode("\n",$tmpv);
             }
 
             foreach($_POST['dm_cdb_table'] as $i => $cdb_tablename){

@@ -61,14 +61,14 @@ The Map shortcode has the following optional attributes:
         * Empty String ('') -- The default visualizations will be used
         * A comma separated string of CartoDB .viz URLs  -- These will be appended to the default visualizations list and shown on the map 
         * false -- Don't load the default visualizations on this map
-    * marker = (show|hide)
-        * show -- Show the default Leaflet.js marker (or line or polygon) for this post's associated feature
-        * hide -- Make the feature invisible. 
-    * popup = ('true'|'false')
+    * marker = (true|false)
+        * true -- Show the default Leaflet.js marker (or line or polygon) for this post's associated feature
+        * false -- Make the feature invisible. 
+    * popup = (true|false)
         * true -- Show the attributes popup when the feature is clicked
         * false -- Don't show the attributes popup when the feature is clicked
         * NOTE: If you include a CartoDB visualization which includes a popup, that popup will still work, regardless of this setting
-    * zoom = ('default'|1-19ish)
+    * zoom = (default|1-19ish)
         * default -- Fit the map bounds to the feature's bounding box
         * 1-19ish -- Set map zoom level manually. Most slippy basemaps support levels 1-19, but some go to 21 or beyond.
     * lat = ('default'|latitude), lng = ('default'|latitude)

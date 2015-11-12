@@ -243,7 +243,9 @@ DapperMapper.prototype = {
 
 
         var callback = elem.data('callback') || undefined;
-        var marker_type = elem.data('marker') || undefined;
+        var show_marker = elem.data('marker');
+        show_marker = (show_marker === false ? false : true);
+
         var popup = elem.data('popup');
         popup = (popup === false || popup == 'false' ? false : true);
         var _this = this;
@@ -277,6 +279,19 @@ DapperMapper.prototype = {
                         if(popup){
                             layer.bindPopup(feature.popup_contents);
                         }
+                    },
+                    pointToLayer: function(feature, latlng){
+                        if(show_marker){
+                            return L.marker(latlng);
+                        }else{
+                            return L.circleMarker(latlng, {
+                                opacity: 0,
+                                fillOpacity: 0
+                            });
+                        }
+                    },
+                    style: function(feature){
+                        return {};
                     }
                 }).addTo(_this.map);
             });
