@@ -20,11 +20,27 @@ We can't use noConflict until Leaflet.markercluster [Issue #387](https://github.
 TODO
 ----
 
+### Pre-Release
+ * Set up sample site
+ * Sample maps
+    * From various GIS sectors
+        * http://www.esri.com/industries
+    * Usings points, lines and polygons
+    * With and without CartoDB viz layers
+    * Tying in with CartoDB Case Studies
+ * Wordpress page template with auto-posts by CartoDB attribute name
+    * Data driven pages based on CartoDB data!
+    * Will need a wide table for this to make it interesting
+ * Show map using other Leaflet plugin
+
+### Future enhancements
+ * Set map ID to post ID or archive name 
  * Consider a singleton instead of prefixed functions
- * Let users set basemaps
- * Un-blogged points
+ * Show list of un-blogged points
  * Carto submission form shortcode
  * Triggers on map div for various events
+    * Let users set basemaps
+    * Let users format features
 
 ### Descriptive
  * Needs to be good enough for users to get something done with just the plugin
