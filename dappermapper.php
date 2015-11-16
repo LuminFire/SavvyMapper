@@ -15,7 +15,6 @@ class DapperMapper {
     public static function getInstance(){
         if(is_null(self::$_instance)){
             self::$_instance = new self;
-            self::$_instance->setupActions(self::$_instance);
         }
 
         return self::$_instance;
@@ -23,27 +22,39 @@ class DapperMapper {
 
     private static $_instance = NULL;
 
-    protected function __construct(){}
+    var $mapping;
+    var $settings;
+
+    protected function __construct(){
+        $this->setupActions();
+        $this->mappings = get_option('dm_table_mapping');
+        $this->settings = get_option('dm_settings');
+        if(empty($this->settings)){
+            $this->settings = Array(
+                'dm_cartodb_api_key' => '',
+                'dm_cartodb_username' => ''
+            );
+        }
+    }
 
     /**
      * Set up all the hooks, filters and shortcodes.
      *
-     * @param $that An instance of DapperMapper
      */
-    private function setupActions($that){
-        add_action( 'wp_enqueue_scripts', Array($that,'dm_load_scripts'));
-        add_action( 'admin_enqueue_scripts', Array($that,'dm_load_scripts'));
-        add_filter( "plugin_action_links_dappermapper/dappermapper.php",Array($that,'dm_plugin_add_settings_link'));
-        add_action('wp_ajax_carto_query',Array($that,'dm_ajaxCartoQuery'));
-        add_action('wp_ajax_nopriv_carto_query',Array($that,'dm_ajaxCartoQuery'));
-        add_action( 'wp_ajax_carto_metabox', Array($that,'dm_getCartoGeoJSON'));
-        add_action( 'wp_ajax_nopriv_carto_metabox', Array($that,'dm_getCartoGeoJSON'));
-        add_action('loop_start',Array($that,'dm_make_archive_map_maybe'));
-        add_action( 'save_post', Array($that,'dm_save_meta'));
-        add_action( 'add_meta_boxes', Array($that,'dm_add_meta_box'));
-        add_action( 'admin_menu', Array($that,'dm_add_admin_menu'));
-        add_action( 'admin_init', Array($that,'dm_settings_init'));
-        add_shortcode('dm',Array($that,'dm_shortcodes'));
+    private function setupActions(){
+        add_action( 'wp_enqueue_scripts', Array($this,'load_scripts'));
+        add_action( 'admin_enqueue_scripts', Array($this,'load_scripts'));
+        add_filter( "plugin_action_links_dappermapper/dappermapper.php",Array($this,'plugin_add_settings_link'));
+        add_action('wp_ajax_carto_query',Array($this,'ajaxCartoQuery'));
+        add_action('wp_ajax_nopriv_carto_query',Array($this,'ajaxCartoQuery'));
+        add_action( 'wp_ajax_carto_metabox', Array($this,'getCartoGeoJSON'));
+        add_action( 'wp_ajax_nopriv_carto_metabox', Array($this,'getCartoGeoJSON'));
+        add_action('loop_start',Array($this,'make_archive_map_maybe'));
+        add_action( 'save_post', Array($this,'save_meta'));
+        add_action( 'add_meta_boxes', Array($this,'add_meta_box'));
+        add_action( 'admin_menu', Array($this,'add_admin_menu'));
+        add_action( 'admin_init', Array($this,'settings_init'));
+        add_shortcode('dm',Array($this,'shortcodes'));
     }
 
     /**
@@ -51,7 +62,7 @@ class DapperMapper {
      *
      * We're probably over-loading stuff here. We could probably only load some stuff on specific pages
      */
-    function dm_load_scripts() {
+    function load_scripts() {
         $plugin_dir_url = plugin_dir_url(__FILE__);
 
         wp_enqueue_style('cartodbcss','http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css');
@@ -63,17 +74,17 @@ class DapperMapper {
 
         wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
         wp_enqueue_script('markercluster-js',$plugin_dir_url . 'leaflet/leaflet.markercluster.js',Array('cartodbjs'));
-        wp_enqueue_script('dmjs',$plugin_dir_url . 'DapperMapper.js',Array('jquery'),Array('cartodbjs','markercluster-js')); 
+        wp_enqueue_script('dmjs',$plugin_dir_url . 'DapperMapper.js',Array('jquery','cartodbjs','markercluster-js')); 
         wp_localize_script( 'dmjs', 'ajaxurl', admin_url( 'admin-ajax.php' ));
 
-        wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs'),Array('dmjs')); 
+        wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs')); 
         wp_enqueue_script('jquery-ui-js',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
     }
 
     /**
      * Add a link to the settings page
      */
-    function dm_plugin_add_settings_link( $links ) {
+    function plugin_add_settings_link( $links ) {
         $settings_link = '<a href="options-general.php?page=dappermapper">' . __( 'Settings' ) . '</a>';
         array_unshift( $links, $settings_link );
         return $links;
@@ -82,23 +93,23 @@ class DapperMapper {
     /**
      * Ajax handler for running CartoDB queries
      */
-    function dm_ajaxCartoQuery(){
+    function ajaxCartoQuery(){
         if(isset($_GET['archive_type'])){
             $post_type = $_GET['archive_type'];
-            $sql = $this->dm_get_sql_for_archive_post($post_type);
+            $sql = $this->get_sql_for_archive_post($post_type);
         }else if(isset($_GET['post_id'])){
             $post_id = $_GET['post_id'];
-            $sql = $this->dm_get_sql_for_single_post($post_id);
+            $sql = $this->get_sql_for_single_post($post_id);
         }
 
-        $this->dm_fetch_and_format_features($sql);
+        $this->fetch_and_format_features($sql);
     }
 
 
     /**
      * Get GeoJSON from CartoDB
      */
-    function dm_getCartoGeoJSON(){
+    function getCartoGeoJSON(){
         // $_GET['table'];
         // $_GET['lookup'];
 
@@ -119,7 +130,7 @@ class DapperMapper {
         // no limits. We've got clustering
         // $sql .= " LIMIT 500";
 
-        $json = $this->dm_cartoSQL($sql);
+        $json = $this->cartoSQL($sql);
 
         if(is_null($json)){
             http_response_code(500);
@@ -135,23 +146,21 @@ class DapperMapper {
      * Make the archive map, unless we're not an archive
      * @param $query -- Passed by WP
      */
-    function dm_make_archive_map_maybe($query){
+    function make_archive_map_maybe($query){
         if(!is_archive()){
             return;
         }
         if( $query->is_main_query() ){
 
-            $mappings = get_option('dm_table_mapping');
             $post_type = get_post_type();
 
-            if(isset($mappings[$post_type])){
-                $mappings = get_option('dm_table_mapping');
+            if(isset($this->mappings[$post_type])){
 
-                $vizes = explode("\n",$mappings[$post_type]['visualizations']);
+                $vizes = explode("\n",$this->mappings[$post_type]['visualizations']);
                 $vizes = array_filter($vizes);
                 $visualizations = implode(',',$vizes);
 
-                $show_markers = ($mappings[$post_type]['show_markers'] === 'checked' ? 'true' : 'false');
+                $show_markers = ($this->mappings[$post_type]['show_markers'] === 'checked' ? 'true' : 'false');
 
                 $html = '<article class="hentry archivemapwrap">';
                 $html .= '<div class="dm_map_div dm_archive_map" ';
@@ -169,17 +178,14 @@ class DapperMapper {
     /**
      * Add the metabox to the options page
      */
-    function dm_add_meta_box(){
+    function add_meta_box(){
         global $post;
 
-        $mappings = get_option('dm_table_mapping');
-        $options = get_option('dm_settings');
-
-        if(isset($mappings[$post->post_type])){
+        if(isset($this->mappings[$post->post_type])){
             add_meta_box(
                 'dm_meta_box',
                 'CartoDB Connection',
-                Array($this,'dm_make_meta_box')
+                Array($this,'make_meta_box')
             );
         }
     }
@@ -187,14 +193,13 @@ class DapperMapper {
     /**
      * Make the actual metabox contents
      */
-    function dm_make_meta_box($post,$metabox){
-        $mappings = get_option('dm_table_mapping');
-        $target_table = $mappings[$post->post_type]['table'];
-        $lookup_field = $mappings[$post->post_type]['lookup'];
+    function make_meta_box($post,$metabox){
+        $target_table = $this->mappings[$post->post_type]['table'];
+        $lookup_field = $this->mappings[$post->post_type]['lookup'];
 
         $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
         $cartodb_label = get_post_meta($post->ID,'cartodb_lookup_label',TRUE);
-        $visualizations = implode(',',explode("\n",$mappings[$post->post_type]['visualizations']));
+        $visualizations = implode(',',explode("\n",$this->mappings[$post->post_type]['visualizations']));
 
         print '<div class="db_lookupbox" data-table="'. $target_table .'" data-lookup="'. $lookup_field .'">';
         print '<label>Look up ' . $lookup_field . ': </label><input class="db_lookup_ac" name="cartodb_lookup_label" value="' . $cartodb_label . '">';
@@ -212,14 +217,14 @@ class DapperMapper {
     /**
      * Save our custom metabox contents
      */
-    function dm_save_meta($post_id){
+    function save_meta($post_id){
         // Check if our nonce is set.
         if(!isset($_POST['dm_meta_box_nonce'])){
             return;
         }
 
         // Verify that the nonce is valid.
-        if(!wp_verify_nonce($_POST['dm_meta_box_nonce'],'dm_meta_box')){
+        if(!wp_verify_nonce($_POST['dm_meta_box_nonce'],'meta_box')){
             return;
         }
 
@@ -249,20 +254,20 @@ class DapperMapper {
     /**
      * Add the admin menu entry
      */
-    function dm_add_admin_menu(  ) { 
-        add_menu_page( 'DapperMapper', 'DapperMapper', 'manage_options', 'dappermapper', 'dm_options_page' );
+    function add_admin_menu(  ) { 
+        add_menu_page( 'DapperMapper', 'DapperMapper', 'manage_options', 'dappermapper', Array($this,'options_page'));
     }
 
 
     /*
      * Build the settings page
      */
-    function dm_settings_init(  ) {
-        $settings = get_option( 'dm_settings' );
+    function settings_init(  ) {
+        register_setting( 'dm_pluginPage', 'dm_settings' );
 
         if(isset($_POST)){
             if(isset($_POST['dm_cdb_table'])){
-                $mappings = Array();
+                $newMappings = Array();
                 // Clean up visualizations
                 foreach($_POST['dm_cdb_visualizations'] as $i => $vis){
                     // Split on newlines and commas. They're supposed to use newlines, but people are going to not listen
@@ -290,7 +295,7 @@ class DapperMapper {
 
                 foreach($_POST['dm_cdb_table'] as $i => $cdb_tablename){
                     if($cdb_tablename){
-                        $mappings[$_POST['dm_post_type'][$i]] = Array(
+                        $newMappings[$_POST['dm_post_type'][$i]] = Array(
                             'table' => $_POST['dm_cdb_table'][$i], 
                             'lookup' => $_POST['dm_lookup_field'][$i],
                             'visualizations' => $_POST['dm_cdb_visualizations'][$i],
@@ -298,51 +303,49 @@ class DapperMapper {
                         );
                     }
                 }
-                update_option('dm_table_mapping',$mappings);
+                update_option('dm_table_mapping',$newMappings);
             }
         }
 
-        register_setting( 'pluginPage', 'dm_settings' );
-
-        if(empty($settings['dm_cartodb_api_key'])){
+        if(empty($this->settings['dm_cartodb_api_key'])){
             add_settings_section(
                 'dm_pluginPage_section', 
                 __( 'Getting Started', 'wordpress' ), 
-                Array($this,'dm_getting_started_callback'), 
-                'pluginPage'
+                Array($this,'getting_started_callback'), 
+                'dm_pluginPage'
             );
         }
 
         add_settings_field( 
             'dm_cartodb_username', 
             __( 'Your CartoDB Username', 'wordpress' ), 
-            Array($this,'dm_cartodb_username'), 
-            'pluginPage', 
+            Array($this,'cartodb_username'), 
+            'dm_pluginPage', 
             'dm_pluginPage_section' 
         );
 
         add_settings_field( 
             'dm_cartodb_api_key', 
             __( 'Your CartoDB API Key', 'wordpress' ), 
-            Array($this,'dm_cartodb_api_key'), 
-            'pluginPage', 
+            Array($this,'cartodb_api_key'), 
+            'dm_pluginPage', 
             'dm_pluginPage_section' 
         );
 
-        if(!empty($settings['dm_cartodb_api_key'])){
+        if(!empty($this->settings['dm_cartodb_api_key'])){
 
             add_settings_section(
                 'dm_pluginPage_section', 
                 __( 'Instructions', 'wordpress' ), 
-                Array($this,'dm_instructions_callback'), 
-                'pluginPage'
+                Array($this,'instructions_callback'), 
+                'dm_pluginPage'
             );
 
             add_settings_section(
                 'dm_pluginPage_mapping_table', 
                 __( 'Post Type to CartoDB Map', 'wordpress' ), 
-                Array($this,'dm_pluginPage_mapping_table'), 
-                'pluginPage'
+                Array($this,'pluginPage_mapping_table'), 
+                'dm_pluginPage'
             );
         }
     }
@@ -351,24 +354,24 @@ class DapperMapper {
     /**
      * Settings input for cartodb_api_key
      */
-    function dm_cartodb_api_key(  ) { 
-        $settings = get_option( 'dm_settings' );
-        print "<input type='text' name='dm_settings[dm_cartodb_api_key]' value='" . $settings['dm_cartodb_api_key'] . "'>";
+    function cartodb_api_key(  ) { 
+        $a = 1 + 1;
+        print "<input type='text' name='dm_settings[dm_cartodb_api_key]' value='" . $this->settings['dm_cartodb_api_key'] . "'>";
     }
 
 
     /**
      * Settings input for cartodb username
      */
-    function dm_cartodb_username(  ) { 
-        $settings = get_option( 'dm_settings' );
-        print "<input type='text' name='dm_settings[dm_cartodb_username]' value='" . $settings['dm_cartodb_username'] . "'>";
+    function cartodb_username(  ) { 
+        $a = 1 + 1;
+        print "<input type='text' name='dm_settings[dm_cartodb_username]' value='" . $this->settings['dm_cartodb_username'] . "'>";
     }
 
     /**
      * Instructions for users who are just starting
      */
-    function dm_getting_started_callback() { 
+    function getting_started_callback() { 
         echo "<p>";
         echo "Enter your CartoDB Username and API key below and click &ldquo;" . __('Save Changes','wordpress') . "&rdquo; to get started.";
         echo "</p>";
@@ -378,7 +381,7 @@ class DapperMapper {
     /**
      * Instructions for users who are just starting
      */
-    function dm_instructions_callback(){
+    function instructions_callback(){
         echo "<p>For any post type you would like to associate with a CartoDB table, select the CartoDB table name from the dropdown,</p>";
         echo "<p>blah blah blah</p>";
     }
@@ -386,11 +389,8 @@ class DapperMapper {
     /**
      * Get list of user tables and print out a form to let users set mapping between post types and CDB tables
      */
-    function dm_pluginPage_mapping_table(){
-        $settings = get_option('dm_settings');
-        $mappings = get_option('dm_table_mapping');
-
-        $tables_raw = $this->dm_cartoSQL("SELECT * FROM CDB_UserTables()",FALSE);
+    function pluginPage_mapping_table(){
+        $tables_raw = $this->cartoSQL("SELECT * FROM CDB_UserTables()",FALSE);
         $tables_raw = json_decode($tables_raw);
 
         $tables = Array();
@@ -398,7 +398,7 @@ class DapperMapper {
             $tables[$table->cdb_usertables] = Array();
         }
 
-        $columns = $this->dm_cartoSQL("select table_name,column_name from information_schema.columns where table_name IN ('" . implode("','",array_keys($tables)) . "')",FALSE);
+        $columns = $this->cartoSQL("select table_name,column_name from information_schema.columns where table_name IN ('" . implode("','",array_keys($tables)) . "')",FALSE);
         $columns = json_decode($columns);
         foreach($columns->rows as $column){
             $tables[$column->table_name][] = $column->column_name;
@@ -406,9 +406,9 @@ class DapperMapper {
 
         $cdb_tables_and_columns = Array();
         foreach($tables as $table => $fields){
-            $cdb_tables_and_columns[$table] = makeCDBFieldSelect($tables,$table);
+            $cdb_tables_and_columns[$table] = $this->makeCDBFieldSelect($tables,$table);
         }
-        $cdb_tables_and_columns['dm_empty_select_list'] = makeCDBFieldSelect($tables);
+        $cdb_tables_and_columns['dm_empty_select_list'] = $this->makeCDBFieldSelect($tables);
         print '<script type="text/javascript">var cdb_tables_and_columns = ' . json_encode($cdb_tables_and_columns) . ';</script>';
 
         $post_types = get_post_types(Array('public' => true,));
@@ -425,20 +425,20 @@ class DapperMapper {
             $visualizations = '';
             $show_markers = 'checked';
 
-            if(isset($mappings[$post_type])){
-                $selected = $mappings[$post_type]['table'];
-                $lookup_field = $mappings[$post_type]['lookup'];
-                $visualizations = $mappings[$post_type]['visualizations'];
-                $show_markers = ($mappings[$post_type]['show_markers'] === 0 ? '' : 'checked');
+            if(isset($this->mappings[$post_type])){
+                $selected = $this->mappings[$post_type]['table'];
+                $lookup_field = $this->mappings[$post_type]['lookup'];
+                $visualizations = $this->mappings[$post_type]['visualizations'];
+                $show_markers = ($this->mappings[$post_type]['show_markers'] === 0 ? '' : 'checked');
             }
 
             // The CDB association row
             print '<tr><td><input type="hidden" name="dm_post_type[]" value="' . $post_type . '">'. $post_type_object->labels->singular_name .'</td>';
 
-            $cdb_select = $this->dm_makeCDBTableSelect($tables,$selected);
+            $cdb_select = $this->makeCDBTableSelect($tables,$selected);
             print '<td>' . $cdb_select . '</td>';
 
-            $cdb_field_select = makeCDBFieldSelect($tables,$selected,$lookup_field);
+            $cdb_field_select = $this->makeCDBFieldSelect($tables,$selected,$lookup_field);
             print '<td class="dm_cdb_field_select_td">'.$cdb_field_select.'</td></tr>';
 
 
@@ -459,10 +459,10 @@ class DapperMapper {
     /**
      * Print the options form
      */
-    function dm_options_page(  ) {
+    function options_page(  ) {
         print "<form action='options.php' method='post'><h2>DapperMapper</h2>";
-        settings_fields( 'pluginPage' );
-        do_settings_sections( 'pluginPage' );
+        settings_fields( 'dm_pluginPage' );
+        do_settings_sections( 'dm_pluginPage' );
         submit_button();
         print "</form>";
     }
@@ -470,7 +470,7 @@ class DapperMapper {
     /**
      * Make the table select dropdown
      */
-    function dm_makeCDBTableSelect($opts,$selected = NULL){
+    function makeCDBTableSelect($opts,$selected = NULL){
         $cdb_select = '<select name="dm_cdb_table[]" class="dm_cdb_table_select">';
         $cdb_select .= '<option value="">--</option>';
         foreach($opts as $table => $fields){
@@ -500,7 +500,7 @@ class DapperMapper {
     /**
      * Handle all dm shortcodes
      */
-    function dm_shortcodes($scatts){
+    function shortcodes($scatts){
         global $post;
 
         extract(shortcode_atts(Array(
@@ -522,7 +522,7 @@ class DapperMapper {
             }
         }
 
-        $cartoObj = $this->dm_makePostCDBOjb();
+        $cartoObj = $this->makePostCDBOjb();
 
         if(!empty($attr)){
             $props = $cartoObj->features[0]->properties;
@@ -530,14 +530,12 @@ class DapperMapper {
                 return '<span class="dapper-attr">' . $props->{$attr} . '</span>';
             }
         }else if(!empty($show) && $show == 'map'){
-            $mappings = get_option('dm_table_mapping');
-
             // merge vizes
             if(strtolower($vizes) === 'false'){
                 $visualizations = '';
             } else {
                 $vizes = explode(',',$vizes);
-                $vizes = array_merge(explode("\n",$mappings[$post->post_type]['visualizations']),$vizes);
+                $vizes = array_merge(explode("\n",$this->mappings[$post->post_type]['visualizations']),$vizes);
                 $vizes = array_filter($vizes);
                 $visualizations = implode(',',$vizes);
             }
@@ -582,7 +580,7 @@ class DapperMapper {
      *
      * @return A dict with all the requst info, if debug is TRUE. Otherwise just returns the response body
      */
-    function dm_curl_request( $url, $data = Array(), $debug = FALSE){
+    function curl_request( $url, $data = Array(), $debug = FALSE){
 
         $post = curl_init();
         curl_setopt($post, CURLOPT_URL, $url);
@@ -621,6 +619,8 @@ class DapperMapper {
 
         if($debug){
             return $response;
+        }else{
+            $this->last_curl = $response;
         }
 
         return $response['body'];
@@ -629,11 +629,10 @@ class DapperMapper {
     /**
      * Given a query make a CartoDB API request
      */
-    function dm_cartoSQL($sql,$json = TRUE){
+    function cartoSQL($sql,$json = TRUE){
 
-        $options = get_option( 'dm_settings' );
-        $un = $options['dm_cartodb_username'];
-        $key = $options['dm_cartodb_api_key'];
+        $un = $this->settings['dm_cartodb_username'];
+        $key = $this->settings['dm_cartodb_api_key'];
 
         $querystring = Array(
             'q' => $sql,
@@ -646,7 +645,7 @@ class DapperMapper {
 
         $url = 'https://' . $un . '.cartodb.com/api/v2/sql?' . http_build_query($querystring);
 
-        $ret = $this->dm_curl_request($url);
+        $ret = $this->curl_request($url);
 
         if($json){
             return json_decode($ret);
@@ -658,7 +657,7 @@ class DapperMapper {
     /**
      * Get all CDB IDs for a given post type
      */
-    function dm_get_cdbids_for_post_type($post_type){
+    function get_cdbids_for_post_type($post_type){
         global $wpdb;
         $res = $wpdb->get_results( "SELECT 
             p.ID,
@@ -684,15 +683,14 @@ class DapperMapper {
     /**
      * Generate SQL to fetch all CDB objects which have posts
      */
-    function dm_get_sql_for_archive_post($post_type){
-        $mappings = get_option('dm_table_mapping');
-        if(!isset($mappings[$post_type])){
+    function get_sql_for_archive_post($post_type){
+        if(!isset($this->mappings[$post_type])){
             http_response_code(404);
             exit();
         }
 
-        $ids = $this->dm_get_cdbids_for_post_type($post_type);
-        $target_table = $mappings[$post_type]['table'];
+        $ids = $this->get_cdbids_for_post_type($post_type);
+        $target_table = $this->mappings[$post_type]['table'];
 
         if(!empty($target_table)){
             $sql = 'SELECT * FROM "' . $target_table . '" WHERE "cartodb_id" IN (' . implode(',',array_keys($ids)) . ')';
@@ -704,11 +702,10 @@ class DapperMapper {
     /**
      * Generate the SQL to fetch a single post
      */
-    function dm_get_sql_for_single_post($postid){
+    function get_sql_for_single_post($postid){
         $post = get_post($postid);
-        $mappings = get_option('dm_table_mapping');
-        $target_table = $mappings[$post->post_type]['table'];
-        $lookup_field = $mappings[$post->post_type]['lookup'];
+        $target_table = $this->mappings[$post->post_type]['table'];
+        $lookup_field = $this->mappings[$post->post_type]['lookup'];
         $cartodb_id = get_post_meta($post->ID,'cartodb_lookup_value',TRUE);
 
         if(!empty($target_table) && !empty($lookup_field) && !empty($cartodb_id)){
@@ -720,13 +717,13 @@ class DapperMapper {
     /**
      * Given SQL, fetch the features, set their popup contents and print the GeoJSON
      */
-    function dm_fetch_and_format_features($sql){
+    function fetch_and_format_features($sql){
         if(empty($sql)){
             http_response_code(500);
             exit();
         }
 
-        $json = $this->dm_cartoSQL($sql);
+        $json = $this->cartoSQL($sql);
 
         if(is_null($json)){
             http_response_code(500);
@@ -758,7 +755,7 @@ class DapperMapper {
      *
      * @param $the_post Which post to use. defaults to $post
      */
-    function dm_makePostCDBOjb($the_post = NULL){
+    function makePostCDBOjb($the_post = NULL){
         global $post;
         global $cartoObj;
 
@@ -767,16 +764,19 @@ class DapperMapper {
         }
 
         $the_post = (is_null($the_post) ? $post : $the_post);
-        $mappings = get_option('dm_table_mapping');
-        $target_table = $mappings[$the_post->post_type]['table'];
-        $lookup_field = $mappings[$the_post->post_type]['lookup'];
+        $target_table = $this->mappings[$the_post->post_type]['table'];
+        $lookup_field = $this->mappings[$the_post->post_type]['lookup'];
 
         $cartodb_id = get_post_meta($the_post->ID,'cartodb_lookup_value',TRUE);
         $cartodb_label = get_post_meta($the_post->ID,'cartodb_lookup_label',TRUE);
-        $cartoObj = $this->dm_cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
+        $cartoObj = $this->cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
 
         return $cartoObj;
     }
 }
 
 DapperMapper::getInstance();
+
+function test_test_test(){
+    print "TEST TEST TEST<br>\n";
+}
