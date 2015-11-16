@@ -774,9 +774,4 @@ class DapperMapper {
         return $cartoObj;
     }
 }
-
 DapperMapper::getInstance();
-
-function test_test_test(){
-    print "TEST TEST TEST<br>\n";
-}
