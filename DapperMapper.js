@@ -68,22 +68,12 @@ DapperMapper.prototype = {
         });
         this.layers.cluster = L.markerClusterGroup().addTo(this.map);
 
-
-        // Fetch all the geoms from carto and show them on the map, possibly clustered
-        jQuery.getJSON(ajaxurl,{
-            'action' : 'carto_metabox',
-            'table' : _this._meta.table, 
-            'lookup' : _this._meta.lookup,
-            'cartodb_id' : jQuery('input[name=cartodb_lookup_value]').val()
-        }).then(function(success){
-            _this.data.origgeoms = success;
-            _this._setMetaboxLayerVisibility(_this.data.origgeoms);
-        });
+		this._setMapToNewFilterValue();
 
         // On the metabox page set a listener on the lookup input field for when we have <2 chars
-        jQuery('.db_lookup_ac').on('keyup blur',function(e){
-            if(jQuery('.db_lookup_ac').val().length < 2){
-                if(_this.data.origgeoms.features.length <= 1){
+        jQuery('input[name=cartodb_lookup_value]').on('keyup blur',function(e){
+            if(jQuery('input[name=cartodb_lookup_value]').val().length < 2){
+                if(_this.data.origgeoms === undefined || _this.data.origgeoms.features.length <= 1){
                     // Fetch all the geoms from carto and show them on the map, possibly clustered
                     jQuery.getJSON(ajaxurl,{
                         'action' : 'carto_metabox',
@@ -99,29 +89,31 @@ DapperMapper.prototype = {
             }
         });
 
-        // If we have 2+ chars then we fire off autocomplete
-        jQuery('.db_lookup_ac').autocomplete({
-            source: function(request, response){
+		// jQuery('input[name=cartodb_lookup_value]').on('change',function(e){
+		// 	e.preventDefault();
+		// 	e.stopPropagation();
+		// 	_this._setMapToNewFilterValue();
+		// 	return false;
+		// });
 
+        // If we have 2+ chars then we fire off autocomplete
+        jQuery('input[name=cartodb_lookup_value]').autocomplete({
+            source: function(request, response){
                 request = jQuery.extend(request,{
-                    'action' : 'carto_metabox',
+                    'action' : 'carto_autocomplete',
                     'table' : _this._meta.table, 
                     'lookup' : _this._meta.lookup
                 });
 
                 var localresponse = response;
 
-                jQuery.getJSON(ajaxurl,request).then(function(success){
-                    _this._setMetaboxLayerVisibility(success);
+				if(_this._lastAutocomplete !== undefined){
+					_this._lastAutocomplete.abort();
+				}
 
-                    var suggestions = success.features;
-
-                    for(var i = 0;i<suggestions.length;i++){
-                        suggestions[i]['label'] = suggestions[i].properties[_this._meta.lookup];
-                        suggestions[i]['value'] = suggestions[i].properties[_this._meta.lookup];
-                    }
-
-                    localresponse(suggestions);
+                _this._lastAutocomplete = jQuery.get(ajaxurl,request);
+				_this._lastAutocomplete.then(function(success){
+                    localresponse(success);
                 },function(failure){
                     localresponse();
                 });
@@ -129,7 +121,7 @@ DapperMapper.prototype = {
             },
             minLength: 2,
             select: function( event, ui ) {
-                _this._setMetaboxLayerVisibility(ui.item);
+                _this._setMapToNewFilterValue();
             }
         });
     },
@@ -138,15 +130,40 @@ DapperMapper.prototype = {
     * Use the properties from a feature and display them for the user
     */
     _setLookupMeta: function(feature){
+		skipval = jQuery('input[name=cartodb_lookup_value]').val() === '';
         var html = '<ul>';
         var props = feature.properties;
         for(var k in props){
-            html += '<li><strong>' + k + '</strong> - ' + props[k] + '</li>';
+            html += '<li><strong>' + k + '</strong>' + (skipval ? '' : ' - ' + props[k]) + '</li>';
         }
         html += '</ul>';
 
         jQuery('.dm_lookup_meta').html(html);
     },
+
+
+	/*
+	 * Load all features for the current lookup value
+	 */
+
+	_setMapToNewFilterValue: function(altval){
+        // Fetch all the geoms from carto and show them on the map, possibly clustered
+		var _this = this;
+        jQuery.getJSON(ajaxurl,{
+            'action' : 'carto_metabox',
+            'table' : _this._meta.table, 
+            'lookup' : _this._meta.lookup,
+            'val' : altval || jQuery('input[name=cartodb_lookup_value]').val()
+        }).then(function(success){
+            _this.data.origgeoms = success;
+            _this._setMetaboxLayerVisibility(_this.data.origgeoms);
+
+			if(_this.layers.allgeoms.getLayers().length > 1){
+				var feature = _this.layers.allgeoms.getLayers()[0].feature;
+				_this._setLookupMeta(feature);
+			}
+        });
+	},
 
     /*
     * Set up the basemap layer. Right now we're just using mapquest, but
