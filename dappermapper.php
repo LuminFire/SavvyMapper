@@ -22,7 +22,7 @@ class DapperMapper {
 
     private static $_instance = NULL;
 
-    var $mapping;
+    var $mappings;
     var $settings;
 
     protected function __construct(){
@@ -198,7 +198,7 @@ class DapperMapper {
                 $vizes = array_filter($vizes);
                 $visualizations = implode(',',$vizes);
 
-                $show_markers = ($this->mappings[$post_type]['show_markers'] === 'checked' ? 'true' : 'false');
+                $show_markers = ($this->mappings[$post_type]['show_markers'] === '1' ? 'true' : 'false');
 
                 $html = '<article class="hentry archivemapwrap">';
                 $html .= '<div class="dm_map_div dm_archive_map" ';
@@ -248,7 +248,7 @@ class DapperMapper {
         $html .= '<div class="shortcodehints"><h3>Available Shortcodes</h3><ul><li><strong>[dm attr="<i>attribute name</i>"]</strong> -- Show the value of the specified attribute</li>';
         $html .= '<li><strong>[dm show="map"]</strong> -- Show the feature on the map</li></ul></div>';
 		$html .= '<h3>Available Attributes</h3>';
-		$html .= '<p>Attribute values from the first feature found will be used. If your lookup field is not unique the attribute values displayed on the site may not match what you see below, or may change depending on what the database returns.</p>';
+		$html .= '<p>Attribute values from the first feature found will be used unless you specify what do do in case of multiple (eg. multiple="all").</p>';
         $html .= '<div class="dm_lookup_meta">';
         $html .= '</div>';
         $html .= '</div>';
@@ -463,7 +463,7 @@ class DapperMapper {
             $selected = FALSE;
             $lookup_field = '';
             $visualizations = '';
-            $show_markers = 'checked';
+            $show_markers = '1';
 
             if(isset($this->mappings[$post_type])){
                 $selected = $this->mappings[$post_type]['table'];
@@ -545,8 +545,9 @@ class DapperMapper {
     function shortcodes($scatts){
         global $post;
 
-        extract(shortcode_atts(Array(
+		$attrs = shortcode_atts(Array(
             'attr' => NULL,
+			'multiple' => NULL,
             'show' => NULL,
             'onarchive' => 'show',
             'vizes' => NULL,
@@ -555,7 +556,9 @@ class DapperMapper {
             'zoom' => 'default',
             'lat' => 'default',
             'lng' => 'default',
-        ),$scatts));
+        ),$scatts);
+
+        extract($attrs);
 
         // If we're supposed to hide the map on archive pages, bail early.
         if(strtolower($onarchive) == 'hide'){
@@ -567,10 +570,23 @@ class DapperMapper {
         $cartoObj = $this->makePostCDBOjb();
 
         if(!empty($attr)){
-            $props = $cartoObj->features[0]->properties;
-            if(isset($props->{$attr})){
-                return '<span class="dapper-attr">' . $props->{$attr} . '</span>';
-            }
+			switch($multiple){
+			case 'unique':
+				$allProp = Array();
+				foreach($cartoObj->features as $feature){
+					if(!empty($feature->properties->{$attr})){
+						$allProp[] = $feature->properties->{$attr};
+					}
+				}
+				$allProp = array_unique($allProp);
+				$propHtml = implode(', ',$allProp);
+				break;
+			default:
+				$props = $cartoObj->features[0]->properties;
+				$propHtml = $props->{$attr};
+			}
+
+			return '<span class="dapper-attr">' . $propHtml . '</span>';
         }else if(!empty($show) && $show == 'map'){
             // merge vizes
             if(strtolower($vizes) === 'false'){
@@ -583,8 +599,8 @@ class DapperMapper {
             }
 
             // show markers or not?
-            if(is_null($maker)){
-                $show_markers = ($mapping[$post->post_type]['show_markers'] === 'checked' ? 'true' : 'false');
+            if(is_null($marker)){
+                $show_markers = ($this->mappings[$post->post_type]['show_markers'] === 1 ? 'true' : 'false');
             }else{
                 $show_markers = (strtolower($marker) == 'true');
             }
@@ -809,8 +825,8 @@ class DapperMapper {
         $target_table = $this->mappings[$the_post->post_type]['table'];
         $lookup_field = $this->mappings[$the_post->post_type]['lookup'];
 
-        $cartodb_id = get_post_meta($the_post->ID,'cartodb_lookup_value',TRUE);
-        $cartoObj = $this->cartoSQL("SELECT * FROM " . $target_table . " WHERE cartodb_id='" . $cartodb_id . "'"); 
+        $cartodb_value = get_post_meta($the_post->ID,'cartodb_lookup_value',TRUE);
+        $cartoObj = $this->cartoSQL("SELECT * FROM " . $target_table . " WHERE \"$lookup_field\"='" . $cartodb_value . "'"); 
 
         return $cartoObj;
     }
