@@ -274,20 +274,26 @@ class SavvyMapper {
      * Print the options form
      */
     function options_page() {
-		$html = "";
+		$html = '<div class="wrap">';
 		$html .= '<h2>SavvyMapper</h2>';
 		$html .= '<p>Welcome to SavvyMapper. Add connections to services below.</p>';
 		foreach( $this->interface_classes as $interface ) {
 			$html .= '<input type="button" onclick="savvy.add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
 		}
 		$html .= '<hr>';
-        $html .= '<form action="options.php" method="post" id="savvyoptions">';
+
+		$html .= '<div id="savvyoptions"></div>';
+
+        $html .= '<form method="post" action="options.php">';
+
 		ob_start();
-		settings_field('savvymapper_pluginPage');
-		do_settings_section('savvymapper_pluginPage');
+		settings_fields('savvymapper_plugin_page');
+		do_settings_sections('savvymapper_plugin_page');
 		submit_button();
-		$html .= ob_end_clean();
+		$html .= ob_get_clean();
+
         $html .= '</form>';
+		$html .= '</div>';
 
 		print $html;
     }
@@ -296,6 +302,27 @@ class SavvyMapper {
 	 *
 	 */
     function settings_init() {
+		register_setting( 
+			'savvymapper_plugin_page',						// option group
+			'savvymapper_settings'							// option name
+		);													// sanitize_callback
+
+		add_settings_section(
+			'savvymapper_plugin_page_section',				// id
+			__( 'SavvyMapper Settings Page', 'wordpress' ), // title
+			Array($this,'getting_started_callback'),		// callback
+			'savvymapper_plugin_page'						// page
+		);
+
+        add_settings_field( 
+            'savvymapper_settings',							// id
+            __( 'SavvyMapper Setting', 'wordpress' ),		// title  
+            Array($this,'savvymapper_settings_callback'),	// callback
+            'savvymapper_plugin_page',						// page
+			'savvymapper_plugin_page_section',				// section
+			array()											// args
+        );
+
 		$options = Array();
 		foreach( $this->interfaces as $interface ) {
 			$options[$this->get_name] = $interface->settings_init();
@@ -313,6 +340,15 @@ class SavvyMapper {
 		$interface = $_GET['interface'];
 		print $this->interface_classes[$interface]->options_div();
 		exit();
+	}
+
+	function getting_started_callback(){
+		return 'getting started callback';
+	}
+
+	function savvymapper_settings_callback(){
+		$settings = get_option( 'savvymapper_settings', '{}' );
+        print '<textarea name="savvymapper_settings">' . $settings . '</textarea>';
 	}
 
 }

@@ -284,7 +284,6 @@ class DapperMapper {
         add_menu_page( 'DapperMapper', 'DapperMapper', 'manage_options', 'dappermapper', Array($this,'options_page'));
     }
 
-
     /*
      * Build the settings page
      */
