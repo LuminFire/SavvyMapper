@@ -41,7 +41,7 @@ class DapperMapper {
      * Set up all the hooks, filters and shortcodes.
      *
      */
-    private function setupActions(){
+    private function setupActions() {
         add_action( 'wp_enqueue_scripts', Array($this,'load_scripts'));
         add_action( 'admin_enqueue_scripts', Array($this,'load_scripts'));
         add_filter( "plugin_action_links_dappermapper/dappermapper.php",Array($this,'plugin_add_settings_link'));
@@ -65,23 +65,7 @@ class DapperMapper {
      * We're probably over-loading stuff here. We could probably only load some stuff on specific pages
      */
     function load_scripts() {
-        $plugin_dir_url = plugin_dir_url(__FILE__);
-
-        wp_enqueue_style('cartodbcss','http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css');
-        wp_enqueue_style('markercluster-css',$plugin_dir_url . 'leaflet/MarkerCluster.css'); 
-        wp_enqueue_style('markercluster-default-css',$plugin_dir_url . 'leaflet/MarkerCluster.Default.css'); 
-        wp_enqueue_style('dmcss',$plugin_dir_url . 'dm.css'); 
-        wp_enqueue_style('jquery-ui-css',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.css',Array('jquery'));
-
-
-        wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
-        wp_enqueue_script('markercluster-js',$plugin_dir_url . 'leaflet/leaflet.markercluster.js',Array('cartodbjs'));
-        wp_enqueue_script('dmjs',$plugin_dir_url . 'DapperMapper.js',Array('jquery','cartodbjs','markercluster-js')); 
-        wp_localize_script( 'dmjs', 'ajaxurl', admin_url( 'admin-ajax.php' ));
-
-        wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs')); 
-        wp_enqueue_script('jquery-ui-js',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
-    }
+	}
 
     /**
      * Add a link to the settings page
