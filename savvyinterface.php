@@ -21,7 +21,7 @@ abstract class SavvyInterface {
 	 */
 	function __construct(){
 		$this->savvy = SavvyMapper::get_instance();
-		$this->savvy->register_interface( $this );
+		$this->setup_actions();
 	}
 
 	/**
@@ -31,14 +31,20 @@ abstract class SavvyInterface {
 		error_log( 'The method ' . $method . ' is not supported by this class.' );
 	}
 
+	/**
+	 * Get the name of this plugin
+	 */
 	function get_name() {
 		return $this->name;
 	}
 
-	function get_metabox_name() {
-		$metaname = sanitize_title($this->name . ' meta_box');
-		$metaname = str_replace('-','_',$metaname);
-		return $metaname;
+	/**
+	 * The type should be an html-attribute friendly name
+	 */
+	function get_type() {
+		$typename = sanitize_title( $this->name );
+		$typename = str_replace( '-', '_', $typename );
+		return $typename;
 	}
 
 	/**
@@ -69,12 +75,17 @@ abstract class SavvyInterface {
 	/**
 	 * Get the part of the form for this interface
 	 */
-	abstract function options_page();
+	abstract function options_div();
 
 	/**
 	 * Save the settings.
 	 */
 	abstract function settings_init();
+
+	/**
+	 * Setup the actions to get things started
+	 */
+	function setup_actions() { }
 
     /*
      * cURL wrapper which returns request and response headers, curl request meta, post and response body.

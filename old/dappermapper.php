@@ -1,12 +1,12 @@
 <?php
 
 /*
- * @package Cimbura
- * Plugin Name: DapperMapper for CartoDB
- * Author: Michael Moore
- * Author URI: http://cimbura.com
- * Description: Easily tie your CartoDB data to posts in WordPress. Access CartoDB properties dynamically via shortcode and show maps on post archive pages.
- * Version: 0.1
+ * @  package Cimbura
+ * P  lugin Name: DapperMapper for CartoDB
+ * A  uthor: Michael Moore
+ * A  uthor URI: http://cimbura.com
+ * D  escription: Easily tie your CartoDB data to posts in WordPress. Access CartoDB properties dynamically via shortcode and show maps on post archive pages.
+ * V  ersion: 0.1
  */
 
 

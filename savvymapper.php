@@ -3,7 +3,7 @@
 /**
  * SavvyMapper connects your WordPress install to your GIS data in a savvy way
  *
- * PluginName: SavvyMapper Core
+ * Plugin Name: SavvyMapper Core
  * Author: Michael Moore
  * Author URI: http://cimbura.com
  * Version: 0.0.1
@@ -33,6 +33,11 @@ class SavvyMapper {
 	 * @var The loaded interfaces.
 	 */
 	var $interfaces;
+
+	/**
+	 * @var The loaded interfaces.
+	 */
+	var $interface_classes;
 
 	/**
 	 * Get the singleton instance.
@@ -65,17 +70,6 @@ class SavvyMapper {
 	}
 
 	/**
-	 * Hook for interfaces to add themselves
-	 * @param SavvyInterface $interface An instance of SavvyInterface.
-	 *
-	 * @return void
-	 */
-	function register_interface( $interface ) {
-		$interfaceName = $interface->get_name();
-		$this->interfaces[ $interfaceName ] = $interface;
-	}
-
-	/**
 	 * Set up all the hooks and filters
 	 */
 	function setup_actions( ) {
@@ -92,12 +86,17 @@ class SavvyMapper {
         add_action( 'wp_ajax_savvy_autocomplete', Array( $this, 'ajax_autocomplete' ) );
         add_action( 'wp_ajax_nopriv_savvy_autocomplete', Array( $this, 'ajax_autocomplete' ) );
 
+        add_action( 'wp_ajax_savvy_get_interface_options_form', Array( $this, 'get_interface_options_form' ) );
+        add_action( 'wp_ajax_nopriv_savvy_get_interface_options_form', Array( $this, 'get_interface_options_form' ) );
+
         add_action( 'add_meta_boxes', Array( $this, 'add_meta_boxes' ) );
         add_action( 'save_post', Array( $this, 'save_meta' ) );
         add_action( 'loop_start', Array( $this, 'make_archive_map' ) );
 
         add_action( 'admin_menu', Array( $this, 'add_admin_menu' ) );
         add_action( 'admin_init', Array( $this, 'settings_init' ) );
+
+		add_action('plugins_loaded', Array( $this, 'load_interfaces' ) );
 	}
 
 	/**
@@ -112,12 +111,16 @@ class SavvyMapper {
 	 */
 	function load_scripts() {
 		$plugin_dir_url = plugin_dir_url(__FILE__);
-        wp_enqueue_style('dmcss',$plugin_dir_url . 'dm.css'); 
+        wp_enqueue_style('savvycss',$plugin_dir_url . 'savvy.css'); 
+
         wp_enqueue_style('jquery-ui-css',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.css',Array('jquery'));
-        wp_enqueue_script('dmjs',$plugin_dir_url . 'DapperMapper.js',Array('jquery','cartodbjs','markercluster-js')); 
-        wp_localize_script( 'dmjs', 'ajaxurl', admin_url( 'admin-ajax.php' ));
-        wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs')); 
         wp_enqueue_script('jquery-ui-js',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
+
+        wp_enqueue_script('savvyjs',$plugin_dir_url . 'savvy.js',Array('jquery','cartodbjs','markercluster-js')); 
+        wp_localize_script( 'savvyjs', 'ajaxurl', admin_url( 'admin-ajax.php' ));
+
+
+        wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs')); 
 	}
 
 	/**
@@ -263,19 +266,30 @@ class SavvyMapper {
     /**
      * Add the admin menu entry
      */
-    function add_admin_menu(  ) { 
+    function add_admin_menu() { 
         add_menu_page( 'SavvyMapper', 'SavvyMapper', 'manage_options', 'savvymapper', Array($this,'options_page'));
     }
 
     /**
      * Print the options form
      */
-    function options_page(  ) {
-        print "<form action='options.php' method='post'><h2>SavvyMapper</h2>";
-		foreach( $this->interfaces as $interface ) {
-			print $this->options_page();
+    function options_page() {
+		$html = "";
+		$html .= '<h2>SavvyMapper</h2>';
+		$html .= '<p>Welcome to SavvyMapper. Add connections to services below.</p>';
+		foreach( $this->interface_classes as $interface ) {
+			$html .= '<input type="button" onclick="savvy.add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
 		}
-        print "</form>";
+		$html .= '<hr>';
+        $html .= '<form action="options.php" method="post" id="savvyoptions">';
+		ob_start();
+		settings_field('savvymapper_pluginPage');
+		do_settings_section('savvymapper_pluginPage');
+		submit_button();
+		$html .= ob_end_clean();
+        $html .= '</form>';
+
+		print $html;
     }
 
 	/**
@@ -288,5 +302,22 @@ class SavvyMapper {
 		}
 		// Do settings save
     }
-}
 
+	function load_interfaces() {
+		require_once( dirname( __FILE__ ) . '/savvyinterface.php' );
+		$this->interface_classes = apply_filters( 'savvy_load_interfaces', $this->interface_classes);
+	}
+
+
+	function get_interface_options_form(){
+		$interface = $_GET['interface'];
+		print $this->interface_classes[$interface]->options_div();
+		exit();
+	}
+
+}
+SavvyMapper::get_instance();
+
+foreach( glob( dirname( __FILE__ ) . '/interfaces/*.php' ) as $interface ) {
+	require_once( $interface );
+}
