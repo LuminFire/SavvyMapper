@@ -268,13 +268,56 @@ class SavvyMapper {
      */
     function add_admin_menu() { 
         add_menu_page( 'SavvyMapper', 'SavvyMapper', 'manage_options', 'savvymapper', Array($this,'options_page'));
+		add_submenu_page('savvymapper','Post Mapping','Post Mapping','manage_options','savvy_connections',Array($this,'connection_mapping_page'));
     }
+
+	function connection_mapping_page() {
+		$html = '<div class="wrap savvymapper_mapping_wrap">';
+		$html .= '<h2>SavvyMapper Post Mapping</h2>';
+		$html .= '<p>Configure mapping between your post types and your SavvyMapper connections.</p>';
+
+		$html .= '<div id="savvymapper_mapping">';
+		$settings_string = get_option( 'savvymapper_mapping', '{}' );
+		$html .= '</div>';
+
+
+        $post_types = get_post_types(Array('public' => true,));
+        ksort($post_types);
+
+		$post_type_list = Array();
+		foreach($post_types as $post_type){
+            $post_type_object = get_post_type_object($post_type);
+			$post_type_list[$post_type] = $post_type_object->labels->singular_name;
+        }
+
+		$html .= print_r($post_type_list,TRUE);
+
+
+		$settings_string = get_option( 'savvymapper_connections', '{}' );
+		$settings = json_decode( $settings_string, TRUE );
+		$connections_list = Array();
+		foreach($settings['connections'] as $connection){
+			$connections_list[] = $connection['connection_name'];
+		}
+
+		$html .= print_r($connections_list,TRUE);
+
+		$html .= "<ol><li>List of existing connections, one per row, with an hr between each and a remove button on each one</li>";
+		$html .= "<li>Last row is dropdown with post types / connections / Add button</li>";
+		$html .= "<li>Add button does ajax call to get settings for specified connection (including defaults) and adds row</li>";
+		$html .= "</ol>";
+
+		$html .= '</div>';
+
+		print $html;
+
+	}
 
     /**
      * Print the options form
      */
     function options_page() {
-		$html = '<div class="wrap">';
+		$html = '<div class="wrap savvymapper_options_wrap">';
 		$html .= '<h2>SavvyMapper</h2>';
 		$html .= '<p>Welcome to SavvyMapper. Add connections to services below.</p>';
 		foreach( $this->interface_classes as $interface ) {
@@ -282,7 +325,16 @@ class SavvyMapper {
 		}
 		$html .= '<hr>';
 
-		$html .= '<div id="savvyoptions"></div>';
+		$html .= '<div id="savvyoptions">';
+
+		$settings_string = get_option( 'savvymapper_connections', '{}' );
+		$settings = json_decode( $settings_string, TRUE );
+		foreach($settings['connections'] as $connection){
+			$interface = $this->interface_classes[$connection['interface']];
+			$html .= $this->_get_interface_options_form( $interface, $connection );
+		}
+
+		$html .= '</div>';
 
         $html .= '<form method="post" action="options.php">';
 
@@ -304,7 +356,7 @@ class SavvyMapper {
     function settings_init() {
 		register_setting( 
 			'savvymapper_plugin_page',						// option group
-			'savvymapper_settings'							// option name
+			'savvymapper_connections'							// option name
 		);													// sanitize_callback
 
 		add_settings_section(
@@ -315,9 +367,9 @@ class SavvyMapper {
 		);
 
         add_settings_field( 
-            'savvymapper_settings',							// id
-            __( 'SavvyMapper Setting', 'wordpress' ),		// title  
-            Array($this,'savvymapper_settings_callback'),	// callback
+            'savvymapper_connections',							// id
+            __( 'SavvyMapper Connections', 'wordpress' ),		// title  
+            Array($this,'savvymapper_connections_callback'),	// callback
             'savvymapper_plugin_page',						// page
 			'savvymapper_plugin_page_section',				// section
 			array()											// args
@@ -336,19 +388,39 @@ class SavvyMapper {
 	}
 
 
+	/**
+	 * This is called by ajax to make new boxes, and by options page to load existing options
+	 */
 	function get_interface_options_form(){
-		$interface = $_GET['interface'];
-		print $this->interface_classes[$interface]->options_div();
+		$interface_type = $_GET['interface'];
+		$interface = $this->interface_classes[$interface_type];
+		print $this->_get_interface_options_form( $interface );
 		exit();
+	}
+
+	/**
+	 * Actually create the options form
+	 */
+	function _get_interface_options_form( $interface, $connection_details = Array() ){
+		$connection_name = (isset($connection_details['connection_name']) ? $connection_details['connection_name'] : '');
+		
+		$html .= '<div class="instance-config">';
+		$html .= '<h3><span class="remove-instance">(X)</span> ' . $interface->get_name() . ' Connection</h3>';
+		$html .= '<label>Connection Name</label> <input type="text" data-name="connection_name" value="' . $connection_name . '"><br>' . "\n";
+		$html .= '<input type="hidden" data-name="interface" value="' . $interface->get_type() . '">' . "\n";
+		$html .= $interface->options_div($connection_details);
+		$html .= '<hr>';
+		$html .= '</div>';
+		return $html;
 	}
 
 	function getting_started_callback(){
 		return 'getting started callback';
 	}
 
-	function savvymapper_settings_callback(){
-		$settings = get_option( 'savvymapper_settings', '{}' );
-        print '<textarea name="savvymapper_settings">' . $settings . '</textarea>';
+	function savvymapper_connections_callback(){
+		$settings = get_option( 'savvymapper_connections', '{}' );
+        print '<textarea name="savvymapper_connections" id="savvymapper_connections">' . $settings . '</textarea>';
 	}
 
 }

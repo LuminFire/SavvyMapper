@@ -1,3 +1,12 @@
 /**
  * SavvyMapper CSS
  */
+
+.remove-instance{
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.remove-instance:hover{
+	text-decoration: none;
+}

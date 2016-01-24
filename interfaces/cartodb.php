@@ -166,11 +166,13 @@ function load_savvy_carto_interface( $interfaces ) {
 			return $html;
 		}
 
-		function options_div() {
-			$html = '<div>';
-			$html .= '<label>CartoDB Username</label><input type="text" data-name="username"><br>\n';
-			$html .= '<label>CartoDB API Key</label><input type="text" data-name="key"><br>\n';
-			$html .= '</div>';
+		function options_div( $connection_details = Array() ) {
+			$connection_details = shortcode_atts( Array(
+				'username' => '',
+				'key' => '',
+				), $connection_details );
+			$html .= '<label>CartoDB Username </label><input type="text" data-name="username" value="' . $connection_details['username'] . '"><br>' . "\n";
+			$html .= '<label>CartoDB API Key </label><input type="text" data-name="key" value="' . $connection_details['key'] . '"><br>' . "\n";
 			return $html;
 		}
 

@@ -10,7 +10,7 @@ function load_savvy_wfs_interface( $interfaces ) {
 		function autocomplete() { return ''; }
 		function make_meta_box( $post, $metabox ) { return ''; } 
 		function make_archive_map() { return '';} 
-		function options_div() { return "<input value='Sample options page'>\n"; }
+		function options_div() { return '<input value="WFS Doesn\'t actually work yet">' . "\n"; }
 
 		function settings_init() {
 			return Array();
