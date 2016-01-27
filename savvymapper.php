@@ -24,6 +24,8 @@ class SavvyMapper {
 	 *
 	 * Includes information needed to create connections, like
 	 * usernames and API keys
+	 *
+	 * (Not yet set or used)
 	 */
 	var $settings;
 
@@ -38,6 +40,8 @@ class SavvyMapper {
 	 *
 	 * The array is associative, with the shortname as they key
 	 * and the instance as the value.
+	 *
+	 * Corresponds with savvymapper_connections
 	 */
 	var $interfaces;
 
@@ -50,6 +54,8 @@ class SavvyMapper {
 	 * @var The mappings between savvyconnector instances and post types.
 	 *
 	 * It's an array, the keys are the post type, the values are the mapping details
+	 *
+	 * Corresponds with savvymapper_mappings
 	 */
 	var $mappings;
 
@@ -72,12 +78,7 @@ class SavvyMapper {
 	 * Initializes the SavvyMapper instance
 	 */
 	protected function __construct() {
-		$this->mappings = get_option('savvy_table_mapping');
-		$this->settings = get_option('savvy_settings');
-
-		if ( empty( $this->mappings ) ) {
-			$this->mappings = Array();
-		}
+		$this->mappings = $this->get_mapping();
 
 		if ( empty ( $this->settings ) ) {
 			$this->settings = Array();
@@ -106,6 +107,9 @@ class SavvyMapper {
 
         add_action( 'wp_ajax_savvy_get_interface_options_form', Array( $this, 'get_interface_options_form' ) );
         add_action( 'wp_ajax_nopriv_savvy_get_interface_options_form', Array( $this, 'get_interface_options_form' ) );
+
+        add_action( 'wp_ajax_savvy_get_mapping_options_form', Array( $this, 'get_mapping_options_form' ) );
+        add_action( 'wp_ajax_nopriv_savvy_get_mapping_options_form', Array( $this, 'get_mapping_options_form' ) );
 
         add_action( 'add_meta_boxes', Array( $this, 'add_meta_boxes' ) );
         add_action( 'save_post', Array( $this, 'save_meta' ) );
@@ -332,22 +336,17 @@ class SavvyMapper {
 		// Show all the settings
 		$mapping = $this->get_mapping();
 		$html .= '<div id="savvy_mapping_settings">';
-		foreach($mapping as $mapping){
-			$html .= $connections[ $mapping[ 'connection' ] ]->mapping_div( $mapping );
+		foreach( $mapping['mappings'] as $one_mapping ) {
+			$html .= $this->_get_mapping_options_form($one_mapping);
 		}
 		$html .= '</div>';
 
 		// Show the form to add new mappings
 		$html .= '<div id="savvy_mapping_form">';
-		$html .= '<select name="savvy_post_types">' . implode( "\n", $post_type_options ) . '</select> ';
-		$html .= '<select name="savvy_connection_types">' . implode( "\n", $connection_options ) . '</select> ';
+		$html .= '<select name="savvy_post_type">' . implode( "\n", $post_type_options ) . '</select> ';
+		$html .= '<select name="savvy_connection_id">' . implode( "\n", $connection_options ) . '</select> ';
 		$html .= '<input type="button" onclick="savvy.add_mapping(this);" value="Add Mapping">';
 		$html .= '</div>';
-
-		// todo list
-		$html .= "<ol>";
-		$html .= "<li>Add button does ajax call to get settings for specified connection (including defaults) and adds row</li>";
-		$html .= "</ol>";
 
 		// Save options form
 		$html .= '<form method="post" action="options.php">';
@@ -480,6 +479,39 @@ class SavvyMapper {
 		return $html;
 	}
 
+	/**
+	 * This is called by ajax to make new data mapping boxes, and by options page to load existing values
+	 */
+	function get_mapping_options_form(){
+		$connection_id = $_GET['connection_id'];
+
+		$mapping = Array(
+			'post_type' => $_GET['post_type'],
+			'connection_id' => $_GET['connection_id'],
+			);
+
+		print $this->_get_mapping_options_form( $mapping );
+		exit();	
+	}
+
+	function _get_mapping_options_form( $mapping ){
+		$postType = $mapping[ 'post_type' ];
+		$post_type_info = get_post_type_object(  $postType );
+
+		$connections = $this->get_connections();
+		$connection = $connections[ $mapping[ 'connection_id' ] ];
+
+		$html = '<div class="mapping-config">';
+		$html .= '<h3><span class="remove-instance">(X)</span> ' . $post_type_info->labels->singular_name . ' => ' . $connection->get_connection_name() . '</h3>';
+		$html .= '<label>Mapping Name</label> <input type="text" data-name="mapping_name" value="' . $mapping['mapping_name'] . '"><br>' . "\n";
+		$html .= '<input type="hidden" data-name="connection_id" value="' . $connection->get_id() . '"><br>' . "\n";
+		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '"><br>' . "\n";
+		$html .= $connection->mapping_div($mapping);
+		$html .= '<hr>';
+		$html .= '</div>';
+		return $html;
+	}
+
 	function getting_started_callback() {
 		return 'getting started callback';
 	}
@@ -530,7 +562,7 @@ class SavvyMapper {
 			return $this->mappings;
 		}
 
-		$mapping_string = get_option( 'savvymapper_mappings'. '{}' );
+		$mapping_string = get_option( 'savvymapper_mappings', '{}' );
 		$mapping = json_decode( $mapping_string, TRUE );
 
 		$this->mapping = $mapping;

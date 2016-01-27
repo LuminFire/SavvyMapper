@@ -177,7 +177,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 		function mapping_div( $mapping ) {
-			return "<div>No mapping info yet</div>";
+			return '<br>Mapping div';
 		}
 
 		function settings_init() {
