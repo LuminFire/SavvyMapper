@@ -166,14 +166,18 @@ function load_savvy_carto_interface( $interfaces ) {
 			return $html;
 		}
 
-		function options_div( $connection_details = Array() ) {
+		function options_div() {
 			$connection_details = shortcode_atts( Array(
 				'username' => '',
 				'key' => '',
-				), $connection_details );
+				), $this->config );
 			$html .= '<label>CartoDB Username </label><input type="text" data-name="username" value="' . $connection_details['username'] . '"><br>' . "\n";
 			$html .= '<label>CartoDB API Key </label><input type="text" data-name="key" value="' . $connection_details['key'] . '"><br>' . "\n";
 			return $html;
+		}
+
+		function mapping_div( $mapping ) {
+			return "<div>No mapping info yet</div>";
 		}
 
 		function settings_init() {

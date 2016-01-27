@@ -16,6 +16,10 @@ function load_savvy_wfs_interface( $interfaces ) {
 			return Array();
 		}
 
+		function mapping_div( $mapping ) {
+			return "<div>No mapping info yet</div>";
+		}
+
 	}
 
 	$interfaces['wfs'] = new SavvyWFS();

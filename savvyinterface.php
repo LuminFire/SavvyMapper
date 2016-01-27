@@ -7,21 +7,29 @@
 abstract class SavvyInterface {
 
 	/**
-	 * @var The SavvyMapper instance;
+	 * @var The SavvyMapper instance.
 	 */
 	var $savvy;
 
 	/**
-	 * @var This interface's name
+	 * @var This interface's name.
 	 */
 	var $name = "Default Savvy Interface";
 
 	/**
-	 * Init self and load self into SavvyMapper
+	 * @var This instance's config
 	 */
-	function __construct(){
+	var $config;
+
+	/**
+	 * Init self and load self into SavvyMapper
+	 *
+	 * @param array $config 
+	 */
+	function __construct($config = Array()){
 		$this->savvy = SavvyMapper::get_instance();
 		$this->setup_actions();
+		$this->set_config( $config );
 	}
 
 	/**
@@ -73,9 +81,14 @@ abstract class SavvyInterface {
 	abstract function make_meta_box($post,$metabox);
 
 	/**
-	 * Get the part of the form for this interface
+	 * Get the part of the form for the connection interface
 	 */
 	abstract function options_div();
+
+	/**
+	 * Get the part of the form for setting up the mapping
+	 */
+	abstract function mapping_div( $mapping_definition );
 
 	/**
 	 * Save the settings.
@@ -86,6 +99,13 @@ abstract class SavvyInterface {
 	 * Setup the actions to get things started
 	 */
 	function setup_actions() { }
+
+	/**
+	 * @param array $config This instance's config
+	 */
+	function set_config( $config = Array() ) {
+		$this->config = $config;
+	}
 
     /*
      * cURL wrapper which returns request and response headers, curl request meta, post and response body.
@@ -143,4 +163,29 @@ abstract class SavvyInterface {
 
         return $response['body'];
     }
+
+	/**
+	 * Get the ID for this instance
+	 *
+	 * @return The ID, or the curren time if this interface isn't set up yet.
+	 */
+	function get_id() {
+		if ( !empty( $this->config[ '_id' ] ) ) {
+			return $this->config['_id'];
+		}
+
+		return time();
+	}
+
+	/**
+	 * Get the connection_name for this instance
+	 *
+	 * @return The connection name, or empty string if this interface isn't set up yet.
+	 */
+	function get_connection_name() {
+		if ( !empty( $this->config[ 'connection_name' ] ) ) {
+			return $this->config[ 'connection_name' ];
+		}
+		return '';
+	}
 }
