@@ -78,11 +78,9 @@ class SavvyMapper {
 	 * Initializes the SavvyMapper instance
 	 */
 	protected function __construct() {
-		$this->mappings = $this->get_mapping();
+		$this->settings = Array();
 
-		if ( empty ( $this->settings ) ) {
-			$this->settings = Array();
-		}
+		$this->mappings = $this->get_mapping();
 
 		$this->setup_actions();
 		$this->setup_shortcodes();
@@ -339,7 +337,7 @@ class SavvyMapper {
 		foreach( $mapping['mappings'] as $one_mapping ) {
 			$html .= $this->_get_mapping_options_form($one_mapping);
 		}
-		$html .= '</div>';
+		$html .= '<br></div>';
 
 		// Show the form to add new mappings
 		$html .= '<div id="savvy_mapping_form">';
@@ -447,6 +445,9 @@ class SavvyMapper {
 	function load_interfaces() {
 		require_once( dirname( __FILE__ ) . '/savvyinterface.php' );
 		$this->interface_classes = apply_filters( 'savvy_load_interfaces', $this->interface_classes);
+
+		// Now that we have all our interfaces we can make our connections
+		$this->get_connections();
 	}
 
 

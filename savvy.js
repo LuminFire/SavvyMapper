@@ -1,6 +1,6 @@
 function SavvyMapper(){
 	this._init();
-};
+}
 
 SavvyMapper.prototype = {
 
@@ -57,7 +57,11 @@ SavvyMapper.prototype = {
 			oneconfig = {};
 			jQuery(instance).find(':input').each(function(j,input){
 				input = jQuery(input);
-				oneconfig[ input.data('name') ] = input.val();
+				if(input.attr('type') == 'checkbox'){
+					oneconfig[ input.data('name') ] = (input.prop('checked') ? 1 : 0);
+				}else{
+					oneconfig[ input.data('name') ] = input.val();
+				}
 			});
 			config['connections'].push(oneconfig);
 		});
@@ -72,7 +76,11 @@ SavvyMapper.prototype = {
 			oneconfig = {};
 			jQuery(mapping).find(':input').each(function(j,input){
 				input = jQuery(input);
-				oneconfig[ input.data('name') ] = input.val();
+				if(input.attr('type') == 'checkbox'){
+					oneconfig[ input.data('name') ] = (input.prop('checked') ? 1 : 0);
+				}else{
+					oneconfig[ input.data('name') ] = input.val();
+				}
 			});		
 			config['mappings'].push(oneconfig);
 		});

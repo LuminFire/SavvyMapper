@@ -17,14 +17,24 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 		/**
+		 *
+		 */
+		function connection_setup_actions() {
+			add_action( 'wp_ajax_savvy_cartodb_get_fields', Array( $this, 'get_fields_for_table' ) );
+			add_action( 'wp_ajax_nopriv_savvy_cartodb_get_fields', Array( $this, 'get_fields_for_table' ) );
+		}
+
+		/**
 		 * Load the carto scripts
 		 */
 		function load_scripts() {
+			$plugin_dir_url = plugin_dir_url(__FILE__);
 			wp_enqueue_style('cartodbcss','http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css');
 			wp_enqueue_style('markercluster-css',$plugin_dir_url . 'leaflet/MarkerCluster.css'); 
 			wp_enqueue_style('markercluster-default-css',$plugin_dir_url . 'leaflet/MarkerCluster.Default.css'); 
 			wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
 			wp_enqueue_script('markercluster-js',$plugin_dir_url . 'leaflet/leaflet.markercluster.js',Array('cartodbjs'));
+			wp_enqueue_script('savvycarto',$plugin_dir_url . 'cartodb.js',Array('jquery'));
 		}
 
 		function get_post_json() {
@@ -90,33 +100,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			return $json;
 		}
 
-		/**
-		 * Given a query make a CartoDB API request
-		 */
-		function carto_sql($sql,$json = TRUE){
-
-			$un = $this->settings['dm_cartodb_username'];
-			$key = $this->settings['dm_cartodb_api_key'];
-
-			$querystring = Array(
-				'q' => $sql,
-				'api_key' => $key,
-			);
-
-			if($json){
-				$querystring['format'] = 'GeoJSON';
-			}
-
-			$url = 'https://' . $un . '.cartodb.com/api/v2/sql?' . http_build_query($querystring);
-
-			$ret = $this->curl_request($url);
-
-			if($json){
-				return json_decode($ret);
-			}else{
-				return $ret;
-			}
-		}
+		
 
 		/**
 		 * Make the metabox
@@ -177,11 +161,135 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 		function mapping_div( $mapping ) {
-			return '<br>Mapping div';
+			$defaults = Array(
+				'cdb_table' => '',
+				'cdb_field' => '',
+				'cdb_visualizations' => '',
+				'cdb_show_markers' => 1
+				);
+
+			$mapping = shortcode_atts($defaults, $mapping);
+
+			$user_tables = $this->carto_user_tables();
+			$html .= '<label>CartoDB Table</label>: ';
+			$html .= $this->form_make_select('cdb_table', array_keys($user_tables), array_keys($user_tables), $mapping['cdb_table'] ) . '<br>' . "\n";
+
+			if(isset($user_tables[$mapping['cdb_table']])){
+				$cdb_table = $user_tables[$mapping['cdb_table']];
+			} else {
+				$cdb_table = Array();
+			}
+
+			$html .= '<label>CartoDB Field</label>: ';
+			$html .= $this->form_make_select('cdb_field', $cdb_table, $cdb_table, $mapping['cdb_field'] ) . '<br>' . "\n";
+
+
+			$html .= '<label>Visualizations</label>: ';
+			$html .= $this->form_make_textarea('cdb_visualizations',$mapping['cdb_visualizations']) . '<br>' . "\n";
+
+			$html .= '<label>Show Markers</label>: ';
+			$html .= $this->form_make_checkbox('cdb_show_markers',$mapping['cdb_show_markers']);
+
+
+			return $html;
 		}
 
 		function settings_init() {
 			return Array();
+		}
+
+		/* ------------ Below this arre CartoDB specific implementation functions ------------ */
+
+
+		function make_cdb_field_select( $table, $selected = FALSE ) {
+			$user_tables = $this->carto_user_tables();
+			$html = '<select data-name="cdb_field">';
+			$html = '<option value="">--</option>';
+			if(isset($user_tables[$table])){
+				foreach( $user_tables[$table] as $field_name){
+					$html .= '<option value="' . $field_name . '"';
+					if ( $select == $field_name ) {
+						$html .= ' selected="selected"';
+					}
+					$html .= '>' . $field_name . '</option>';
+				}
+			}
+			$html .= '</select>';
+
+			return $html;
+		}
+
+
+		/**
+		 * Get the users' CDB tables and their columns
+		 */
+		function carto_user_tables() {
+			if($tables = $this->get_cache('user_tables')){
+				return $tables;
+			}
+
+			$q = 'SELECT * FROM CDB_UserTables()';
+			$tables_raw_string = $this->carto_sql($q,FALSE);
+			$tables_raw = json_decode($tables_raw_string);
+
+			$tables = Array();
+			foreach($tables_raw->rows as $table){
+				$tables[$table->cdb_usertables] = Array();
+			}
+
+			$columns_string = $this->carto_sql("SELECT table_name,column_name FROM information_schema.columns WHERE table_name IN ('" . implode("','",array_keys($tables)) . "')",FALSE);
+			$columns = json_decode($columns_string);
+			foreach($columns->rows as $column){
+				$tables[$column->table_name][] = $column->column_name;
+			}
+
+			$this->set_cache('user_tables',$tables);
+			return $tables;
+		}
+
+		/**
+		 * Given a query make a CartoDB API request
+		 */
+		function carto_sql($sql,$json = TRUE){
+
+			$un = $this->config['username'];
+			$key = $this->config['key'];
+
+			$querystring = Array(
+				'q' => $sql,
+				'api_key' => $key,
+			);
+
+			if($json){
+				$querystring['format'] = 'GeoJSON';
+			}
+
+			$url = 'https://' . $un . '.cartodb.com/api/v2/sql?' . http_build_query($querystring);
+
+			$ret = $this->curl_request($url);
+
+			if($json){
+				return json_decode($ret);
+			}else{
+				return $ret;
+			}
+		}
+
+		function get_fields_for_table(){
+			$table = $_GET['table'];
+
+			$user_tables = $this->carto_user_tables();
+
+			if(isset($user_tables[$table])){
+				$cdb_table = $user_tables[$table];
+			} else {
+				$cdb_table = Array();
+			}
+
+			$html = $this->form_make_select('cdb_field', $cdb_table) . '<br>' . "\n";
+
+			print $html;
+			exit();
 		}
 	}
 	$interfaces['cartodb'] = new SavvyCartoDB();

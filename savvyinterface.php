@@ -22,6 +22,15 @@ abstract class SavvyInterface {
 	var $config;
 
 	/**
+	 * @var A place for the instance to cache things
+	 *
+	 * Instances shouldn't use this directly but should use
+	 *
+	 * get_cache($key) and set_cache($key,$value) instead
+	 */
+	var $cache;
+
+	/**
 	 * Init self and load self into SavvyMapper
 	 *
 	 * @param array $config 
@@ -97,14 +106,27 @@ abstract class SavvyInterface {
 
 	/**
 	 * Setup the actions to get things started
+	 *
+	 * This is run for all instances of the interface, even empty ones
 	 */
 	function setup_actions() { }
+		
+	/**
+	 * Setup actions for a specific connection
+	 *
+	 * This is run only when we have a config
+	 */
+	function connection_setup_actions() { }
 
 	/**
 	 * @param array $config This instance's config
 	 */
 	function set_config( $config = Array() ) {
 		$this->config = $config;
+
+		if(!empty($config)){
+			$this->connection_setup_actions();
+		}
 	}
 
     /*
@@ -187,5 +209,61 @@ abstract class SavvyInterface {
 			return $this->config[ 'connection_name' ];
 		}
 		return '';
+	}
+
+	/**
+	 * Get something from cache
+	 */
+	function get_cache($cache_key) {
+		if(isset($this->cache[$cache_key])){
+			return $this->cache[$cache_key];
+		}
+		return FALSE;
+	}
+
+	/**
+	 * Set the cache
+	 */
+	function set_cache($cache_key,$cache_value){
+		$this->cache[$cache_key] = $cache_value;
+	}
+
+	/* --- form generation stuff --- */
+	function form_make_select( $param_name, $values, $labels = Array(), $selected = FALSE ){
+		$html = '<select data-name="' . $param_name . '">';
+		$html .= '<option value="">--</option>';
+		foreach($values as $k => $value){
+			$html .= '<option value="' . $value . '"';
+			if ( $selected == $value ) {
+				$html .= ' selected="selected"';
+			}
+			$html .= '>';
+
+			if(!empty($labels)){
+				$label = $labels[$k];
+			}else{
+				$label = $value;
+			}
+
+			$html .= $label . '</option>';
+		}
+		$html .= '</select>';
+		return $html;
+	}
+
+	function form_make_textarea( $param_name, $value = ''){
+		$html = '<textarea data-name="' . $param_name . '">' . $value . '</textarea>';
+		return $html;
+	}
+
+	function form_make_checkbox( $param_name, $checked ) {
+		$html .= '<input data-name="' . $param_name . '" type="checkbox" value="1"';
+
+		if($checked){
+			$html .= ' checked="checked"';
+		}
+		$html .= '>';
+
+		return $html;
 	}
 }
