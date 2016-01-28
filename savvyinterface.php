@@ -77,7 +77,7 @@ abstract class SavvyInterface {
 	/**
 	 * Ajax autocomplete. Return the JSON features that match the query
 	 */
-	abstract function autocomplete();
+	abstract function autocomplete($mapping,$term);
 
 	/**
 	 * Make the metabox for this interface
@@ -87,7 +87,7 @@ abstract class SavvyInterface {
 	 *
 	 * Prints the metabox html
 	 */
-	abstract function make_meta_box($post,$metabox);
+	abstract function make_meta_box_map($post,$metabox);
 
 	/**
 	 * Get the part of the form for the connection interface
@@ -266,4 +266,6 @@ abstract class SavvyInterface {
 
 		return $html;
 	}
+
+	abstract function save_meta($post_id);
 }
