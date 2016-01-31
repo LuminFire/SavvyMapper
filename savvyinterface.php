@@ -83,11 +83,12 @@ abstract class SavvyInterface {
 	 * Make the metabox for this interface
 	 *
 	 * @param WP_Post $post The post this metabox is for.
-	 * @param notsure $metabox Something else.
+	 * @param Array $mapping The current connection mapping.
+	 * @param array $current_settings The current settings for the given post.
 	 *
 	 * Prints the metabox html
 	 */
-	abstract function extra_metabox_fields($post,$metabox);
+	abstract function extra_metabox_fields( $post, $mapping, $current_settings = Array() );
 
 	/**
 	 * Get the part of the form for the connection interface

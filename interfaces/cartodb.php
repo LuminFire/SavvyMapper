@@ -262,25 +262,28 @@ function load_savvy_carto_interface( $interfaces ) {
 			exit();
 		}
 
-
-		function save_meta($post_id){
-			// TODO: Loop through posted vars to capture interface specific values
-			if(isset($_POST['savvymapper_visualizations'])){
-				$visValue = implode(',',explode("\n",$_POST['savvymapper_visualizations']));
-			} else {
-				$visValue = '';
-			}
-			return Array('cdb_visualizations' => $visValue);
-		}
-
-		function extra_metabox_fields( $post, $mapping ) {
-			$visualizations = $mapping['cdb_visualizations'];
+		function extra_metabox_fields( $post, $mapping, $current_settings = Array() ) {
+			$visualizations_str = $current_settings['cdb_visualizations'];
+			$visualizations = explode( ',', $visualizations_str );
 
 			$html = '<label>Visualizations</label><br>';
-			$html .= '<textarea name="savvymapper_visualizations">' . $visualizations . '</textarea>' . "\n";
+			$html .= '<textarea name="savvymapper_visualizations">' . implode("\n",$visualizations). '</textarea>' . "\n";
 
 			return $html;
 		}
+
+		function save_meta($post_id){
+			// TODO: Loop through posted vars to capture interface specific values
+			if( isset( $_POST[ 'savvymapper_visualizations' ] ) ) {
+				$visAr = explode( "\n", $_POST[ 'savvymapper_visualizations' ] );
+				$visAr = array_map( 'trim', $visAr );
+				$visValue = array_filter( $visAr );
+			} else {
+				$visValue = '';
+			}
+			return Array( 'cdb_visualizations' => $visValue );
+		}
+
 
 		function do_shortcodes( $attrs, $contents ) {
 			global $post;

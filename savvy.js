@@ -135,8 +135,12 @@ SavvyMap.prototype = {
 		if(args.id !== false){
 			this.id = args.id;
 		}else{
-			this.id = 'dmap' + this.__proto__._curId++;
+			this.id = this.getId();
 		}
+	},
+
+	getId: function(){
+		return 'dmap' + SavvyMap.prototype._curId++;
 	},
 
 	/* Public functions */
@@ -209,7 +213,7 @@ SavvyMap.prototype = {
 		// });
 
 		// If we have 2+ chars then we fire off autocomplete
-		jQuery('input[name=savvymapper_lookup_value]').autocomplete({
+		jQuery('divinput[name=savvymapper_lookup_value]').autocomplete({
 			source: function(request, response){
 				request = jQuery.extend(request,{
 					'action' : 'savvy_autocomplete',
@@ -441,7 +445,7 @@ SavvyMap.prototype = {
 	},
 
 	_curId: 0
-}
+};
 
 
 jQuery(document).ready(function(){

@@ -279,29 +279,22 @@ class SavvyMapper {
 	function make_meta_box($post, $metabox){
 		$connection = $metabox['args'][0];
 		$mapping = $metabox['args'][1];
-		// $target_table = $mapping['cdb_table'];
-		// $lookup_field = $mapping['lookup_field'];
 
-		// $settings_string = get_post_meta($post->ID,'savvymapper_post_meta',TRUE);
-		// $settings_ar = json_decode($settings_string,TRUE);
-		// foreach($settings_ar as $set){
-		// 	if($set['mapping_id'] == $mapping['mapping_id']){
-		// 		$settings = $set;
-		// 		break;
-		// 	}
-		// }
-
-		// $visualizations = implode(',',explode("\n",$mapping['cdb_visualizations']));
-
+		$current_settings_str = get_post_meta( $post->ID, 'savvymapper_post_meta', TRUE);
+		$current_settings = json_decode($current_settings_str, TRUE);
 
 		$html = '<div class="savvy_metabox_wrapper">';
 
 		// Two columns
 		// Col. 1: settings, help and hidden metadata
 		$html .= '<div class="savvymapper_metabox_col">';
-		$html .= '<label>Look up value' . $mapping['lookup_field'] . ': </label><input class="db_lookup_ac" name="savvymapper_lookup_value" value="' . $settings['lookup_val'] . '"><br>' . "\n";
-		$html .= '<input type="hidden" name="savvyampper_mapping" value="' . json_encode($mapping) . '">';
-		$html .= $connection->extra_metabox_fields($post, $mapping);
+
+		$html .= '<label>Look up value' . $mapping['lookup_field'] . ': </label>';
+		$html .= '<input class="savvy_lookup_ac" name="savvymapper_lookup_value" value="' . $current_settings['lookup_value'] . '">';
+		$html .= '<br>' . "\n";
+
+		$html .= "<input type='hidden' name='savvyampper_mapping' value='" . json_encode($mapping) . "'>";
+		$html .= $connection->extra_metabox_fields($post, $mapping, $current_settings );
 
 		ob_start();
 		wp_nonce_field( 'savvymapper_meta_box', 'savvymapper_meta_box_nonce' );
@@ -322,6 +315,65 @@ class SavvyMapper {
 
 		print $html;
 	}
+
+
+	/**
+	 * Save the posted metadata for the current post
+	 *
+	 * @param $post_id The post ID for this meta data
+	 */
+	function save_meta($post_id){
+		// Check if our nonce is set.
+		if(!isset($_POST['savvymapper_meta_box_nonce'])){
+			return;
+		}
+
+		// Verify that the nonce is valid.
+		if(!wp_verify_nonce($_POST['savvymapper_meta_box_nonce'],'savvymapper_meta_box')){
+			return;
+		}
+
+		// If this is an autosave, our form has not been submitted, so we don't want to do anything.
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		// Check the user's permissions.
+		if ( isset( $_POST['post_type'] ) && 'page' == $_POST['post_type'] ) {
+			if ( ! current_user_can( 'edit_page', $post_id ) ) {
+				return;
+			}
+		} else {
+			if ( ! current_user_can( 'edit_post', $post_id ) ) {
+				return;
+			}
+		}
+
+		$settings = Array();
+	
+		// Load mapping info from hidden field in metabox
+		$orig_mapping_str = stripslashes( $_POST[ 'savvyampper_mapping' ] );
+		$orig_mapping = json_decode( $orig_mapping_str, TRUE );
+		$connection = $this->connections[ $orig_mapping[ 'connection_id' ] ];
+		$mapping = $this->mappings[ $orig_mapping[ 'mapping_id' ] ];
+
+		// Capture common fields for all interfaces
+		$settings = Array(
+			'mapping_id' => $mapping[ 'mapping_id' ],
+			'connection_id' => 'asdf',
+			'lookup_value' => sanitize_text_field( $_POST[ 'savvymapper_lookup_value' ] )
+		);
+
+		// Ask the specific connection to capture anything else
+		$connectionMeta = $connection->save_meta($post_id,$mapping);
+
+		// Merge them 
+		$settings = array_merge( $settings, $connectionMeta );
+
+		// serialize settings and update post meta
+		update_post_meta($post_id,'savvymapper_post_meta',json_encode($settings));
+	}
+
 
 	/**
 	 * Make the map for the archive, if the settings say so
@@ -633,49 +685,6 @@ class SavvyMapper {
 		}
 
 		return $this->mappings;
-	}
-
-	function save_meta($post_id){ 
-		// Check if our nonce is set.
-		if(!isset($_POST['savvymapper_meta_box_nonce'])){
-			return;
-		}
-
-		// Verify that the nonce is valid.
-		if(!wp_verify_nonce($_POST['savvymapper_meta_box_nonce'],'savvymapper_meta_box')){
-			return;
-		}
-
-		// If this is an autosave, our form has not been submitted, so we don't want to do anything.
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return;
-		}
-
-		// Check the user's permissions.
-		if ( isset( $_POST['post_type'] ) && 'page' == $_POST['post_type'] ) {
-			if ( ! current_user_can( 'edit_page', $post_id ) ) {
-				return;
-			}
-		} else {
-			if ( ! current_user_can( 'edit_post', $post_id ) ) {
-				return;
-			}
-		}
-
-		$settings = Array();
-		foreach($_POST['savvymapper_lookup_value'] as $k => $lookup_val){
-			$settingGroup = Array(
-				'lookup_val' =>		sanitize_text_field($_POST['savvymapper_lookup_value'][$k]),
-				'mapping_id' =>		sanitize_text_field($_POST['savvymapper_mapping_id'][$k]),
-				'connection_id' =>	sanitize_text_field($_POST['savvymapper_connection_id'][$k])
-			);
-			$settings[] = $settingGroup;
-		}
-
-
-
-		update_post_meta($post_id,'savvymapper_post_meta',json_encode($settings));
-
 	}
 }
 SavvyMapper::get_instance();
