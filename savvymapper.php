@@ -239,7 +239,7 @@ class SavvyMapper {
 			$permalink = get_permalink($ids[$feature->properties->cartodb_id]);
 
 			$popup_contents = '<table class="leafletpopup">';
-			$popup_contents .= '<tr><th colspan="2"><a href="' . $permalink . '">View ' .$post_type_info->labels->singular_name .'</a></tr>';
+// 			$popup_contents .= '<tr><th colspan="2"><a href="' . $permalink . '">View ' .$post_type_info->labels->singular_name .'</a></tr>';
 			foreach($feature->properties as $k => $v){
 				$popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
 			}

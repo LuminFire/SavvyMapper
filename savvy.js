@@ -374,6 +374,7 @@ SavvyMap.prototype = {
 		var callback = elem.data('callback') || undefined;
 		var show_marker = elem.data('marker');
 		show_marker = (show_marker === false ? false : true);
+		show_marker = true;
 
 		var popup = elem.data('popup');
 		popup = (popup === false || popup == 'false' ? false : true);

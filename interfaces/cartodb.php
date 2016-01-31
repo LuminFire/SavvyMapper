@@ -371,7 +371,7 @@ function load_savvy_carto_interface( $interfaces ) {
 						$propHtml = $props->{$attr};
 				}
 
-				return '<span class="dapper-attr">' . $propHtml . '</span>';
+				return '<span class="savvy-attr">' . $propHtml . '</span>';
 			}else if(!empty($show) && $show == 'map'){
 				// merge vizes
 				if(strtolower($vizes) === 'false'){
