@@ -87,7 +87,7 @@ abstract class SavvyInterface {
 	 *
 	 * Prints the metabox html
 	 */
-	abstract function make_meta_box_map($post,$metabox);
+	abstract function extra_metabox_fields($post,$metabox);
 
 	/**
 	 * Get the part of the form for the connection interface

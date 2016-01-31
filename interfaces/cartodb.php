@@ -27,7 +27,6 @@ function load_savvy_carto_interface( $interfaces ) {
 			add_action('wp_ajax_carto_query',Array($this,'ajaxCartoQuery'));
 			add_action('wp_ajax_nopriv_carto_query',Array($this,'ajaxCartoQuery'));
 
-			// add_action( 'save_post', Array($this,'save_meta'));
 			add_shortcode( 'savvy', Array( $this, 'do_shortcodes' ) );
 		}
 
@@ -57,17 +56,17 @@ function load_savvy_carto_interface( $interfaces ) {
 		 */
 		function autocomplete($mapping,$term = NULL) {
 
-			$sql = "SELECT DISTINCT ON (".$mapping['cdb_field'].")  " . $mapping['cdb_field'] . ",the_geom FROM " . $mapping['cdb_table'];
+			$sql = "SELECT DISTINCT ON (".$mapping['lookup_field'].")  " . $mapping['lookup_field'] . ",the_geom FROM " . $mapping['cdb_table'];
 
 			if(!empty($term)){
-				$sql .= " WHERE " . $mapping['cdb_field'] . " ILIKE '" . $term . "%'";
+				$sql .= " WHERE " . $mapping['lookup_field'] . " ILIKE '" . $term . "%'";
 			}
 
-			$sql .= " ORDER BY " . $mapping['cdb_field'];
+			$sql .= " ORDER BY " . $mapping['lookup_field'];
 			$sql .= " LIMIT 25";
 
 			$json = $this->carto_sql($sql);
-			return Array($json,$mapping['cdb_field']);
+			return Array($json,$mapping['lookup_field']);
 		}
 
 
@@ -104,23 +103,6 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 
-
-		/**
-		 * Make the metabox
-		 */
-		function make_meta_box_map( $post, $mapping ) {
-			$target_table = $mapping['cdb_table'];
-			$lookup_field = $mapping['cdb_field'];
-			$visualizations = implode(',',explode("\n",$mapping['cdb_visualizations']));
-
-			$html = '';
-			$html .= '<div class="savvy_lookupbox" data-table="'. $target_table .'" data-lookup="'. $lookup_field .'">';
-			$html .= '<label>Look up ' . $lookup_field . ': </label><input class="savvy_lookup_ac" name="savvymapper_' . $mapping['mapping_id'] . '_lookup_value" value="' . $lookup_value. '">';
-			$html .= '<input type="hidden" data-vizes="'.$visualizations.'">';
-			$html .= '</div>';
-			return $html;
-		}
-
 		function make_archive_map() {
 			$vizes = explode("\n",$this->mappings[$post_type]['visualizations']);
 			$vizes = array_filter($vizes);
@@ -152,7 +134,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		function mapping_div( $mapping ) {
 			$defaults = Array(
 				'cdb_table' => '',
-				'cdb_field' => '',
+				'lookup_field' => '',
 				'cdb_visualizations' => '',
 				'cdb_show_markers' => 1
 			);
@@ -170,7 +152,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			}
 
 			$html .= '<label>CartoDB Field</label>: ';
-			$html .= $this->form_make_select('cdb_field', $cdb_table, $cdb_table, $mapping['cdb_field'] ) . '<br>' . "\n";
+			$html .= $this->form_make_select('lookup_field', $cdb_table, $cdb_table, $mapping['lookup_field'] ) . '<br>' . "\n";
 
 
 			$html .= '<label>Visualizations</label>: ';
@@ -189,9 +171,9 @@ function load_savvy_carto_interface( $interfaces ) {
 		/* ------------ Below this arre CartoDB specific implementation functions ------------ */
 
 
-		function make_cdb_field_select( $table, $selected = FALSE ) {
+		function make_lookup_field_select( $table, $selected = FALSE ) {
 			$user_tables = $this->carto_user_tables();
-			$html = '<select data-name="cdb_field">';
+			$html = '<select data-name="lookup_field">';
 			$html = '<option value="">--</option>';
 			if(isset($user_tables[$table])){
 				foreach( $user_tables[$table] as $field_name){
@@ -274,44 +256,30 @@ function load_savvy_carto_interface( $interfaces ) {
 				$cdb_table = Array();
 			}
 
-			$html = $this->form_make_select('cdb_field', $cdb_table) . '<br>' . "\n";
+			$html = $this->form_make_select('lookup_field', $cdb_table) . '<br>' . "\n";
 
 			print $html;
 			exit();
 		}
 
 
-		function save_meta($post_id){ 
-			// Check if our nonce is set.
-			if(!isset($_POST['dm_meta_box_nonce'])){
-				return;
-			}
-
-			// Verify that the nonce is valid.
-			if(!wp_verify_nonce($_POST['dm_meta_box_nonce'],'dm_meta_box')){
-				return;
-			}
-
-			// If this is an autosave, our form has not been submitted, so we don't want to do anything.
-			if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-				return;
-			}
-
-			// Check the user's permissions.
-			if ( isset( $_POST['post_type'] ) && 'page' == $_POST['post_type'] ) {
-				if ( ! current_user_can( 'edit_page', $post_id ) ) {
-					return;
-				}
+		function save_meta($post_id){
+			// TODO: Loop through posted vars to capture interface specific values
+			if(isset($_POST['savvymapper_visualizations'])){
+				$visValue = implode(',',explode("\n",$_POST['savvymapper_visualizations']));
 			} else {
-				if ( ! current_user_can( 'edit_post', $post_id ) ) {
-					return;
-				}
+				$visValue = '';
 			}
+			return Array('cdb_visualizations' => $visValue);
+		}
 
-			$cartodb_value = sanitize_text_field($_POST['cartodb_lookup_value']);
+		function extra_metabox_fields( $post, $mapping ) {
+			$visualizations = $mapping['cdb_visualizations'];
 
-			update_post_meta($post_id,'cartodb_lookup_value',$cartodb_value);
+			$html = '<label>Visualizations</label><br>';
+			$html .= '<textarea name="savvymapper_visualizations">' . $visualizations . '</textarea>' . "\n";
 
+			return $html;
 		}
 
 		function do_shortcodes( $attrs, $contents ) {
@@ -413,55 +381,55 @@ function load_savvy_carto_interface( $interfaces ) {
 
 		}
 
-    /**
-     * Get single CDB object baed on the requested post
-     *
-     * @param $the_post Which post to use. defaults to $post
-     */
-    function makePostCDBOjb($the_post = NULL){
-        global $post;
+		/**
+		 * Get single CDB object baed on the requested post
+		 *
+		 * @param $the_post Which post to use. defaults to $post
+		 */
+		function makePostCDBOjb($the_post = NULL){
+			global $post;
 
 
-		$settings_string = get_post_meta($post->ID,'savvymapper_post_meta',TRUE);
-		$settings_ar = json_decode($settings_string,TRUE);
-		foreach($settings_ar as $set){
-			if($set['connection_id'] == $this->config['_id']){
-				$settings = $set;
-				break;
+			$settings_string = get_post_meta($post->ID,'savvymapper_post_meta',TRUE);
+			$settings_ar = json_decode($settings_string,TRUE);
+			foreach($settings_ar as $set){
+				if($set['connection_id'] == $this->config['_id']){
+					$settings = $set;
+					break;
+				}
 			}
+
+			$the_post = $post;
+			$mapping = $this->savvy->mappings[$settings['mapping_id']];
+			$target_table = $mapping['cdb_table'];
+			$lookup_field = $mapping['lookup_field'];
+
+			$cartodb_value = $settings['lookup_val'];
+			$sql = "SELECT * FROM " . $target_table . " WHERE \"$lookup_field\" ILIKE '" . $cartodb_value . "%'";
+			$cartoObj = $this->carto_sql($sql); 
+
+			return $cartoObj;
 		}
 
-        $the_post = $post;
-		$mapping = $this->savvy->mappings[$settings['mapping_id']];
-        $target_table = $mapping['cdb_table'];
-        $lookup_field = $mapping['cdb_field'];
+		/**
+		 * Ajax handler for running CartoDB queries
+		 */
+		function ajaxCartoQuery(){
+			if(isset($_GET['archive_type'])){
+				$post_type = $_GET['archive_type'];
+				$sql = $this->get_sql_for_archive_post($post_type);
+			}else if(isset($_GET['post_id'])){
+				$post_id = $_GET['post_id'];
+				$sql = $this->get_sql_for_single_post($post_id);
+			}
 
-        $cartodb_value = $settings['lookup_val'];
-		$sql = "SELECT * FROM " . $target_table . " WHERE \"$lookup_field\" ILIKE '" . $cartodb_value . "%'";
-        $cartoObj = $this->carto_sql($sql); 
+			$this->fetch_and_format_features($sql);
+		}
 
-        return $cartoObj;
-    }
-
-    /**
-     * Ajax handler for running CartoDB queries
-     */
-    function ajaxCartoQuery(){
-        if(isset($_GET['archive_type'])){
-            $post_type = $_GET['archive_type'];
-            $sql = $this->get_sql_for_archive_post($post_type);
-        }else if(isset($_GET['post_id'])){
-            $post_id = $_GET['post_id'];
-            $sql = $this->get_sql_for_single_post($post_id);
-        }
-
-        $this->fetch_and_format_features($sql);
-    }
-
-    /**
-     * Generate the SQL to fetch a single post
-     */
-    function get_sql_for_single_post($postid){
+		/**
+		 * Generate the SQL to fetch a single post
+		 */
+		function get_sql_for_single_post($postid){
 
 			$settings_string = get_post_meta($postid,'savvymapper_post_meta',TRUE);
 			$settings_ar = json_decode($settings_string,TRUE);
@@ -475,54 +443,54 @@ function load_savvy_carto_interface( $interfaces ) {
 			$mapping = $this->savvy->mappings[$settings['mapping_id']];
 
 
-        $post = get_post($postid);
-        $target_table = $mapping['cdb_table'];
-        $lookup_field = $mapping['cdb_field'];
-		$cartodb_value = $settings['lookup_val'];
+			$post = get_post($postid);
+			$target_table = $mapping['cdb_table'];
+			$lookup_field = $mapping['lookup_field'];
+			$cartodb_value = $settings['lookup_val'];
 
-        if(!empty($target_table) && !empty($lookup_field) && !empty($cartodb_value)){
-            $sql = 'SELECT * FROM "' . $target_table . '" WHERE "'.$lookup_field.'" ILIKE \'' . $cartodb_value. "%'";
-            return $sql;
-        }
-    }
+			if(!empty($target_table) && !empty($lookup_field) && !empty($cartodb_value)){
+				$sql = 'SELECT * FROM "' . $target_table . '" WHERE "'.$lookup_field.'" ILIKE \'' . $cartodb_value. "%'";
+				return $sql;
+			}
+		}
 
-    /**
-     * Given SQL, fetch the features, set their popup contents and print the GeoJSON
-     */
-    function fetch_and_format_features($sql){
-		global $post;
-		$post_type = $post->post_type;
-        if(empty($sql)){
-            http_response_code(500);
-            exit();
-        }
+		/**
+		 * Given SQL, fetch the features, set their popup contents and print the GeoJSON
+		 */
+		function fetch_and_format_features($sql){
+			global $post;
+			$post_type = $post->post_type;
+			if(empty($sql)){
+				http_response_code(500);
+				exit();
+			}
 
-        $json = $this->carto_sql($sql);
+			$json = $this->carto_sql($sql);
 
-        if(is_null($json)){
-            http_response_code(500);
-            exit();
-        }
+			if(is_null($json)){
+				http_response_code(500);
+				exit();
+			}
 
-        $post_type_info = get_post_type_object($post_type);
+			$post_type_info = get_post_type_object($post_type);
 
-        foreach($json->features as &$feature){
-            $permalink = get_permalink($ids[$feature->properties->cartodb_id]);
+			foreach($json->features as &$feature){
+				$permalink = get_permalink($ids[$feature->properties->cartodb_id]);
 
-            $popup_contents = '<table class="leafletpopup">';
-            $popup_contents .= '<tr><th colspan="2"><a href="' . $permalink . '">View ' .$post_type_info->labels->singular_name .'</a></tr>';
-            foreach($feature->properties as $k => $v){
-                $popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
-            }
-            $popup_contents .= '</table>';
-            $feature->popup_contents = $popup_contents;
-        }
+				$popup_contents = '<table class="leafletpopup">';
+				$popup_contents .= '<tr><th colspan="2"><a href="' . $permalink . '">View ' .$post_type_info->labels->singular_name .'</a></tr>';
+				foreach($feature->properties as $k => $v){
+					$popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
+				}
+				$popup_contents .= '</table>';
+				$feature->popup_contents = $popup_contents;
+			}
 
-        header("Content-Type: application/json");
-        print json_encode($json);
-        exit();
+			header("Content-Type: application/json");
+			print json_encode($json);
+			exit();
 
-    }
+		}
 
 
 	}

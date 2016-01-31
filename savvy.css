@@ -11,45 +11,67 @@
 	text-decoration: none;
 }
 table.savvy_settings th {
-    text-align: left;
+	text-align: left;
 }
 
 .savvy_metabox_map_div, .savvy_lookupbox {
-    min-height: 400px;
-    min-width: 250px;
-    width: 50%;
-    box-sizing: border-box;
-    display: inline-block;
-    vertical-align: top;
+	min-height: 400px;
+	min-width: 250px;
+	width: 50%;
+	box-sizing: border-box;
+	display: inline-block;
+	vertical-align: top;
 }
 
 .savvy_vizbox textarea{
-    width: 100%;
+	width: 100%;
 }
 
 .savvy_metabox_map_div {
-    padding-right: 10px;
+	padding-right: 10px;
 }
 
 .savvy_page_map_div {
-    width: 100%;
-    height: 450px;
+	width: 100%;
+	height: 450px;
 }
 
 .leafletpopup {
-    min-width: 250px;
+	min-width: 250px;
 }
 
 .savvy_archive_map {
-    height: 450px;
-    width: 100%;
+	height: 450px;
+	width: 100%;
 }
 
 .hentry.archivemapwrap {
-    padding-top: 0;
+	padding-top: 0;
 }
 
 .savvy-attr {
 	font-weight: bold;
 	color: #690000;
+}
+
+div.savvymapper_metabox_col {
+	display: inline-block;
+	width: 50%;
+	box-sizing: border-box;
+	vertical-align: top;
+}
+
+div.savvymapper_metabox_col:first-child {
+	padding-right: 10px;
+}
+
+div.savvymapper_metabox_col >  div {
+	width: 100%;
+	display: block;
+	padding-right: 10px !important;
+}
+
+div.savvymapper_metabox_col textarea {
+	resize: both;
+	width: 100%;
 }
