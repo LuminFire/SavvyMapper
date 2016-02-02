@@ -190,7 +190,7 @@ var SavvyMap = SavvyMapBase.extend({
 		if(this.args[ 'archive_type' ] !== undefined || this.args[ 'post_id' ] !== undefined){
 
 			var promise = jQuery.getJSON(ajaxurl,{
-				'action': 'get_geojson_for_post',
+				'action': 'savvy_get_geojson_for_post',
 				'post_id' : this.args[ 'post_id' ]
 			});
 

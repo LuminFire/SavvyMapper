@@ -141,8 +141,9 @@ class SavvyMapper {
 		wp_enqueue_script('jquery-ui-js',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
 
 		wp_enqueue_script('savvymapperjs',$plugin_dir_url . 'savvymapper.js',Array('jquery','cartodbjs','markercluster-js')); 
+		wp_localize_script( 'savvymapperjs', 'ajaxurl', admin_url( 'admin-ajax.php' ));
+
 		wp_enqueue_script('savvymapjs',$plugin_dir_url . 'savvymap.js',Array('jquery','cartodbjs','markercluster-js')); 
-		wp_localize_script( 'savvyjs', 'ajaxurl', admin_url( 'admin-ajax.php' ));
 
 
 		wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs')); 
@@ -774,6 +775,7 @@ class SavvyMapper {
 		$fake_attrs = Array(
 			'attr' => 'asdf',
 			);
+		$fake_contents = '';
 
 		$json = $connection->get_attribute_shortcode_geosjon( $fake_attrs, $fake_contents, $mapping, $current_settings );
 
