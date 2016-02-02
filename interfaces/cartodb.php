@@ -27,7 +27,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			add_action('wp_ajax_carto_query',Array($this,'ajaxCartoQuery'));
 			add_action('wp_ajax_nopriv_carto_query',Array($this,'ajaxCartoQuery'));
 
-			add_shortcode( 'savvy', Array( $this, 'do_shortcodes' ) );
+			// add_shortcode( 'savvy', Array( $this, 'do_shortcodes' ) );
 		}
 
 		/**
@@ -102,25 +102,6 @@ function load_savvy_carto_interface( $interfaces ) {
 			return $json;
 		}
 
-
-		function make_archive_map() {
-			$vizes = explode("\n",$this->mappings[$post_type]['visualizations']);
-			$vizes = array_filter($vizes);
-			$visualizations = implode(',',$vizes);
-
-			$show_markers = ($this->mappings[$post_type]['show_markers'] === '1' ? 'true' : 'false');
-
-			$html = '<article class="hentry archivemapwrap">';
-			$html .= '<div class="dm_map_div dm_archive_map" ';
-			$html .= 'data-archive_type="'.$post_type.'" ';
-			$html .= 'data-vizes="' . $visualizations . '" '; 
-			$html .= 'data-marker="' . $show_markers . '" ';
-			$html .= '></div>';
-			$html .= '</article>';
-
-			return $html;
-		}
-
 		function options_div() {
 			$connection_details = shortcode_atts( Array(
 				'username' => '',
@@ -135,7 +116,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			$defaults = Array(
 				'cdb_table' => '',
 				'lookup_field' => '',
-				'cdb_visualizations' => '',
+				'cdb_visualizations' => Array(),
 				'cdb_show_markers' => 1
 			);
 
@@ -156,7 +137,7 @@ function load_savvy_carto_interface( $interfaces ) {
 
 
 			$html .= '<label>Visualizations</label>: ';
-			$html .= $this->form_make_textarea('cdb_visualizations',$mapping['cdb_visualizations']) . '<br>' . "\n";
+			$html .= $this->form_make_textarea( 'cdb_visualizations', implode( "\n", $mapping[ 'cdb_visualizations' ] ) ) . '<br>' . "\n";
 
 			$html .= '<label>Show Markers</label>: ';
 			$html .= $this->form_make_checkbox('cdb_show_markers',$mapping['cdb_show_markers']);
@@ -239,7 +220,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			$ret = $this->curl_request($url);
 
 			if($json){
-				return json_decode($ret);
+				return json_decode( $ret, TRUE );
 			}else{
 				return $ret;
 			}
@@ -263,8 +244,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 		function extra_metabox_fields( $post, $mapping, $current_settings = Array() ) {
-			$visualizations_str = $current_settings['cdb_visualizations'];
-			$visualizations = explode( ',', $visualizations_str );
+			$visualizations = $current_settings['cdb_visualizations'];
 
 			$html = '<label>Visualizations</label><br>';
 			$html .= '<textarea name="savvymapper_visualizations">' . implode("\n",$visualizations). '</textarea>' . "\n";
@@ -285,166 +265,31 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 
-		function do_shortcodes( $attrs, $contents ) {
-			global $post;
+		function get_map_shortcode_properties( $attrs, $contents, $mapping, $curent_settings ) {
+			$attrs = array_merge( Array(
+				'vizes' => Array(),
+			), $attrs );
 
-			$attrs = shortcode_atts(Array(
-				'attr' => NULL,
-				'multiple' => NULL,
-				'show' => NULL,
-				'onarchive' => 'show',
-				'vizes' => NULL,
-				'popup' => 'true',
-				'marker' => NULL,
-				'zoom' => 'default',
-				'lat' => 'default',
-				'lng' => 'default',
-			),$attrs);
+			$mapping['cdb_visualizations'] = explode( "\n", $mapping['cdb_visualizations'] );
+			$mapping['cdb_visualizations'] = array_filter($mapping['cdb_visualizations']);
 
-			extract($attrs);
+			$vizes = array_merge( $mapping[ 'cdb_visualizations' ], $curent_settings[ 'cdb_visualizations' ], $attrs[ 'vizes' ] );
 
-
-			$settings_string = get_post_meta($post->ID,'savvymapper_post_meta',TRUE);
-			$settings_ar = json_decode($settings_string,TRUE);
-			foreach($settings_ar as $set){
-				if($set['connection_id'] == $this->config['_id']){
-					$settings = $set;
-					break;
-				}
-			}
-
-			$mapping = $this->savvy->mappings[$settings['mapping_id']];
-
-
-			// If we're supposed to hide the map on archive pages, bail early.
-			if(strtolower($onarchive) == 'hide'){
-				if(is_archive()){
-					return '';
-				}
-			}
-
-			$cartoObj = $this->makePostCDBOjb();
-
-			if(!empty($attr)){
-				switch($multiple){
-					case 'unique':
-						$allProp = Array();
-						foreach($cartoObj->features as $feature){
-							if(!empty($feature->properties->{$attr})){
-								$allProp[] = $feature->properties->{$attr};
-							}
-						}
-						$allProp = array_unique($allProp);
-						$propHtml = implode(', ',$allProp);
-						break;
-					default:
-						$props = $cartoObj->features[0]->properties;
-						$propHtml = $props->{$attr};
-				}
-
-				return '<span class="savvy-attr">' . $propHtml . '</span>';
-			}else if(!empty($show) && $show == 'map'){
-				// merge vizes
-				if(strtolower($vizes) === 'false'){
-					$visualizations = '';
-				} else {
-					$vizes = explode(',',$vizes);
-					$vizes = array_merge(explode("\n",$mapping['visualizations']),$vizes);
-					$vizes = array_filter($vizes);
-					$visualizations = implode(',',$vizes);
-				}
-
-				// show markers or not?
-				if(is_null($marker)){
-					$show_markers = ($mapping['show_markers'] === 1 ? 'true' : 'false');
-				}else{
-					$show_markers = (strtolower($marker) == 'true');
-				}
-
-				$html = '';
-				$popup_contents = '<table class="leafletpopup">';
-				foreach($cartoObj->features[0]->properties as $k => $v){
-					$popup_contents .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
-				}
-				$popup_contents .= '</table>';
-				$cartoObj->features[0]->popup_contents = $popup_contents;
-				$props = $cartoObj->features[0]->properties;
-				$html .= '<div class="savvy_map_div savvy_page_map_div" ';
-				$html .= 'data-post_id="'.$post->ID.'" ';
-				$html .= 'data-vizes="' . $visualizations . '" '; 
-				$html .= 'data-marker="' . $show_markers . '" ';
-				$html .= 'data-lat="' . $lat . '" ';
-				$html .= 'data-lng="' . $lng . '" ';
-				$html .= 'data-zoom="' . $zoom. '" ';
-				$html .= 'data-popup="' . $popup . '" ';
-				$html .= '></div>';
-				return $html;
-			}
-			return '';
-
+			return Array( 'vizes' => $vizes );
 		}
 
-		/**
-		 * Get single CDB object baed on the requested post
-		 *
-		 * @param $the_post Which post to use. defaults to $post
-		 */
-		function makePostCDBOjb($the_post = NULL){
-			global $post;
+		function get_attribute_shortcode_geosjon( $attrs, $contents, $mapping, $current_settings ){
+			$q = "SELECT * FROM " . $mapping['cdb_table'] . " WHERE " . $mapping['lookup_field'] . " ILIKE '" . $current_settings['lookup_value'] . "'";
+			$features = $this->carto_sql($q);
 
-
-			$settings_string = get_post_meta($post->ID,'savvymapper_post_meta',TRUE);
-			$settings_ar = json_decode($settings_string,TRUE);
-			foreach($settings_ar as $set){
-				if($set['connection_id'] == $this->config['_id']){
-					$settings = $set;
-					break;
-				}
-			}
-
-			$the_post = $post;
-			$mapping = $this->savvy->mappings[$settings['mapping_id']];
-			$target_table = $mapping['cdb_table'];
-			$lookup_field = $mapping['lookup_field'];
-
-			$cartodb_value = $settings['lookup_val'];
-			$sql = "SELECT * FROM " . $target_table . " WHERE \"$lookup_field\" ILIKE '" . $cartodb_value . "%'";
-			$cartoObj = $this->carto_sql($sql); 
-
-			return $cartoObj;
-		}
-
-		/**
-		 * Ajax handler for running CartoDB queries
-		 */
-		function ajaxCartoQuery(){
-			if(isset($_GET['archive_type'])){
-				$post_type = $_GET['archive_type'];
-				$sql = $this->get_sql_for_archive_post($post_type);
-			}else if(isset($_GET['post_id'])){
-				$post_id = $_GET['post_id'];
-				$sql = $this->get_sql_for_single_post($post_id);
-			}
-
-			$this->fetch_and_format_features($sql);
+			return $features;
 		}
 
 		/**
 		 * Generate the SQL to fetch a single post
 		 */
 		function get_sql_for_single_post($postid){
-
-			$settings_string = get_post_meta($postid,'savvymapper_post_meta',TRUE);
-			$settings_ar = json_decode($settings_string,TRUE);
-			foreach($settings_ar as $set){
-				if($set['connection_id'] == $this->config['_id']){
-					$settings = $set;
-					break;
-				}
-			}
-
-			$mapping = $this->savvy->mappings[$settings['mapping_id']];
-
+			list($connection, $mapping, $settings ) = $this->savvy->get_post_info_by_post_id( $postid );
 
 			$post = get_post($postid);
 			$target_table = $mapping['cdb_table'];
@@ -492,10 +337,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			header("Content-Type: application/json");
 			print json_encode($json);
 			exit();
-
 		}
-
-
 	}
 	$interfaces['cartodb'] = new SavvyCartoDB();
 

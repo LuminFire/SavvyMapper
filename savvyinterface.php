@@ -269,4 +269,6 @@ abstract class SavvyInterface {
 	}
 
 	abstract function save_meta($post_id);
+
+	abstract function get_attribute_shortcode_geosjon( $attrs, $contents, $mapping, $current_settings );
 }
