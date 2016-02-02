@@ -135,18 +135,18 @@ class SavvyMapper {
 	 */
 	function load_scripts() {
 		$plugin_dir_url = plugin_dir_url(__FILE__);
-		wp_enqueue_style('savvycss',$plugin_dir_url . 'savvy.css'); 
 
-		wp_enqueue_style('jquery-ui-css',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.css',Array('jquery'));
-		wp_enqueue_script('jquery-ui-js',$plugin_dir_url . 'jqui/jquery-ui-1.11.4/jquery-ui.min.js',Array('jquery'));
+		wp_enqueue_style('savvycss',$plugin_dir_url . 'assets/savvy.css'); 
 
-		wp_enqueue_script('savvymapperjs',$plugin_dir_url . 'savvymapper.js',Array('jquery','cartodbjs','markercluster-js')); 
+		wp_enqueue_style('savvyautocompletecss',$plugin_dir_url . 'assets/jquery.autocomplete.css',Array('jquery'));
+		wp_enqueue_script('savvyautocompletejs',$plugin_dir_url . 'assets/jquery.autocomplete.js',Array('jquery'));
+
+		wp_enqueue_script('savvyclassjs',$plugin_dir_url . 'assets/savvyclass.js');
+
+		wp_enqueue_script('savvymapperjs',$plugin_dir_url . 'assets/savvymapper.js',Array('jquery','savvyclassjs')); 
 		wp_localize_script( 'savvymapperjs', 'ajaxurl', admin_url( 'admin-ajax.php' ));
 
-		wp_enqueue_script('savvymapjs',$plugin_dir_url . 'savvymap.js',Array('jquery','cartodbjs','markercluster-js')); 
-
-
-		wp_enqueue_script('dminit',$plugin_dir_url . 'dm_init.js',Array('jquery','dmjs')); 
+		wp_enqueue_script('savvymapjs',$plugin_dir_url . 'assets/savvymap.js',Array('jquery','cartodbjs')); 
 	}
 
 	/**
@@ -355,7 +355,7 @@ class SavvyMapper {
 		// Col. 1: settings, help and hidden metadata
 		$html .= '<div class="savvymapper_metabox_col">';
 
-		$html .= '<label>Look up value ' . $mapping['lookup_field'] . ': </label>';
+		$html .= '<label>Look up value <em>' . $mapping['lookup_field'] . '</em>: </label>';
 		$html .= '<input class="savvy_lookup_ac" name="savvymapper_lookup_value" value="' . $current_settings['lookup_value'] . '">';
 		$html .= '<br>' . "\n";
 

@@ -1,3 +1,11 @@
+/**
+ * This is the base SavvyMap class. It implements the base functionality of any map displayed with SavvyMapper. 
+ * 
+ * Interfaces should provide a .js file with a class that extends SavvyMap and implements any additional functionality
+ * beyond the base functionality. 
+ *
+ * In some cases the base functionality may be sufficient for a given interface
+ */
 var SavvyMap = SavvyClass.extend({
 	// Meta info we use internally. 
 
