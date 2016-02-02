@@ -202,9 +202,14 @@ class SavvyMapper {
 				$allProp = array_unique( $allProp );
 			}
 
-			$propHtml = implode( ', ', $allProp );
+			sort($allProp);
 
-			return '<span class="savvy-attr">' . $propHtml . '</span>';
+			if(count($allProp) > 0){
+				$propHtml = implode( '</span><span class="savvy-attr">', $allProp );
+				$propHtml = '<span class="savvy-attr">' . $propHtml . '</span>';
+			}
+
+			return '<span class="savvy-attrs">' . $propHtml . '</span>';
 
 		} else if ( isset( $attrs[ 'show' ] ) ) {
 
@@ -513,7 +518,7 @@ class SavvyMapper {
 		$html .= '<div id="savvy_mapping_form">';
 		$html .= '<select name="savvy_post_type">' . implode( "\n", $post_type_options ) . '</select> ';
 		$html .= '<select name="savvy_connection_id">' . implode( "\n", $connection_options ) . '</select> ';
-		$html .= '<input type="button" onclick="savvy.add_mapping(this);" value="Add Mapping">';
+		$html .= '<input type="button" onclick="SAVVY.add_mapping(this);" value="Add Mapping">';
 		$html .= '</div>';
 
 		// Save options form
@@ -772,12 +777,7 @@ class SavvyMapper {
 		$postId = $_GET['post_id'];
 		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $postId );
 
-		$fake_attrs = Array(
-			'attr' => 'asdf',
-			);
-		$fake_contents = '';
-
-		$json = $connection->get_attribute_shortcode_geosjon( $fake_attrs, $fake_contents, $mapping, $current_settings );
+		$json = $connection->get_geojson_for_post( $mapping, $current_settings );
 
 		$this->send_json($json);
 	}

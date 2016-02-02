@@ -6,7 +6,7 @@ jQuery(document).ready(function(){
 			'action'	: 'savvy_cartodb_get_fields',
 			'table'		: jQuery(e.target).val()
 		}).then(function(success){
-			jQuery(e.target).parent().find('select[data-name=cdb_field]').html(success);
+			jQuery(e.target).parent().find('select[data-name=lookup_field]').html(success);
 		});
 	});
 

@@ -279,11 +279,17 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 		function get_attribute_shortcode_geosjon( $attrs, $contents, $mapping, $current_settings ){
-			$q = "SELECT * FROM " . $mapping['cdb_table'] . " WHERE " . $mapping['lookup_field'] . " ILIKE '" . $current_settings['lookup_value'] . "'";
+			$q = "SELECT " . $attrs['attr']  . ", the_geom FROM " . $mapping['cdb_table'] . " WHERE " . $mapping['lookup_field'] . " ILIKE '" . $current_settings['lookup_value'] . "'";
 			$features = $this->carto_sql($q);
-
 			return $features;
 		}
+
+		function get_geojson_for_post( $mapping, $current_settings ){
+			$q = "SELECT * FROM " . $mapping['cdb_table'] . " WHERE " . $mapping['lookup_field'] . " ILIKE '" . $current_settings['lookup_value'] . "'";
+			$features = $this->carto_sql($q);
+			return $features;
+		}
+
 
 		/**
 		 * Generate the SQL to fetch a single post
