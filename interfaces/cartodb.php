@@ -51,9 +51,9 @@ function load_savvy_carto_interface( $interfaces ) {
 		/**
 		 * Autocomplete the text for the selected field
 		 */
-		function autocomplete($mapping,$term = NULL) {
+		function autocomplete( $mapping, $term = NULL ) {
 
-			$sql = "SELECT DISTINCT ON (".$mapping['lookup_field'].")  " . $mapping['lookup_field'] . ",the_geom FROM " . $mapping['cdb_table'];
+			$sql = "SELECT DISTINCT ON (" . $mapping[ 'lookup_field' ] . ")  " . $mapping[ 'lookup_field' ] . " FROM " . $mapping[ 'cdb_table' ];
 
 			if(!empty($term)){
 				$sql .= " WHERE " . $mapping['lookup_field'] . " ILIKE '" . $term . "%'";
@@ -62,8 +62,14 @@ function load_savvy_carto_interface( $interfaces ) {
 			$sql .= " ORDER BY " . $mapping['lookup_field'];
 			$sql .= " LIMIT 25";
 
-			$json = $this->carto_sql($sql);
-			return Array($json,$mapping['lookup_field']);
+			$json_str = $this->carto_sql($sql,FALSE);
+			$json = json_decode($json_str,TRUE);
+			$suggestions = Array();
+			foreach($json['rows'] as $row){
+				$suggestions[] = $row[ $mapping[ 'lookup_field' ] ];
+			}
+			$suggestions = array_filter($suggestions);
+			return $suggestions;
 		}
 
 

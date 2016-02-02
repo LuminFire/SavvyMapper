@@ -2,7 +2,6 @@
  * This is the main SavvyMapper class. It handles core functionality and assets on all pages. 
  *
  * All classes extend a simple JS inheritance class based on an example by John Resig. 
- *
  */
 
 SavvyMapper = SavvyClass.extend({
@@ -103,8 +102,29 @@ jQuery(document).ready(function(){
 	SAVVY = new SavvyMapper();
 
 	jQuery('.savvy_lookup_ac').each(function(){
-		jQuery(this).autocomplete({
+		var mapping_id = jQuery(this).parent().data('mapping_id');
+		jQuery(this).autoComplete({
+			source: function(term,suggest){
+				try { SAVVY.auto.abort(); } catch(e){}
 
+				SAVVY.auto = jQuery.get(ajaxurl, {
+					'action'		: 'savvy_autocomplete',
+					'term'			: term,
+					'mapping_id'	: mapping_id
+				});
+
+				SAVVY.auto.then(function(success){
+					suggest(success);
+				});
+			}
+		});
+
+		// don't submit
+		jQuery(this).on('keypress',function(e){
+			if( e.keyCode == 13 ) {
+				return false;
+			}
+			console.log(e.keyCode);
 		});
 	});
 });

@@ -138,8 +138,8 @@ class SavvyMapper {
 
 		wp_enqueue_style('savvycss',$plugin_dir_url . 'assets/savvy.css'); 
 
-		wp_enqueue_style('savvyautocompletecss',$plugin_dir_url . 'assets/jquery.autocomplete.css',Array('jquery'));
-		wp_enqueue_script('savvyautocompletejs',$plugin_dir_url . 'assets/jquery.autocomplete.js',Array('jquery'));
+		wp_enqueue_style('savvyautocompletecss',$plugin_dir_url . 'assets/jquery.auto-complete.css');
+		wp_enqueue_script('savvyautocompletejs',$plugin_dir_url . 'assets/jquery.auto-complete.js',Array('jquery'));
 
 		wp_enqueue_script('savvyclassjs',$plugin_dir_url . 'assets/savvyclass.js');
 
@@ -287,27 +287,12 @@ class SavvyMapper {
 	 * Autocomplete!
 	 */
 	function ajax_autocomplete() {
-		$connection = $_GET['connection'];
-		$mapping = $this->mappings[$_GET['mapping']];
-		$term = $_GET['term'];
-
-		list($json,$lookup) = $this->connections[$connection]->autocomplete($mapping,$term);
-
-		if(is_null($json)){
-			http_response_code(500);
-			exit();
-		}
-
-		$suggestions = Array();
-		foreach($json->features as $i => $feature){
-			$suggestions[] = Array(
-				'label' => $feature->properties->$lookup,
-				'value' => $feature->properties->$lookup,
-			);
-		}
+		$mapping = $this->get_mappings( $_GET[ 'mapping_id' ] );
+		$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+		$suggestions = $connection->autocomplete( $mapping, $_GET['term'] );
 
 		header("Content-Type: application/json");
-		print json_encode($suggestions,JSON_FORCE_OBJECT);
+		print json_encode($suggestions);
 		exit();
 	}
 
@@ -353,13 +338,13 @@ class SavvyMapper {
 
 		// Two columns
 		// Col. 1: settings, help and hidden metadata
-		$html .= '<div class="savvymapper_metabox_col">';
+		$html .= '<div class="savvymapper_metabox_col" data-mapping_id="' . $mapping[ 'mapping_id'] . '">';
 
 		$html .= '<label>Look up value <em>' . $mapping['lookup_field'] . '</em>: </label>';
 		$html .= '<input class="savvy_lookup_ac" name="savvymapper_lookup_value" value="' . $current_settings['lookup_value'] . '">';
 		$html .= '<br>' . "\n";
 
-		$html .= "<input type='hidden' name='savvyampper_mapping' value='" . json_encode($mapping) . "'>";
+		// $html .= "<input type='hidden' name='savvyampper_mapping' value='" . json_encode($mapping) . "'>";
 		$html .= $connection->extra_metabox_fields($post, $mapping, $current_settings );
 
 		ob_start();
@@ -415,13 +400,8 @@ class SavvyMapper {
 			}
 		}
 
-		$settings = Array();
-	
-		// Load mapping info from hidden field in metabox
-		$orig_mapping_str = stripslashes( $_POST[ 'savvyampper_mapping' ] );
-		$orig_mapping = json_decode( $orig_mapping_str, TRUE );
-		$connection = $this->connections[ $orig_mapping[ 'connection_id' ] ];
-		$mapping = $this->mappings[ $orig_mapping[ 'mapping_id' ] ];
+		// Ask the specific connection to capture anything else
+		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post_id);
 
 		// Capture common fields for all interfaces
 		$settings = Array(
@@ -429,7 +409,6 @@ class SavvyMapper {
 			'lookup_value' => sanitize_text_field( $_POST[ 'savvymapper_lookup_value' ] )
 		);
 
-		// Ask the specific connection to capture anything else
 		$connectionMeta = $connection->save_meta( $post_id, $mapping );
 
 		// Merge them 
