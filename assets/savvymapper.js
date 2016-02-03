@@ -24,9 +24,52 @@ SavvyMapper = SavvyClass.extend({
 
 		jQuery('#savvyoptions').on('change',':input',this.update_connection_config);
 		jQuery('#savvy_mapping_settings').on('change',':input',this.update_mapping_config);
+
+		this.setup_listeners();
 	},
 
-	// Add a new API connection
+	setup_listeners: function(){
+		var _this = this;
+
+		// Set up behavior for autocomplete fields in metaboxes
+		jQuery('.savvy_lookup_ac').each(function(){
+			var mapping_id = jQuery(this).closest('.savvy_metabox_wrapper').data('mapping_id');
+			var acfield = jQuery(this);
+
+			acfield.autoComplete({
+				source: function( term, suggest ) {
+					try { _this.auto.abort(); } catch(e){}
+
+					_this.auto = jQuery.get(ajaxurl, {
+						'action'		: 'savvy_autocomplete',
+						'term'			: term,
+						'mapping_id'	: mapping_id
+					});
+
+					_this.auto.then(function(success){
+						suggest(success);
+					});
+				},
+				onSelect: function( e, term, item ) {
+					_this.replace_map_search_layer(acfield, term);
+				}
+			});
+
+			acfield.on('change',function(e){
+				_this.replace_map_search_layer(e.target, e.target.value);
+			});
+
+			// Don't submit when users hit enter
+			jQuery(this).on('keypress',function(e){
+				if( e.keyCode == 13 ) {
+					return false;
+				}
+				console.log(e.keyCode);
+			});
+		});
+	},
+
+	// SETTINGS: Add a new API connection
 	add_connection: function(button){
 		jQuery.get(ajaxurl, {
 			'action'	: 'savvy_get_interface_options_form',
@@ -36,7 +79,7 @@ SavvyMapper = SavvyClass.extend({
 		});
 	},
 
-	// Add a new mapping
+	// SETTINGS: Add a new mapping
 	add_mapping: function() {
 		var _this = this;
 		var postType = jQuery('select[name=savvy_post_type]').val();	
@@ -54,7 +97,7 @@ SavvyMapper = SavvyClass.extend({
 		});
 	},
 
-	// Update the connection config json string
+	// SETTINGS: Update the connection config json string
 	update_connection_config: function(){
 		var config = {'connections': []};
 		var oneconfig;
@@ -73,7 +116,7 @@ SavvyMapper = SavvyClass.extend({
 		jQuery('#savvymapper_connections').val(JSON.stringify(config));
 	},
 
-	// Update the mapping config json string
+	// SETTINGS: Update the mapping config json string
 	update_mapping_config: function(){
 		var config = {'mappings': []};
 		var oneconfig;
@@ -93,38 +136,16 @@ SavvyMapper = SavvyClass.extend({
 	}, 
 
 	// Add a map to this object
-	add_map: function(newMap){
-		this.maps[newMap.getId()] = newMap;
+	add_map: function( newMap ){
+		this.maps[ newMap.getId() ] = newMap;
 	},
+
+	replace_map_search_layer: function(target, newSearch) {
+		var map_id = jQuery(target).closest('.savvy_metabox_wrapper').find('.savvy_metabox_map_div').data('map').id;
+		this.maps[ map_id ].set_search_layer( {'lookup_value': newSearch});
+	}
 });
 
 jQuery(document).ready(function(){
 	SAVVY = new SavvyMapper();
-
-	jQuery('.savvy_lookup_ac').each(function(){
-		var mapping_id = jQuery(this).closest('.savvy_metabox_wrapper').data('mapping_id');
-		jQuery(this).autoComplete({
-			source: function(term,suggest){
-				try { SAVVY.auto.abort(); } catch(e){}
-
-				SAVVY.auto = jQuery.get(ajaxurl, {
-					'action'		: 'savvy_autocomplete',
-					'term'			: term,
-					'mapping_id'	: mapping_id
-				});
-
-				SAVVY.auto.then(function(success){
-					suggest(success);
-				});
-			}
-		});
-
-		// don't submit
-		jQuery(this).on('keypress',function(e){
-			if( e.keyCode == 13 ) {
-				return false;
-			}
-			console.log(e.keyCode);
-		});
-	});
 });

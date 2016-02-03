@@ -36,7 +36,8 @@ function load_savvy_carto_interface( $interfaces ) {
 		function load_scripts() {
 			$plugin_dir_url = plugin_dir_url(__FILE__);
 			wp_enqueue_style('cartodbcss','http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css');
-			wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
+			// wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
+			wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.uncompressed.js');
 			wp_enqueue_script('savvycarto',$plugin_dir_url . 'cartodb.js',Array('jquery'));
 		}
 

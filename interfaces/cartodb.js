@@ -23,7 +23,7 @@ jQuery(document).ready(function(){
 		var mapdiv = jQuery(this);
 		var mapconf = mapdiv.data('map');
 		var newMap = new SavvyCartoMap(this,mapconf);
-		SAVVY.add_map(newMap);
+		SAVVY.add_map( newMap );
 	});
 
 });

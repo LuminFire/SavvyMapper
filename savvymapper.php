@@ -349,8 +349,11 @@ class SavvyMapper {
 		$mapping = $metabox['args'][1];
 
 		list($cur_connection, $cur_mapping, $current_settings ) = $this->get_post_info_by_post_id( $post->ID);
+		$mapSetup = $this->make_map_config( Array(), Array(), $connection, $mapping );
 
-		$html = "<div class='savvy_metabox_wrapper' data-mapping_id='" . $mapping[ 'mapping_id'] . "' data-map='" . json_encode($current_settings) . "'>";
+
+
+		$html = "<div class='savvy_metabox_wrapper' data-mapping_id='" . $mapping[ 'mapping_id'] . "'>";
 
 		// Two columns
 		// Col. 1: settings, help and hidden metadata
@@ -368,8 +371,6 @@ class SavvyMapper {
 		$html .= ob_get_clean();
 
 		$html .= '</div>';
-
-		$mapSetup = $this->make_map_config( Array(), Array(), $connection, $mapping );
 
 		// Col. 2: map div
 		$html .= '<div class="savvymapper_metabox_col">';
@@ -769,6 +770,13 @@ class SavvyMapper {
 	function get_geojson_for_post(){
 		$postId = $_GET['post_id'];
 		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $postId );
+
+		$overrides = $_GET['overrides'];
+		if( empty( $overrides ) ){
+			$overrides = Array();
+		}
+
+		$current_settings = array_merge( $current_settings, $overrides );
 
 		$json = $connection->get_geojson_for_post( $mapping, $current_settings );
 

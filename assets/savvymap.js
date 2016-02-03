@@ -1,11 +1,11 @@
 /**
- * This is the base SavvyMap class. It implements the base functionality of any map displayed with SavvyMapper. 
- * 
- * Interfaces should provide a .js file with a class that extends SavvyMap and implements any additional functionality
- * beyond the base functionality. 
- *
- * In some cases the base functionality may be sufficient for a given interface
- */
+* This is the base SavvyMap class. It implements the base functionality of any map displayed with SavvyMapper. 
+* 
+* Interfaces should provide a .js file with a class that extends SavvyMap and implements any additional functionality
+* beyond the base functionality. 
+*
+* In some cases the base functionality may be sufficient for a given interface
+*/
 var SavvyMap = SavvyClass.extend({
 	// Meta info we use internally. 
 
@@ -51,6 +51,29 @@ var SavvyMap = SavvyClass.extend({
 		var lat = this.args[ 'lat' ] || 'default';
 		var lng = this.args[ 'lng' ] || 'default';
 		var zoom = this.args[ 'zoom' ] || 'default';
+		lat = (parseFloat(lat) == lat ? lat : 0);
+		lng = (parseFloat(lng) == lng ? lng : 0);
+		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
+
+
+
+		this.map = L.map(this.div[0]).setView([lat,lng],zoom); 
+		this._setupBasemap().addTo(this.map);
+
+		this.set_search_layer();
+	},
+
+	getId: function(){
+		return this.args.id;
+	}, 
+
+	set_search_layer: function( overrides ) {
+		overrides = overrides || {};
+
+		// Fetch lat/lng/zoom
+		var lat = this.args[ 'lat' ] || 'default';
+		var lng = this.args[ 'lng' ] || 'default';
+		var zoom = this.args[ 'zoom' ] || 'default';
 		var fitBounds = true;
 
 		// then make sure they're sane
@@ -69,8 +92,8 @@ var SavvyMap = SavvyClass.extend({
 		popup = (popup === false || popup == 'false' ? false : true);
 		var _this = this;
 
-		this.map = L.map(this.div[0]).setView([lat,lng],zoom); 
-		this._setupBasemap().addTo(this.map);
+
+
 		this.archive_type = this.args[ 'archive_type' ];
 		this.post_id = this.args[ 'post_id' ];
 
@@ -78,10 +101,15 @@ var SavvyMap = SavvyClass.extend({
 
 			var promise = jQuery.getJSON(ajaxurl,{
 				'action': 'savvy_get_geojson_for_post',
-				'post_id' : this.args[ 'post_id' ]
+				'post_id' : this.args[ 'post_id' ],
+				'overrides' : overrides
 			});
 
 			promise = promise.then(function(success){
+				if(_this.layers.thegeom !== undefined){
+					_this.map.removeLayer( _this.layers.thegeom );
+				}
+
 				_this.layers.thegeom = L.geoJson(success,{
 					onEachFeature: function (feature, layer) {
 						if(popup){
@@ -116,9 +144,5 @@ var SavvyMap = SavvyClass.extend({
 
 			return promise;
 		}
-	},
-
-	getId: function(){
-		return this.args.id;
 	}
 });
