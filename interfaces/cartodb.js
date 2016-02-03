@@ -11,21 +11,12 @@ jQuery(document).ready(function(){
 	});
 
 	// On individual post pages, get the map
-	jQuery('.savvy_map_cartodb').each(function(){
+	jQuery('.savvy_map_cartodb,.savvy_metabox_map_cartodb').each(function(){
 		var mapdiv = jQuery(this);
 		var mapconf = mapdiv.data('map');
 		var newMap = new SavvyCartoMap(this,mapconf);
 		SAVVY.add_map(newMap);
 	});
-
-	// On editing posts pages, get the map
-	jQuery('.savvy_metabox_map_cartodb').each(function(){
-		var mapdiv = jQuery(this);
-		var mapconf = mapdiv.data('map');
-		var newMap = new SavvyCartoMap(this,mapconf);
-		SAVVY.add_map( newMap );
-	});
-
 });
 
 var SavvyCartoMap = SavvyMap.extend({

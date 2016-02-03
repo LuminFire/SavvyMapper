@@ -67,6 +67,20 @@ SavvyMapper = SavvyClass.extend({
 				console.log(e.keyCode);
 			});
 		});
+
+		jQuery('.savvy_shortcode_field').on('change',function(e){
+			var theselect = jQuery(e.target);
+			var preparea = theselect.parent().find('div[data-name=hidden_shortcodepreview]');
+			preparea.find('.savvy_field_name').html(theselect.val());
+			theselect.parent().find('input[data-name=shortcodepreview]').val(preparea.text());
+		});
+
+		jQuery('.savvy_shortcode_multiple').on('change',function(e){
+			var theselect = jQuery(e.target);
+			var preparea = theselect.parent().find('div[data-name=hidden_shortcodepreview]');
+			preparea.find('.savvy_multiple').html(theselect.val());
+			theselect.parent().find('input[data-name=shortcodepreview]').val(preparea.text());
+		});
 	},
 
 	// SETTINGS: Add a new API connection

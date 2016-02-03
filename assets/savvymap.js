@@ -103,8 +103,9 @@ var SavvyMap = SavvyClass.extend({
 
 			var promise = jQuery.getJSON(ajaxurl,{
 				'action': 'savvy_get_geojson_for_post',
-				'post_id' : this.args[ 'post_id' ],
-				'overrides' : overrides
+				'post_id' : this.args.post_id,
+				'overrides' : overrides,
+				'mapping_id' : this.args.mapping_id
 			});
 
 			promise = promise.then(function(success){
@@ -136,7 +137,9 @@ var SavvyMap = SavvyClass.extend({
 
 			if(fitBounds) {
 				promise = promise.then(function(){
-					_this.map.fitBounds(_this.layers.thegeom.getBounds());
+					if(_this.layers.thegeom.getLayers().length > 0){
+						_this.map.fitBounds(_this.layers.thegeom.getBounds());
+					}
 				});
 			} else {
 				promise = promise.then(function(){

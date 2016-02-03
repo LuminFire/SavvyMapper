@@ -169,20 +169,23 @@ class SavvyMapper {
 			$allProp = array();
 			foreach ( $features['features'] as $feature ) {
 
+				// multiple can be: empty (unique), all (show all) or first (show first)
+
 				// We only collect non-empty properties to display
-				if ( ! empty( $feature['properties'][ $attrs ['attr'] ] ) ) {
-					$allProp[] = $feature['properties'][ $attrs['attr'] ];
-					if ( $attrs['multiple'] != 'unique' && $attrs['multiple'] != 'all' ) {
-						// If we're asking for a single, just break
-						break;
-					}
+				$allProp[] = $feature['properties'][ $attrs['attr'] ];
+				if ( $attrs[ 'multiple' ] == 'first' ) {
+					// If we're asking for a single, just break
+					break;
 				}
 			}
 
 			// If we're unique, do that now
-			if ( $attrs['multiple'] == 'unique' ) {
+			if ( $attrs[ 'multiple' ] !== 'all' ) {
 				$allProp = array_unique( $allProp );
 			}
+
+			// Remove empty values
+			$allProp = array_filter( $allProp );
 
 			sort( $allProp );
 
@@ -337,12 +340,37 @@ class SavvyMapper {
 		$html .= '<input class="savvy_lookup_ac" name="savvymapper_lookup_value" value="' . $current_settings['lookup_value'] . '">';
 		$html .= '<br>' . "\n";
 
-		// $html .= "<input type='hidden' name='savvyampper_mapping' value='" . json_encode($mapping) . "'>";
+		$html .= "<input type='hidden' name='savvyampper_mapping_id' value='" . $mapping[ 'mapping_id' ] . "'>";
 		$html .= $connection->extra_metabox_fields( $post, $mapping, $current_settings );
 
 		ob_start();
 		wp_nonce_field( 'savvymapper_meta_box', 'savvymapper_meta_box_nonce' );
 		$html .= ob_get_clean();
+
+		$html .= '<hr>';
+		$lookup_fields = $connection->get_attribute_names( $mapping );
+
+		$html .= '<h3>Shortcode Cheat Sheet</h3>';
+
+		$html .= '<h4>Map</h4>';
+		$html .= "<input class='wide' type='text' value='[savvy show=\"map\"]'><br><br>";
+
+		$html .= '<h4>Attributes</h4>';
+		$html .= '<label>Attribute Name</label>: <select class="savvy_shortcode_field">';
+		foreach($lookup_fields as $field){
+			$html .= '<option value="' . $field . '">' . $field . '</option>';
+		}
+		$html .= '</select><br>';
+
+		$html .= '<label>Duplicate value handling</label>: ';
+		$html .= '<select class="savvy_shortcode_multiple">';
+		$html .= '<option value="">Unique Values (default)</option>';
+		$html .= "<option value=' multiple=\"first\"'>First (may be empty)</option>";
+		$html .= "<option value=' multiple=\"all\"'>All (may have duplicates)</option>";
+		$html .= '</select>';
+
+		$html .= '<div class="hidden" data-name="hidden_shortcodepreview">[savvy attr="<span class="savvy_field_name">' . $lookup_fields[0] . '</span>"<span class="savvy_multiple"></span>]</div>';
+		$html .= "<input class='wide' type='text' data-name='shortcodepreview' value='" . '[savvy attr="' . $lookup_fields[0] . '"]' . "'>";
 
 		$html .= '</div>';
 
@@ -391,6 +419,12 @@ class SavvyMapper {
 
 		// Ask the specific connection to capture anything else
 		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post_id );
+
+		if ( empty( $connection ) ) {
+			$mapping = $this->get_mappings( $_POST[ 'savvyampper_mapping_id' ] );
+			$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+			$current_settings = array();
+		}
 
 		// Capture common fields for all interfaces
 		$settings = array(
@@ -465,7 +499,7 @@ class SavvyMapper {
 		foreach ( $post_types as $post_type ) {
 			$post_type_object = get_post_type_object( $post_type );
 			// $post_type_list[$post_type] = $post_type_object->labels->singular_name;
-			$post_type_options[] = '<option value="' . $post_type . '">' . $post_type_object->labels->singular_name . '</option>';
+			$post_type_options[] = '<option value="' . $post_type . '">' . $post_type_object->labels->name . '</option>';
 		}
 
 		$connection_options = array();
@@ -512,7 +546,7 @@ class SavvyMapper {
 		$html .= '<h2>SavvyMapper</h2>';
 		$html .= '<p>Welcome to SavvyMapper. Add connections to services below.</p>';
 		foreach ( $this->interface_classes as $interface ) {
-			$html .= '<input type="button" onclick="savvy.add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
+			$html .= '<input type="button" onclick="SAVVY.add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
 		}
 		$html .= '<hr>';
 
@@ -647,9 +681,9 @@ class SavvyMapper {
 		$html = '<div class="mapping-config">';
 		$html .= '<h3><span class="remove-instance">(X)</span> ' . $post_type_info->labels->singular_name . ' => ' . $connection->get_connection_name() . '</h3>';
 		$html .= '<label>Mapping Name</label> <input type="text" data-name="mapping_name" value="' . $mapping['mapping_name'] . '"><br>' . "\n";
-		$html .= '<input type="hidden" data-name="connection_id" value="' . $connection->get_id() . '"><br>' . "\n";
-		$html .= '<input type="hidden" data-name="mapping_id" value="' . $mapping_id . '"><br>' . "\n";
-		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '"><br>' . "\n";
+		$html .= '<input type="hidden" data-name="connection_id" value="' . $connection->get_id() . '">';
+		$html .= '<input type="hidden" data-name="mapping_id" value="' . $mapping_id . '">';
+		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '">';
 		$html .= $connection->mapping_div( $mapping );
 		$html .= '<hr>';
 		$html .= '</div>';
@@ -740,6 +774,12 @@ class SavvyMapper {
 	function get_geojson_for_post() {
 		$postId = $_GET['post_id'];
 		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $postId );
+
+		if( empty( $connection ) ) {
+			$mapping = $this->get_mappings( $_GET[ 'mapping_id' ] );
+			$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+			$current_settings = array();
+		}
 
 		$overrides = $_GET['overrides'];
 		if ( empty( $overrides ) ) {

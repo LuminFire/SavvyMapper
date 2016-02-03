@@ -5,7 +5,6 @@
  * to be used as an interface
  */
 abstract class SavvyInterface {
-
 	/**
 	 * @var The SavvyMapper instance.
 	 */
@@ -39,29 +38,10 @@ abstract class SavvyInterface {
 		$this->savvy = SavvyMapper::get_instance();
 		$this->setup_actions();
 		$this->set_config( $config );
-	}
 
-	/**
-	 * Handle any unsupported methods here
-	 */
-	function __call( $method, $args ) {
-		error_log( 'The method ' . $method . ' is not supported by this class.' );
-	}
-
-	/**
-	 * Get the name of this plugin
-	 */
-	function get_name() {
-		return $this->name;
-	}
-
-	/**
-	 * The type should be an html-attribute friendly name
-	 */
-	function get_type() {
-		$typename = sanitize_title( $this->name );
-		$typename = str_replace( '-', '_', $typename );
-		return $typename;
+		wp_enqueue_style( 'cartodbcss','http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css' );
+		// wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
+		wp_enqueue_script( 'cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.uncompressed.js' );
 	}
 
 	/**
@@ -71,6 +51,8 @@ abstract class SavvyInterface {
 	 *
 	 * @param mappingconfig $mapping The current mapping for the connection.
 	 * @param string        $term The term we're autocompleting with
+	 *
+	 * @note This should really only return some practical number of items. Probably 15ish, and they should be sorted alphabetically
 	 *
 	 * @return An array of matched values
 	 */
@@ -181,9 +163,11 @@ abstract class SavvyInterface {
 	/**
 	 * Setup the actions to get things started
 	 *
+	 * Enqueue js/css needed for this interface
+	 *
 	 * This is run for all instances of the interface, even empty ones
 	 */
-	function setup_actions() { }
+	abstract function setup_actions();
 
 	/**
 	 * Setup actions for a specific connection
@@ -195,25 +179,23 @@ abstract class SavvyInterface {
 	/**
 	 * @param array $config This instance's config
 	 */
-	function set_config( $config = array() ) {
-		$this->config = $config;
+		function set_config( $config = array() ) {
+			$this->config = $config;
 
-		if ( ! empty( $config ) ) {
-			$this->connection_setup_actions();
+			if ( ! empty( $config ) ) {
+				$this->connection_setup_actions();
+			}
 		}
-	}
 
 	/*
-     * cURL wrapper which returns request and response headers, curl request meta, post and response body.
-     *
-     * Slightly simplified version of what's used in esco-4d-api.php for the api debugger page
-     *
-     * @param $url (String) The URL to make the request to
-     * @param $data (Array) The data to post. If array is empty, GET will be used
-     * @param $debug (Bool, defaults to FALSE) Should debug info be returned?
-     *
-     * @return A dict with all the requst info, if debug is TRUE. Otherwise just returns the response body
-     */
+	 * cURL wrapper which returns request and response headers, curl request meta, post and response body.
+	 *
+	 * @param $url (String) The URL to make the request to
+	 * @param $data (Array) The data to post. If array is empty, GET will be used
+	 * @param $debug (Bool, defaults to FALSE) Should debug info be returned?
+	 *
+	 * @return A dict with all the requst info, if debug is TRUE. Otherwise just returns the response body
+	 */
 	function curl_request( $url, $data = array(), $debug = false ) {
 
 		$post = curl_init();
@@ -388,5 +370,28 @@ abstract class SavvyInterface {
 		$html = '<label>' . $label . '</label>: ';
 		$html .= '<input type="text" data-name="' . $param_name . '" value="' . $value . '">';
 		return $html;
+	}
+
+	/**
+	 * Get the name of this plugin
+	 */
+	function get_name() {
+		return $this->name;
+	}
+
+	/**
+	 * The type should be an html-attribute friendly name
+	 */
+	function get_type() {
+		$typename = sanitize_title( $this->name );
+		$typename = str_replace( '-', '_', $typename );
+		return $typename;
+	}
+
+	/**
+	 * Handle any unsupported methods here
+	 */
+	function __call( $method, $args ) {
+		error_log( 'The method ' . $method . ' is not supported by this class.' );
 	}
 }

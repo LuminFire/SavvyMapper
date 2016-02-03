@@ -14,8 +14,6 @@ function load_savvy_carto_interface( $interfaces ) {
 		function connection_setup_actions() {
 			add_action( 'wp_ajax_savvy_cartodb_get_fields', array( $this, 'get_fields_for_table' ) );
 			add_action( 'wp_ajax_nopriv_savvy_cartodb_get_fields', array( $this, 'get_fields_for_table' ) );
-			add_action( 'wp_ajax_carto_query',array( $this, 'ajaxCartoQuery' ) );
-			add_action( 'wp_ajax_nopriv_carto_query',array( $this, 'ajaxCartoQuery' ) );
 		}
 
 		/**
@@ -29,7 +27,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			}
 
 			$sql .= ' ORDER BY ' . $mapping['lookup_field'];
-			$sql .= ' LIMIT 25';
+			$sql .= ' LIMIT 15';
 
 			$json_str = $this->carto_sql( $sql,false );
 			$json = json_decode( $json_str,true );
@@ -77,10 +75,10 @@ function load_savvy_carto_interface( $interfaces ) {
 				$cdb_table = array();
 			}
 
-			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping['cdb_table'] ) . '<br>' . "\n";
-			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping['lookup_field'] ) . '<br>' . "\n";
-			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping['cdb_visualizations'] ) . '<br>' . "\n";
-			$html .= $this->form_make_checkbox( 'Show Markers', 'cdb_show_markers',$mapping['cdb_show_markers'] );
+			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping[ 'cdb_table' ] ) . '<br>' . "\n";
+			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping[ 'lookup_field' ] ) . '<br>' . "\n";
+			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping[ 'cdb_visualizations' ] ) . '<br>' . "\n";
+			$html .= $this->form_make_checkbox( 'Show Markers', 'cdb_show_markers', $mapping[ 'cdb_show_markers' ] );
 
 			return $html;
 		}
@@ -164,7 +162,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		}
 
 		/**
-		 * overrides default method
+		 * implements required method
 		 */
 		function setup_actions() {
 			add_action( 'wp_enqueue_scripts', array( $this, 'load_scripts' ) );
@@ -178,10 +176,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		 */
 		function load_scripts() {
 			$plugin_dir_url = plugin_dir_url( __FILE__ );
-			wp_enqueue_style( 'cartodbcss','http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css' );
-			// wp_enqueue_script('cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
-			wp_enqueue_script( 'cartodbjs','http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.uncompressed.js' );
-			wp_enqueue_script( 'savvycarto',$plugin_dir_url . 'cartodb.js',array( 'jquery' ) );
+			wp_enqueue_script( 'savvycarto',$plugin_dir_url . 'cartodb.js',array( 'jquery','savvymapjs' ) );
 		}
 
 		/**
@@ -265,7 +260,8 @@ function load_savvy_carto_interface( $interfaces ) {
 			exit();
 		}
 	}
-	$interfaces['cartodb'] = new SavvyCartoDB();
+	$int = new SavvyCartoDB();
+	$interfaces[ $int->get_type() ] = $int;
 
 	return $interfaces;
 }
