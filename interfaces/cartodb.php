@@ -49,10 +49,10 @@ function load_savvy_carto_interface( $interfaces ) {
 				'username' => '',
 				'key' => '',
 			), $this->config );
-			$html .= $this->make_form_text('CartoDB Username','username',$connection_details['username']);
-			$html .= '<br>\n';
-			$html .= $this->make_form_text('CartoDB API Key','key',$connection_details['key']);
-			$html .= '<br>\n';
+			$html .= $this->form_make_text('CartoDB Username','username',$connection_details['username']);
+			$html .= "<br>\n";
+			$html .= $this->form_make_text('CartoDB API Key','key',$connection_details['key']);
+			$html .= "<br>\n";
 			return $html;
 		}
 
