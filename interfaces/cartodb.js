@@ -17,14 +17,25 @@ jQuery(document).ready(function(){
 		var newMap = new SavvyCartoMap(this,mapconf);
 		SAVVY.add_map(newMap);
 	});
+
+	// On editing posts pages, get the map
+	jQuery('.savvy_metabox_map_cartodb').each(function(){
+		var mapdiv = jQuery(this);
+		var mapconf = mapdiv.data('map');
+		var newMap = new SavvyCartoMap(this,mapconf);
+		SAVVY.add_map(newMap);
+	});
+
 });
 
 var SavvyCartoMap = SavvyMap.extend({
 
 	init: function(div,args){
 		this._super(div,args);
-		for(var v = 0;v<this.args.vizes.length;v++){
-			this.addVisualization(this.args.vizes[v]);
+		if( this.args.vizes instanceof Array ){
+			for(var v = 0;v<this.args.vizes.length;v++){
+				this.addVisualization(this.args.vizes[v]);
+			}
 		}
 	},
 

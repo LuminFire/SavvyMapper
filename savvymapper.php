@@ -160,19 +160,7 @@ class SavvyMapper {
 	function do_shortcodes( $attrs, $contents ) {
 		global $post;
 
-		// Default shortcode option that all interfaces need to support
-		$attrs = array_merge( Array(
-			'attr' => NULL,
-			'multiple' => 'unique',
-			'show' => NULL,
-			'onarchive' => 'show',
-			'popup' => true,
-			'marker' => true,
-			'zoom' => 'default',
-			'lat' => 'default',
-			'lng' => 'default',
-		), $attrs );
-
+		$attrs = $this->make_default_attrs( $attrs );
 
 		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post->ID );
 
@@ -218,25 +206,53 @@ class SavvyMapper {
 			// supports, then put it all in a data- attribute for 
 			// javascript to process
 			if( $attrs[ 'show' ] == 'map') {
-				$mapSetup = Array(
-					'id'			=> $attrs[ 'id' ] ?: $mapping['mapping_id'] . '_' . $post->ID,
-					'popup'			=> $attrs[ 'popup' ],
-					'marker'		=> $attrs[ 'marker' ],
-					'zoom'			=> $attrs[ 'zoom' ],
-					'lat'			=> $attrs[ 'lat' ],
-					'lng'			=> $attrs[ 'lng' ],
-					'post_id'		=> $post->ID,
-					'mapping_id'	=> $mapping['mapping_id'],
-				);
 
-				$connectionMapSetup = $connection->get_map_shortcode_properties( $attrs, $contents, $mapping, $current_settings);
-				$mapSetup = array_merge( $mapSetup, $connectionMapSetup );
+				$mapSetup = $this->make_map_config( $attrs, $connection, $mapping );
 
 				$html .= "<div class='savvy_map_div savvy_page_map_div savvy_map_" . $connection->get_type() . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
 
 				return $html;
 			}
 		}
+	}
+
+	function make_default_attrs( $attrs ) {
+		// Default shortcode option that all interfaces need to support
+		$attrs = array_merge( Array(
+			'attr' => NULL,
+			'multiple' => 'unique',
+			'show' => NULL,
+			'onarchive' => 'show',
+			'popup' => true,
+			'marker' => true,
+			'zoom' => 'default',
+			'lat' => 'default',
+			'lng' => 'default',
+		), $attrs );
+
+		return $attrs;
+	}
+
+	function make_map_config( $attrs, $connection, $mapping ) {
+		global $post;
+
+		$attrs = $this->make_default_attrs( $attrs );
+
+		$mapSetup = Array(
+			'id'			=> $attrs[ 'id' ] ?: $mapping['mapping_id'] . '_' . $post->ID,
+			'popup'			=> $attrs[ 'popup' ],
+			'marker'		=> $attrs[ 'marker' ],
+			'zoom'			=> $attrs[ 'zoom' ],
+			'lat'			=> $attrs[ 'lat' ],
+			'lng'			=> $attrs[ 'lng' ],
+			'post_id'		=> $post->ID,
+			'mapping_id'	=> $mapping['mapping_id'],
+		);
+
+		$connectionMapSetup = $connection->get_map_shortcode_properties( $attrs, $contents, $mapping, $current_settings);
+		$mapSetup = array_merge( $mapSetup, $connectionMapSetup );
+
+		return $mapSetup;
 	}
 
 	/**
@@ -334,11 +350,11 @@ class SavvyMapper {
 
 		list($cur_connection, $cur_mapping, $current_settings ) = $this->get_post_info_by_post_id( $post->ID);
 
-		$html = '<div class="savvy_metabox_wrapper">';
+		$html = "<div class='savvy_metabox_wrapper' data-mapping_id='" . $mapping[ 'mapping_id'] . "' data-map='" . json_encode($current_settings) . "'>";
 
 		// Two columns
 		// Col. 1: settings, help and hidden metadata
-		$html .= '<div class="savvymapper_metabox_col" data-mapping_id="' . $mapping[ 'mapping_id'] . '">';
+		$html .= '<div class="savvymapper_metabox_col">';
 
 		$html .= '<label>Look up value <em>' . $mapping['lookup_field'] . '</em>: </label>';
 		$html .= '<input class="savvy_lookup_ac" name="savvymapper_lookup_value" value="' . $current_settings['lookup_value'] . '">';
@@ -353,14 +369,12 @@ class SavvyMapper {
 
 		$html .= '</div>';
 
-
+		$mapSetup = $this->make_map_config( Array(), $connection, $mapping );
 
 		// Col. 2: map div
 		$html .= '<div class="savvymapper_metabox_col">';
-		$html .= '<div class="savvy_metabox_map_div"></div>';
+		$html .= "<div class='savvy_metabox_map_div savvy_metabox_map_" . $connection->get_type() . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
 		$html .= '</div>';
-
-
 
 		$html .= '</div>';
 

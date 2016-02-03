@@ -102,7 +102,7 @@ jQuery(document).ready(function(){
 	SAVVY = new SavvyMapper();
 
 	jQuery('.savvy_lookup_ac').each(function(){
-		var mapping_id = jQuery(this).parent().data('mapping_id');
+		var mapping_id = jQuery(this).closest('.savvy_metabox_wrapper').data('mapping_id');
 		jQuery(this).autoComplete({
 			source: function(term,suggest){
 				try { SAVVY.auto.abort(); } catch(e){}
