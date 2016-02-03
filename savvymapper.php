@@ -95,12 +95,6 @@ class SavvyMapper {
 		add_action( 'admin_enqueue_scripts', Array( $this, 'load_scripts' ) );
 		add_filter( 'plugin_action_links', Array( $this, 'plugin_add_settings_link' ), 10, 5 );
 
-		add_action( 'wp_ajax_savvy_query_post', Array( $this, 'ajax_query_post' ) );
-		add_action( 'wp_ajax_nopriv_savvy_query_post', Array( $this, 'ajax_query' ) );
-
-		add_action( 'wp_ajax_savvy_query_archive', Array( $this, 'ajax_query_archive' ) );
-		add_action( 'wp_ajax_nopriv_savvy_query_archive', Array( $this, 'ajax_query_archive' ) );
-
 		add_action( 'wp_ajax_savvy_autocomplete', Array( $this, 'ajax_autocomplete' ) );
 		add_action( 'wp_ajax_nopriv_savvy_autocomplete', Array( $this, 'ajax_autocomplete' ) );
 
@@ -169,7 +163,7 @@ class SavvyMapper {
 		if( isset( $attrs[ 'attr' ] ) ) {
 
 			// Attributes are simpler, so we'll just ask for fetures based on a search
-			$features = $connection->get_attribute_shortcode_geosjon( $attrs, $contents, $mapping, $current_settings );
+			$features = $connection->get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings );
 
 			// what happens if multiple features match a query
 			$allProp = Array();
@@ -279,24 +273,6 @@ class SavvyMapper {
 		}
 
 		return $actions;
-	}
-
-	/**
-	 * Get the json for a single post from an instance of an interface
-	 */
-	function ajax_query_post() {
-		$instance = $_GET['instance'];
-		$json = $this->settings[$instance]->get_post_json();
-		$this->send_json($json);
-	}
-
-	/**
-	 * Get the json for a archive from an instance of an interface
-	 */
-	function ajax_query_archive() {
-		$instance = $_GET['instance'];
-		$json = $this->settings[$instance]->get_archive_json();
-		$this->send_json($json);
 	}
 
 	/**
@@ -723,7 +699,7 @@ class SavvyMapper {
 		$connections_list = Array();
 		foreach($settings['connections'] as $connection){
 			$interfaceClass = get_class($this->interface_classes[ $connection[ 'interface' ] ]);
-			$connections_list[ $connection[ '_id' ] ] = new $interfaceClass($connection);
+			$connections_list[ $connection[ '_id' ] ] = new $interfaceClass( $connection );
 		}
 
 		$this->connections = $connections_list;
