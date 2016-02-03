@@ -14,7 +14,7 @@ abstract class SavvyInterface {
 	/**
 	 * @var This interface's name.
 	 */
-	var $name = "Default Savvy Interface";
+	var $name = 'Default Savvy Interface';
 
 	/**
 	 * @var This instance's config
@@ -33,9 +33,9 @@ abstract class SavvyInterface {
 	/**
 	 * Init self and load self into SavvyMapper
 	 *
-	 * @param array $config 
+	 * @param array $config
 	 */
-	function __construct($config = Array()){
+	function __construct( $config = array() ) {
 		$this->savvy = SavvyMapper::get_instance();
 		$this->setup_actions();
 		$this->set_config( $config );
@@ -70,7 +70,7 @@ abstract class SavvyInterface {
 	 * Matching should ideally be done as a case-insensitive match, matching the first part of the string
 	 *
 	 * @param mappingconfig $mapping The current mapping for the connection.
-	 * @param string $term The term we're autocompleting with
+	 * @param string        $term The term we're autocompleting with
 	 *
 	 * @return An array of matched values
 	 */
@@ -80,17 +80,17 @@ abstract class SavvyInterface {
 	 * Make the metabox for this interface
 	 *
 	 * @param WP_Post $post The post this metabox is for.
-	 * @param Array $mapping The current connection mapping.
-	 * @param array $current_settings The current settings for the given post.
+	 * @param Array   $mapping The current connection mapping.
+	 * @param array   $current_settings The current settings for the given post.
 	 *
-	 * Prints the metabox html
+	 *   Prints the metabox html
 	 */
-	abstract function extra_metabox_fields( $post, $mapping, $current_settings = Array() );
+	abstract function extra_metabox_fields( $post, $mapping, $current_settings = array() );
 
 	/**
 	 * Get the part of the form for the connection interface
 	 *
-	 * @return Any HTML form elements needed to set up a new connection on the 
+	 * @return Any HTML form elements needed to set up a new connection on the
 	 * options page, as a string, or an empty string if no config is needed.
 	 *
 	 * Input elements should have a data-name property with the name of the field
@@ -123,7 +123,7 @@ abstract class SavvyInterface {
 
 	/**
 	 * App postmeta is actually stored in savvymapper_post_meta, but SavvyMapper
-	 * only knows about the default mapping options. 
+	 * only knows about the default mapping options.
 	 *
 	 * This save_meta function looks for interface-specific values in $_POST
 	 * and returns an array with any additional keys that SavvyMapper should
@@ -135,7 +135,7 @@ abstract class SavvyInterface {
 
 	/**
 	 * Fetch the GeoJSON feature(s) for the current post so we can print their attributes
-	 * for the attribute shortcode. 
+	 * for the attribute shortcode.
 	 *
 	 * Returned features should have at least the property specified in $attrs['attr'].
 	 *
@@ -143,10 +143,10 @@ abstract class SavvyInterface {
 	 * can be made by selecting only the columsn needed in this call, while
 	 * get_geojson_for_post probably needs to return all columns
 	 *
-	 * @param array $attrs The shortcode $attrs.
+	 * @param array  $attrs The shortcode $attrs.
 	 * @param string $contents The contents between the shortcode tags.
-	 * @param array $mapping The current mapping config.
-	 * @param array $current_settings The settings for this specific post.
+	 * @param array  $mapping The current mapping config.
+	 * @param array  $current_settings The settings for this specific post.
 	 *
 	 * @return GeoJSON with each feature having the property specified $attrs['attr']
 	 */
@@ -157,16 +157,16 @@ abstract class SavvyInterface {
 	 *
 	 * This function allows an interface to supply additional settings which the JavaScript can access.
 	 *
-	 * @param array $attrs The shortcode $attrs.
+	 * @param array  $attrs The shortcode $attrs.
 	 * @param string $contents The contents between the shortcode tags.
-	 * @param array $mapping The current mapping config.
-	 * @param array $current_settings The settings for this specific post.
+	 * @param array  $mapping The current mapping config.
+	 * @param array  $current_settings The settings for this specific post.
 	 *
 	 * @note Values returned here should be handled in the js file corresponding to the interface.
 	 *
 	 * @return An Array of additional properties for the map to be aware of.
 	 */
-	abstract function get_map_shortcode_properties( $attrs, $contents, $mapping, $current_settings);
+	abstract function get_map_shortcode_properties( $attrs, $contents, $mapping, $current_settings );
 
 	/**
 	 * Get a GeoJSON object for the current post
@@ -174,7 +174,7 @@ abstract class SavvyInterface {
 	 * @param array $mapping The current mapping config.
 	 * @param array $current_settings The settings for this specific post.
 	 *
-	 * @return A GeoJSON-compatible array. 
+	 * @return A GeoJSON-compatible array.
 	 */
 	abstract function get_geojson_for_post( $mapping, $current_settings );
 
@@ -184,7 +184,7 @@ abstract class SavvyInterface {
 	 * This is run for all instances of the interface, even empty ones
 	 */
 	function setup_actions() { }
-		
+
 	/**
 	 * Setup actions for a specific connection
 	 *
@@ -195,15 +195,15 @@ abstract class SavvyInterface {
 	/**
 	 * @param array $config This instance's config
 	 */
-	function set_config( $config = Array() ) {
+	function set_config( $config = array() ) {
 		$this->config = $config;
 
-		if( !empty( $config ) ){
+		if ( ! empty( $config ) ) {
 			$this->connection_setup_actions();
 		}
 	}
 
-    /*
+	/*
      * cURL wrapper which returns request and response headers, curl request meta, post and response body.
      *
      * Slightly simplified version of what's used in esco-4d-api.php for the api debugger page
@@ -214,51 +214,50 @@ abstract class SavvyInterface {
      *
      * @return A dict with all the requst info, if debug is TRUE. Otherwise just returns the response body
      */
-    function curl_request( $url, $data = Array(), $debug = FALSE){
+	function curl_request( $url, $data = array(), $debug = false ) {
 
-        $post = curl_init();
-        curl_setopt($post, CURLOPT_URL, $url);
-        curl_setopt($post, CURLOPT_POST, count($data));
-        curl_setopt($post, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($post, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($post, CURLINFO_HEADER_OUT, true);
-        curl_setopt($post, CURLOPT_VERBOSE, 1);
-        curl_setopt($post, CURLOPT_HEADER, 1);
+		$post = curl_init();
+		curl_setopt( $post, CURLOPT_URL, $url );
+		curl_setopt( $post, CURLOPT_POST, count( $data ) );
+		curl_setopt( $post, CURLOPT_POSTFIELDS, http_build_query( $data ) );
+		curl_setopt( $post, CURLOPT_RETURNTRANSFER, 1 );
+		curl_setopt( $post, CURLINFO_HEADER_OUT, true );
+		curl_setopt( $post, CURLOPT_VERBOSE, 1 );
+		curl_setopt( $post, CURLOPT_HEADER, 1 );
 
-        curl_setopt($post, CURLOPT_CONNECTTIMEOUT, 5); // connect timeout
-        curl_setopt($post, CURLOPT_TIMEOUT, 60); //timeout in seconds
+		curl_setopt( $post, CURLOPT_CONNECTTIMEOUT, 5 ); // connect timeout
+		curl_setopt( $post, CURLOPT_TIMEOUT, 60 ); // timeout in seconds
 
-        // Set the path to any custom cert files
-        // curl_setopt($post, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ).'cacert.pem');
+		// Set the path to any custom cert files
+		// curl_setopt($post, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ).'cacert.pem');
+		$response = curl_exec( $post );
 
-        $response = curl_exec($post);
+		$header_size = curl_getinfo( $post, CURLINFO_HEADER_SIZE );
+		$header = substr( $response, 0, $header_size );
+		$body = substr( $response, $header_size );
 
-        $header_size = curl_getinfo($post, CURLINFO_HEADER_SIZE);
-        $header = substr($response, 0, $header_size);
-        $body = substr($response, $header_size);
+		$info = curl_getinfo( $post );
 
-        $info = curl_getinfo($post);
+		$response = array(
+			'request_headers' => (isset( $info['request_header'] ) ? $info['request_header'] : ''),
+			'post_body' => http_build_query( $data ),
+			'response_headers' => $header,
+			'body' => $body,
+			'errno' => curl_errno( $post ),
+			'error' => curl_error( $post ),
+			'curl_info' => $info,
+		);
 
-        $response = Array(
-            'request_headers' => (isset($info['request_header']) ? $info['request_header'] : ''),
-            'post_body' => http_build_query($data),
-            'response_headers' => $header,
-            'body' => $body,
-            'errno' => curl_errno($post),
-            'error' => curl_error($post),
-            'curl_info' => $info,
-        );
+		curl_close( $post );
 
-        curl_close($post);
+		if ( $debug ) {
+			return $response;
+		} else {
+			$this->last_curl = $response;
+		}
 
-        if($debug){
-            return $response;
-        }else{
-            $this->last_curl = $response;
-        }
-
-        return $response['body'];
-    }
+		return $response['body'];
+	}
 
 	/**
 	 * Get the ID for this instance
@@ -266,7 +265,7 @@ abstract class SavvyInterface {
 	 * @return The ID, or the curren time if this interface isn't set up yet.
 	 */
 	function get_id() {
-		if ( !empty( $this->config[ '_id' ] ) ) {
+		if ( ! empty( $this->config['_id'] ) ) {
 			return $this->config['_id'];
 		}
 
@@ -279,8 +278,8 @@ abstract class SavvyInterface {
 	 * @return The connection name, or empty string if this interface isn't set up yet.
 	 */
 	function get_connection_name() {
-		if ( !empty( $this->config[ 'connection_name' ] ) ) {
-			return $this->config[ 'connection_name' ];
+		if ( ! empty( $this->config['connection_name'] ) ) {
+			return $this->config['connection_name'];
 		}
 		return '';
 	}
@@ -288,49 +287,49 @@ abstract class SavvyInterface {
 	/**
 	 * Get something from cache
 	 */
-	function get_cache($cache_key) {
-		if(isset($this->cache[$cache_key])){
-			return $this->cache[$cache_key];
+	function get_cache( $cache_key ) {
+		if ( isset( $this->cache[ $cache_key ] ) ) {
+			return $this->cache[ $cache_key ];
 		}
-		return FALSE;
+		return false;
 	}
 
 	/**
 	 * Set the cache
 	 */
-	function set_cache($cache_key,$cache_value){
-		$this->cache[$cache_key] = $cache_value;
+	function set_cache( $cache_key, $cache_value ) {
+		$this->cache[ $cache_key ] = $cache_value;
 	}
 
 	/**
-	 * Interfaces should use these form_make functions so that css and layout is consistant. 
+	 * Interfaces should use these form_make functions so that css and layout is consistant.
 	 *
-	 * @param string $label The label to display.
-	 * @param string $param_name The input parameter
-	 * @param array $values An arry of values for the options
-	 * @param array $labels the labels to use, if the values shouldn't also be used for the labels.
+	 * @param string      $label The label to display.
+	 * @param string      $param_name The input parameter
+	 * @param array       $values An arry of values for the options
+	 * @param array       $labels the labels to use, if the values shouldn't also be used for the labels.
 	 * @param bool/string $selected The value to pre-select
 	 *
 	 * @return An html string.
-	 */ 
-	function form_make_select( $label, $param_name, $values, $labels = Array(), $selected = FALSE ){
-		if( $label == '' ){
+	 */
+	function form_make_select( $label, $param_name, $values, $labels = array(), $selected = false ) {
+		if ( $label == '' ) {
 			$html = '';
 		} else {
 			$html = '<label>' . $label . '</label>: ';
 		}
 		$html .= '<select data-name="' . $param_name . '">';
 		$html .= '<option value="">--</option>';
-		foreach($values as $k => $value){
+		foreach ( $values as $k => $value ) {
 			$html .= '<option value="' . $value . '"';
 			if ( $selected == $value ) {
 				$html .= ' selected="selected"';
 			}
 			$html .= '>';
 
-			if(!empty($labels)){
-				$label = $labels[$k];
-			}else{
+			if ( ! empty( $labels ) ) {
+				$label = $labels[ $k ];
+			} else {
 				$label = $value;
 			}
 
@@ -349,7 +348,7 @@ abstract class SavvyInterface {
 	 *
 	 * @return An html string.
 	 */
-	function form_make_textarea( $label, $param_name, $value = ''){
+	function form_make_textarea( $label, $param_name, $value = '' ) {
 		$html = '<label>' . $label . '</label>: ';
 		$html .= '<textarea data-name="' . $param_name . '">' . $value . '</textarea>';
 		return $html;
@@ -357,17 +356,18 @@ abstract class SavvyInterface {
 
 	/**
 	 * Make a checkbox
+	 *
 	 * @param string $label The label to display.
 	 * @param string $param_name The input parameter.
-	 * @param bool $checked Should the checkbox be checked.
+	 * @param bool   $checked Should the checkbox be checked.
 	 *
 	 * @return An html string.
 	 */
-	function form_make_checkbox( $label,  $param_name, $checked ) {
+	function form_make_checkbox( $label, $param_name, $checked ) {
 		$html = '<label>' . $label . '</label>: ';
 		$html .= '<input data-name="' . $param_name . '" type="checkbox" value="1"';
 
-		if($checked){
+		if ( $checked ) {
 			$html .= ' checked="checked"';
 		}
 		$html .= '>';
@@ -380,13 +380,13 @@ abstract class SavvyInterface {
 	 *
 	 * @param string $label The label to display.
 	 * @param string $param_name The input parameter.
-	 * @param bool $value The pre-populated input of the text input
+	 * @param bool   $value The pre-populated input of the text input
 	 *
 	 * @return An html string
 	 */
 	function form_make_text( $label, $param_name, $value ) {
 		$html = '<label>' . $label . '</label>: ';
 		$html .= '<input type="text" data-name="' . $param_name . '" value="' . $value . '">';
-		return $html;	
+		return $html;
 	}
 }
