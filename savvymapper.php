@@ -207,7 +207,7 @@ class SavvyMapper {
 			// javascript to process
 			if( $attrs[ 'show' ] == 'map') {
 
-				$mapSetup = $this->make_map_config( $attrs, $connection, $mapping );
+				$mapSetup = $this->make_map_config( $attrs, $contents, $connection, $mapping );
 
 				$html .= "<div class='savvy_map_div savvy_page_map_div savvy_map_" . $connection->get_type() . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
 
@@ -233,7 +233,7 @@ class SavvyMapper {
 		return $attrs;
 	}
 
-	function make_map_config( $attrs, $connection, $mapping ) {
+	function make_map_config( $attrs, $contents, $connection, $mapping ) {
 		global $post;
 
 		$attrs = $this->make_default_attrs( $attrs );
@@ -369,7 +369,7 @@ class SavvyMapper {
 
 		$html .= '</div>';
 
-		$mapSetup = $this->make_map_config( Array(), $connection, $mapping );
+		$mapSetup = $this->make_map_config( Array(), Array(), $connection, $mapping );
 
 		// Col. 2: map div
 		$html .= '<div class="savvymapper_metabox_col">';

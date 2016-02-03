@@ -276,6 +276,10 @@ function load_savvy_carto_interface( $interfaces ) {
 			$mapping['cdb_visualizations'] = explode( "\n", $mapping['cdb_visualizations'] );
 			$mapping['cdb_visualizations'] = array_filter($mapping['cdb_visualizations']);
 
+			if( empty( $curent_settings[ 'cdb_visualizations' ] ) ){
+				$curent_settings[ 'cdb_visualizations' ] = Array();
+			}
+
 			$vizes = array_merge( $mapping[ 'cdb_visualizations' ], $curent_settings[ 'cdb_visualizations' ], $attrs[ 'vizes' ] );
 
 			return Array( 'vizes' => $vizes );
