@@ -53,7 +53,6 @@ function load_savvy_carto_interface( $interfaces ) {
 		 * Autocomplete the text for the selected field
 		 */
 		function autocomplete( $mapping, $term = NULL ) {
-
 			$sql = "SELECT DISTINCT ON (" . $mapping[ 'lookup_field' ] . ")  " . $mapping[ 'lookup_field' ] . " FROM " . $mapping[ 'cdb_table' ];
 
 			if(!empty($term)){
@@ -72,7 +71,6 @@ function load_savvy_carto_interface( $interfaces ) {
 			$suggestions = array_filter($suggestions);
 			return $suggestions;
 		}
-
 
 		/**
 		 * Get GeoJSON from CartoDB
@@ -141,7 +139,7 @@ function load_savvy_carto_interface( $interfaces ) {
 
 
 			$html .= '<label>Visualizations</label>: ';
-			$html .= $this->form_make_textarea( 'cdb_visualizations', implode( "\n", $mapping[ 'cdb_visualizations' ] ) ) . '<br>' . "\n";
+			$html .= $this->form_make_textarea( 'cdb_visualizations', $mapping[ 'cdb_visualizations' ] ) . '<br>' . "\n";
 
 			$html .= '<label>Show Markers</label>: ';
 			$html .= $this->form_make_checkbox('cdb_show_markers',$mapping['cdb_show_markers']);
