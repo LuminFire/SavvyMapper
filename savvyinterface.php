@@ -423,11 +423,16 @@ abstract class SavvyInterface {
 
 			$html = '<div class="savvymapper_popup_wrapper"><table class="savvymapper_popup">';
 			foreach($popup_properties as $k => $v){
-				$html .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
+				$empty_row = '';
+				if ( empty( $v ) ) {
+					$empty_row = ' class="empty_row"';
+				}
+				$html .= '<tr' . $empty_row . '><th>' . $k . '</th><td>' . $v . '</td></tr>';
 			}
 			$html .= '</table></div>';
 
 			$popuphtml = apply_filters( 'savvymapper_filter_popup_html', $html, $feature, $mapping );
+			
 
 			$feature[ '_popup_contents' ] = $popuphtml;
 		}

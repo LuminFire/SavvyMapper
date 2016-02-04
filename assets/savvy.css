@@ -104,6 +104,10 @@ table.savvymapper_popup {
 	overflow: auto;
 }
 
+table.savvymapper_popup tr.empty_row {
+	display: none;
+}
+
 .entry-content a.leaflet-popup-close-button {
 	border: none;
 }
