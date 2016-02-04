@@ -86,12 +86,24 @@ div.savvymapper_mapping_wrap textarea {
 	resize: both;
 }
 
-
-
 div.savvy_metabox_wrapper .wide {
 	width: 100%;
 }
 
 div.savvy_metabox_wrapper .hidden {
 	display: none;
+}
+
+div.savvyampper_popup_wrapper {
+	max-height: 250px;
+	overflow: vertical;
+}
+
+table.savvymapper_popup {
+	width: 250px;
+	overflow: auto;
+}
+
+.entry-content a.leaflet-popup-close-button {
+	border: none;
 }

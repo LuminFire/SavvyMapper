@@ -421,11 +421,11 @@ abstract class SavvyInterface {
 		foreach( $json[ 'features' ] as &$feature ) {
 			$popup_properties = apply_filters( 'savvymapper_filter_popup_fields', $feature[ 'properties'] , $feature, $mapping );
 
-			$html = '<table>';
+			$html = '<div class="savvymapper_popup_wrapper"><table class="savvymapper_popup">';
 			foreach($popup_properties as $k => $v){
 				$html .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
 			}
-			$html .= '</table>';
+			$html .= '</table></div>';
 
 			$popuphtml = apply_filters( 'savvymapper_filter_popup_html', $html, $feature, $mapping );
 

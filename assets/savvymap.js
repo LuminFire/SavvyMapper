@@ -125,7 +125,14 @@ var SavvyMap = SavvyClass.extend({
 						}
 					},
 					style: function(feature){
-						return {};
+						if(_this.args.show_features === 0) {
+							return {
+								opacity: 0,
+								fillOpacity: 0
+							};
+						} else {
+							return {};
+						}
 					}
 				}).addTo(_this.map);
 			});
