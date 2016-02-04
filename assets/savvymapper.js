@@ -15,6 +15,7 @@ SavvyMapper = SavvyClass.extend({
 		var _this = this;
 		jQuery('document').ready(function(){
 			_this._setup_listeners();
+			_this._do_action( 'savvymapper_setup_done', _this );
 		});
 	},
 
@@ -33,8 +34,6 @@ SavvyMapper = SavvyClass.extend({
 
 		jQuery('#savvyoptions').on('change',':input',this._update_connection_config);
 		jQuery('#savvy_mapping_settings').on('change',':input',this._update_mapping_config);
-
-
 
 		// Set up behavior for autocomplete fields in metaboxes
 		jQuery('.savvy_lookup_ac').each(function(){
@@ -143,6 +142,7 @@ SavvyMapper = SavvyClass.extend({
 	// Add a map to this object
 	add_map: function( newMap ){
 		this.maps[ newMap.getId() ] = newMap;
+		this._do_action('savvymapper_map_added', this, newMap);
 	},
 
 	getMapsByMeta: function(metaKey,metaValue) {
@@ -211,15 +211,16 @@ SavvyMapper = SavvyClass.extend({
 	},
 
 	_apply_filters: function( tag ) {
-		if (this.filters[tag] === undefined ){
-			return;
-		}
-		
 		var args = Array.prototype.slice.call(arguments);
 		var fun;
 		args.shift();
 		var the_this = args.shift();
 		var filteredval = args[0];
+
+		if (this.filters[tag] === undefined ){
+			return filteredval;
+		}
+		
 		for ( var f = 0; f < this.filters[tag].length; f++ ){
 			fun = this.filters[tag][f].callback;
 			filteredval = fun.apply(the_this, args);
