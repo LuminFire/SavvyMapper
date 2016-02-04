@@ -829,6 +829,19 @@ class SavvyMapper {
 		exit();
 	}
 
+	/**
+	 * A convenience function used to find the connection, mapping and current_settings for 
+	 * the specified post ID.
+	 *
+	 * @param event_id $post_id The post ID
+	 *
+	 * @return An array with $connection, $mapping and $current_settings
+	 *
+	 * @note In the event that the current post has no connection/mapping/settings (such as when a post is
+	 * first created or if a mapping is added to a post type after a post has been created)
+	 * then your function will need to handle the null/null/array() that's returned
+	 * and instantiante or find the connection info some other way.
+	 */
 	function get_post_info_by_post_id( $post_id ) {
 		// Get the connection and mapping objects for the current post
 		$current_settings_str = get_post_meta( $post_id, 'savvymapper_post_meta', true );
@@ -838,11 +851,8 @@ class SavvyMapper {
 		}
 
 		$current_settings = json_decode( $current_settings_str, true );
-		$mapping_id = $current_settings['mapping_id'];
-		$connection_id = $this->mappings[ $mapping_id ]['connection_id'];
-		$this->get_connections();
-		$connection = $this->connections[ $connection_id ];
-		$mapping = $this->mappings[ $mapping_id ];
+		$mapping = $this->get_mappings( $current_settings[ 'mapping_id' ] );
+		$connection = $this->get_connections( $mapping[ 'connection_id' ] );
 
 		return array( $connection, $mapping, $current_settings );
 	}
