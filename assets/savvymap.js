@@ -180,7 +180,7 @@ var SavvyMap = SavvyClass.extend({
 						};
 					}
 
-					thestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, thestyle );
+					thestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, thestyle, feature );
 					return thestyle;
 				}
 			};

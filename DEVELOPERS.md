@@ -15,7 +15,7 @@ basemapconfig = this.savvy._apply_filters( 'savvymap_basemap_config', this, base
 success = _this.savvy._apply_filters( 'savvymap_thegeom_features', _this, success );
 popupcontents = _this.savvy._apply_filters( 'savvymap_popup_contents', _this, popupcontents, feature, layer );
 pointrep = _this.savvy._apply_filters( 'savvymap_feature_point', _this, pointrep, feature, latlng );
-thestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, thestyle );
+thestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, thestyle, feature );
 geojsonconfig = _this.savvy._apply_filters( 'savvymap_thegeom_config', _this, geojsonconfig );
 geombounds = _this.savvy._apply_filters( 'savvymap_thegeom_bounds', _this, geombounds, _this.layers.thegeom );
 _this.savvy._do_action( 'savvymap_init_done', _this);
