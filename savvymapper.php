@@ -154,20 +154,20 @@ class SavvyMapper {
 	function do_shortcodes( $attrs, $contents ) {
 		global $post;
 
-		$attrs = $this->make_default_attrs( $attrs );
-
 		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post->ID );
+
+		$attrs = $this->make_attrs( $attrs, $mapping );
 
 		$html = '';
 
 		if ( isset( $attrs['attr'] ) ) {
 
 			// Attributes are simpler, so we'll just ask for fetures based on a search
-			$features = $connection->get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings );
+			$json = $connection->get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings );
 
 			// what happens if multiple features match a query
 			$allProp = array();
-			foreach ( $features['features'] as $feature ) {
+			foreach ( $json['features'] as $feature ) {
 
 				// multiple can be: empty (unique), all (show all) or first (show first)
 
@@ -213,19 +213,40 @@ class SavvyMapper {
 		}
 	}
 
-	function make_default_attrs( $attrs ) {
+	/**
+	 * Set up the default attributes for shortcodes.
+	 *
+	 * @param array $attrs The attrs passed in by a shortcode.
+	 * @param array $mapping The current mapping.
+	 *
+	 * @return The array of attrs to actually use
+	 */
+	function make_attrs( $attrs, $mapping ) {
+		// Order of presidence goes
+		// 1. $attrs
+		// 2. $mapping
+		// 3. $defaults
+
 		// Default shortcode option that all interfaces need to support
-		$attrs = array_merge( array(
+		$defaults = array(
 			'attr' => null,
 			'multiple' => 'unique',
 			'show' => null,
 			'onarchive' => 'show',
-			'popup' => true,
-			'marker' => true,
+			'show_popups' => 1,
+			'show_features' => 1,
 			'zoom' => 'default',
 			'lat' => 'default',
 			'lng' => 'default',
-		), $attrs );
+		);
+		
+		// Get attributes out of $mapping
+		$mapping_defaults = array_intersect_key( $mapping, $defaults );
+		// Now override the hard-coded defaults with the mapping defaults
+		$mapping_defaults = array_merge( $defaults, $mapping_defaults );
+
+		// Finally, override that with the passed in $attrs since the shortcode take higest presidence
+		$attrs = array_merge( $mapping_defaults, $attrs);
 
 		return $attrs;
 	}
@@ -233,12 +254,12 @@ class SavvyMapper {
 	function make_map_config( $attrs, $contents, $connection, $mapping ) {
 		global $post;
 
-		$attrs = $this->make_default_attrs( $attrs );
+		$attrs = $this->make_attrs( $attrs, $mapping );
 
 		$mapSetup = array(
 			'id'			=> $attrs['id'] ?: $mapping['mapping_id'] . '_' . $post->ID,
-			'popup'			=> $attrs['popup'],
-			'marker'		=> $attrs['marker'],
+			'show_popups'	=> $attrs['show_popups'],
+			'show_features'	=> $attrs['show_features'],
 			'zoom'			=> $attrs['zoom'],
 			'lat'			=> $attrs['lat'],
 			'lng'			=> $attrs['lng'],
@@ -342,7 +363,9 @@ class SavvyMapper {
 		$lookup_fields = $connection->get_attribute_names( $mapping );
 
 		$html .= '<h3>Shortcode Cheat Sheet</h3>';
+		$html .= '<p>Coming Soon</p>';
 
+		/*
 		$html .= '<h4>Map</h4>';
 		$html .= "<input class='wide' type='text' value='[savvy show=\"map\"]'><br><br>";
 
@@ -358,10 +381,27 @@ class SavvyMapper {
 		$html .= '<option value="">Unique Values (default)</option>';
 		$html .= "<option value=' multiple=\"first\"'>First (may be empty)</option>";
 		$html .= "<option value=' multiple=\"all\"'>All (may have duplicates)</option>";
-		$html .= '</select>';
+		$html .= '</select><br>';
 
+
+		$map_display_setup = $this->make_attrs( array(), $mapping );
+		$show_features = ( $map_display_setup[ 'show_features' ] ? ' checked="checked"' : '');
+		$html .= '<label>Show Features</label>: <input type="checkbox"' . $show_features . ' class="savvy_shortcode_features"><br>';
+
+		$show_popups = ( $map_display_setup[ 'show_popups' ] ? ' checked="checked"' : '');
+		$html .= '<label>Show Popups</label>: <input type="checkbox"' . $show_popups . 'class="savvy_shortcode_features"><br>';
+
+		$popup_attr = '';
+		$checkbox_attr = '';
+		if ( empty( $show_popups ) ) {
+			$popup_attr = ' show_popups="0"';
+		}
+		if ( empty( $show_features ) ) {
+			$popup_attr = ' show_features="0"';
+		}
 		$html .= '<div class="hidden" data-name="hidden_shortcodepreview">[savvy attr="<span class="savvy_field_name">' . $lookup_fields[0] . '</span>"<span class="savvy_multiple"></span>]</div>';
 		$html .= "<input class='wide' type='text' data-name='shortcodepreview' value='" . '[savvy attr="' . $lookup_fields[0] . '"]' . "'>";
+		 */
 
 		$html .= '</div>';
 
@@ -677,8 +717,8 @@ class SavvyMapper {
 		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '">';
 		$html .= $connection->mapping_div( $mapping );
 
-		$marker_checked = ( !isset( $mapping[ 'show_marker' ] ) || $mapping[ 'show_marker' ]  != 0  ? 'checked="checked"' : '' );
-		$html .= '<label>Show features</label>: <input type="checkbox" data-name="show_marker" value="1" ' . $marker_checked . '><br>';
+		$marker_checked = ( !isset( $mapping[ 'show_features' ] ) || $mapping[ 'show_features' ]  != 0  ? 'checked="checked"' : '' );
+		$html .= '<label>Show features</label>: <input type="checkbox" data-name="show_features" value="1" ' . $marker_checked . '><br>';
 
 		$popups_checked = ( !isset( $mapping[ 'show_popups' ] ) || $mapping[ 'show_popups' ] != 0 ? 'checked="checked"' : '' );
 		$html .= '<label>Show popups</label>: <input type="checkbox" data-name="show_popups" value="1" ' . $popups_checked . '>';
@@ -782,9 +822,7 @@ class SavvyMapper {
 
 		$current_settings = array_merge( $current_settings, $overrides );
 
-		$json = $connection->get_geojson_for_post( $mapping, $current_settings );
-
-		$json = $this->make_popups( $json );
+		$json = $connection->_get_geojson_for_post( $mapping, $current_settings );
 
 		header( 'Content-Type: application/json' );
 		print json_encode( $json );
@@ -807,12 +845,6 @@ class SavvyMapper {
 		$mapping = $this->mappings[ $mapping_id ];
 
 		return array( $connection, $mapping, $current_settings );
-	}
-
-	function make_popups( $json ) {
-		foreach( $json[ 'features' ] as &$feature ) {
-			$properties = $feature[ 'properties '];
-		}
 	}
 }
 SavvyMapper::get_instance();

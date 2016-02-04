@@ -17,11 +17,11 @@ may manifest themselves in various ways including not finding loaded plugins.
 
 ### Shortcodes
 
-#### Displaying CartoDB attributes
+#### Displaying attributes
 
 [savvy attr="/attribute name/"]
 
-##### Styling CartoDB attributes
+##### Styling attributes
 
 Attributes printed with shortcodes will be wrapped with <span class="savvy-attr"> and
 each set of attributes is wrapped in <span class="savvy-attrs">.
@@ -45,7 +45,6 @@ The Map shortcode has the following optional attributes:
 * popup = (true|false)
     * true -- Show the attributes popup when the feature is clicked
     * false -- Don't show the attributes popup when the feature is clicked
-    * NOTE: If you include a CartoDB visualization which includes a popup, that popup will still work, regardless of this setting
 * zoom = (default|1-19ish)
     * default -- Fit the map bounds to the feature's bounding box
     * 1-19ish -- Set map zoom level manually. Most slippy basemaps support levels 1-19, but some go to 21 or beyond.
@@ -57,3 +56,21 @@ The Map shortcode has the following optional attributes:
 ### The SAVVY Object
 
 This plugin provides a global ```SAVVY``` object which still needs to be documented here.
+
+
+### Filters and Actions
+
+#### Filters
+
+ * savvymapper_filter_popup_fields
+	- Takes three parameters, an array of feature properties, the feature itself and the mapping object
+	- Return the array of properties you want to display in the popup
+ * savvymapper_filter_popup_html
+	- Takes three parameters, the popup html, the feature and the mapping object
+	- If you want to override the default popup table, here's the place
+
+#### Actions
+
+ * TODO: savvymapper_show
+
+#### Displaying a map in a theme

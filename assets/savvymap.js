@@ -76,6 +76,9 @@ var SavvyMap = SavvyClass.extend({
 		var zoom = this.args[ 'zoom' ] || 'default';
 		var fitBounds = true;
 
+		// Set popup override
+		overrides.show_popups = overrides.show_popups || this.args.show_popups;
+
 		// then make sure they're sane
 		if(lat !== 'default' || lng !== 'default' || zoom !== 'default'){
 			fitBounds = false;
@@ -84,14 +87,7 @@ var SavvyMap = SavvyClass.extend({
 		lng = (parseFloat(lng) == lng ? lng : 0);
 		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
 
-		var show_marker = this.args[ 'marker' ];
-		show_marker = (show_marker === false ? false : true);
-		show_marker = true;
-
-		var popup = this.args[ 'popup' ];
-		popup = (popup === false || popup == 'false' ? false : true);
 		var _this = this;
-
 
 		// setting to false for now
 
@@ -114,12 +110,12 @@ var SavvyMap = SavvyClass.extend({
 
 				_this.layers.thegeom = L.geoJson(success,{
 					onEachFeature: function (feature, layer) {
-						if(popup){
-							layer.bindPopup(feature.popup_contents);
+						if(_this.args.show_popups && typeof feature._popup_contents == 'string'){
+							layer.bindPopup(feature._popup_contents);
 						}
 					},
 					pointToLayer: function(feature, latlng){
-						if(show_marker){
+						if(_this.args.show_features){
 							return L.marker(latlng);
 						}else{
 							return L.circleMarker(latlng, {

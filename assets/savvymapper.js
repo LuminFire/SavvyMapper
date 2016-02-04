@@ -68,6 +68,7 @@ SavvyMapper = SavvyClass.extend({
 			});
 		});
 
+		/*
 		jQuery('.savvy_shortcode_field').on('change',function(e){
 			var theselect = jQuery(e.target);
 			var preparea = theselect.parent().find('div[data-name=hidden_shortcodepreview]');
@@ -81,6 +82,7 @@ SavvyMapper = SavvyClass.extend({
 			preparea.find('.savvy_multiple').html(theselect.val());
 			theselect.parent().find('input[data-name=shortcodepreview]').val(preparea.text());
 		});
+		*/
 	},
 
 	// SETTINGS: Add a new API connection

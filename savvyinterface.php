@@ -161,6 +161,27 @@ abstract class SavvyInterface {
 	abstract function get_geojson_for_post( $mapping, $current_settings );
 
 	/**
+	 * This is the actual class called when we need json for a post
+	 * It calls the interface's get_geojson_for_post and then calls
+	 * make_popups with that geojson
+	 *
+	 * @param array $mapping The current mapping config.
+	 * @param array $current_settings The settings for this specific post.
+	 *
+	 * @return A GeoJSON-compatible array.
+	 */
+	function _get_geojson_for_post( $mapping, $current_settings ) {
+		$json = $this->get_geojson_for_post( $mapping, $current_settings );
+
+		$show_popups = ( isset( $current_settings[ 'show_popups' ] ) ?  $current_settings[ 'show_popups' ] : $mapping[ 'show_popups' ] );
+
+		if ( $show_popups ) {
+			$json = $this->make_popups( $mapping, $json );
+		}
+		return $json;
+	}
+
+	/**
 	 * Setup the actions to get things started
 	 *
 	 * Enqueue js/css needed for this interface
@@ -386,6 +407,32 @@ abstract class SavvyInterface {
 		$typename = sanitize_title( $this->name );
 		$typename = str_replace( '-', '_', $typename );
 		return $typename;
+	}
+
+	/**
+	 * Make the popups for the geojson
+	 *
+	 * @param array $mapping The current mapping we're working with.
+	 * @param geojson $json A GeoJSON FeatureCollection.
+	 *
+	 * @return The modified GeoJSON.
+	 */
+	function make_popups( $mapping, $json ) {
+		foreach( $json[ 'features' ] as &$feature ) {
+			$popup_properties = apply_filters( 'savvymapper_filter_popup_fields', $feature[ 'properties'] , $feature, $mapping );
+
+			$html = '<table>';
+			foreach($popup_properties as $k => $v){
+				$html .= '<tr><th>' . $k . '</th><td>' . $v . '</td></tr>';
+			}
+			$html .= '</table>';
+
+			$popuphtml = apply_filters( 'savvymapper_filter_popup_html', $html, $feature, $mapping );
+
+			$feature[ '_popup_contents' ] = $popuphtml;
+		}
+
+		return $json;
 	}
 
 	/**
