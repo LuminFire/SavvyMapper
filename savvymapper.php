@@ -710,7 +710,7 @@ class SavvyMapper {
 		$mapping_id = (empty( $mapping['mapping_id'] ) ? time() : $mapping['mapping_id']);
 
 		$html = '<div class="mapping-config">';
-		$html .= '<h3><span class="remove-instance">(X)</span> ' . $post_type_info->labels->singular_name . ' => ' . $connection->get_connection_name() . '</h3>';
+		$html .= '<h3><span class="remove-instance">(X)</span> ' . $post_type_info->labels->name . ' => ' . $connection->get_connection_name() . '</h3>';
 		$html .= '<label>Mapping Name</label> <input type="text" data-name="mapping_name" value="' . $mapping['mapping_name'] . '"><br>' . "\n";
 		$html .= '<input type="hidden" data-name="connection_id" value="' . $connection->get_id() . '">';
 		$html .= '<input type="hidden" data-name="mapping_id" value="' . $mapping_id . '">';
@@ -742,7 +742,7 @@ class SavvyMapper {
 	 * Get the known connections, requesting them from the database, if needed
 	 *
 	 * A connection will have at least:
-	 * {'interface': $interface_type, '_id': $the_id
+	 * {'interface': $interface_type, '_id': $the_id}
 	 *
 	 * @return $this->connections, an array of connections
 	 */
@@ -859,6 +859,7 @@ class SavvyMapper {
 }
 SavvyMapper::get_instance();
 
+// Load our default supported interfaces
 foreach ( glob( dirname( __FILE__ ) . '/interfaces/*.php' ) as $interface ) {
 	require_once( $interface );
 }
