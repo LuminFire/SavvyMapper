@@ -686,10 +686,10 @@ class SavvyMapper {
 		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '">';
 		$html .= $connection->mapping_div( $mapping );
 
-		$marker_checked = ( ( empty( $mapping[ 'show_marker' ] ) || $mapping[ 'show_marker' ] == 1 ) ? 'checked="checked"' : '' );
+		$marker_checked = ( !isset( $mapping[ 'show_marker' ] ) || $mapping[ 'show_marker' ]  != 0  ? 'checked="checked"' : '' );
 		$html .= '<label>Show features</label>: <input type="checkbox" data-name="show_marker" value="1" ' . $marker_checked . '><br>';
 
-		$popups_checked = ( ( empty( $mapping[ 'show_popups' ] ) || $mapping[ 'show_popups' ] == 1 ) ? 'checked="checked"' : '' );
+		$popups_checked = ( !isset( $mapping[ 'show_popups' ] ) || $mapping[ 'show_popups' ] != 0 ? 'checked="checked"' : '' );
 		$html .= '<label>Show popups</label>: <input type="checkbox" data-name="show_popups" value="1" ' . $popups_checked . '>';
 
 		$html .= '<hr>';
