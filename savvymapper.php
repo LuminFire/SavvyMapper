@@ -137,8 +137,8 @@ class SavvyMapper {
 
 		wp_enqueue_script( 'savvyclassjs',$plugin_dir_url . 'assets/savvyclass.js' );
 
-		wp_enqueue_script( 'savvymapperjs',$plugin_dir_url . 'assets/savvymapper.js',array( 'jquery', 'savvyclassjs' ) );
-		wp_localize_script( 'savvymapperjs', 'ajaxurl', admin_url( 'admin-ajax.php' ) );
+		wp_enqueue_script( 'savvymapper',$plugin_dir_url . 'assets/savvymapper.js',array( 'jquery', 'savvyclassjs' ) );
+		wp_localize_script( 'savvymapper', 'ajaxurl', admin_url( 'admin-ajax.php' ) );
 
 		wp_enqueue_script( 'savvymapjs',$plugin_dir_url . 'assets/savvymap.js',array( 'jquery', 'cartodbjs' ) );
 	}
@@ -528,7 +528,7 @@ class SavvyMapper {
 		$html .= '<div id="savvy_mapping_form">';
 		$html .= '<select name="savvy_post_type">' . implode( "\n", $post_type_options ) . '</select> ';
 		$html .= '<select name="savvy_connection_id">' . implode( "\n", $connection_options ) . '</select> ';
-		$html .= '<input type="button" onclick="SAVVY.add_mapping(this);" value="Add Mapping">';
+		$html .= '<input type="button" onclick="SAVVY._add_mapping(this);" value="Add Mapping">';
 		$html .= '</div>';
 
 		// Save options form
@@ -554,7 +554,7 @@ class SavvyMapper {
 		$html .= '<h2>SavvyMapper</h2>';
 		$html .= '<p>Welcome to SavvyMapper. Add connections to services below.</p>';
 		foreach ( $this->interface_classes as $interface ) {
-			$html .= '<input type="button" onclick="SAVVY.add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
+			$html .= '<input type="button" onclick="SAVVY._add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
 		}
 		$html .= '<hr>';
 

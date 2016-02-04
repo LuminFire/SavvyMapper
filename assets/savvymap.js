@@ -9,6 +9,7 @@
 var SavvyMap = SavvyClass.extend({
 	// Meta info we use internally. 
 	init: function(div) {
+		this.savvy = SAVVY;
 
 		if( this.classname == 'SavvyClass' ) {
 			throw "Classes extending SavvyClass must set a classname";
@@ -26,7 +27,7 @@ var SavvyMap = SavvyClass.extend({
 		this.layers = {}; // A dict of layers we initialize so that people can style and interact with them
 
 		this._basicMapSetup();
-		SAVVY.add_map(this);
+		this.savvy.add_map(this);
 	},
 
 
@@ -43,6 +44,9 @@ var SavvyMap = SavvyClass.extend({
 		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
 
 		this.map = L.map(this.div[0]).setView([lat,lng],zoom); 
+
+		this.map = this.savvy._apply_filters('savvy_map_initialized',this, this.map, this.meta);
+
 		this._setupBasemap().addTo(this.map);
 
 		this.set_search_layer();

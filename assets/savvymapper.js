@@ -5,31 +5,36 @@
 */
 
 SavvyMapper = SavvyClass.extend({
-
 	// Set up listeners
 	init: function(){
 		this.maps = {};
+		this.filters = {};
+		this.actions = {};
 
 		// Set up listeners for options page
 		var _this = this;
+		jQuery('document').ready(function(){
+			_this._setup_listeners();
+		});
+	},
+
+	_setup_listeners: function(){
+		var _this = this;
+
 		jQuery('#savvyoptions').on('click','.remove-instance',function(e){
 			jQuery(e.target).closest('.instance-config').remove();
-			_this.update_connection_config();
+			_this._update_connection_config();
 		});
 
 		jQuery('#savvy_mapping_settings').on('click','.remove-instance',function(e){
 			jQuery(e.target).closest('.mapping-config').remove();
-			_this.update_mapping_config();
+			_this._update_mapping_config();
 		});
 
-		jQuery('#savvyoptions').on('change',':input',this.update_connection_config);
-		jQuery('#savvy_mapping_settings').on('change',':input',this.update_mapping_config);
+		jQuery('#savvyoptions').on('change',':input',this._update_connection_config);
+		jQuery('#savvy_mapping_settings').on('change',':input',this._update_mapping_config);
 
-		this.setup_listeners();
-	},
 
-	setup_listeners: function(){
-		var _this = this;
 
 		// Set up behavior for autocomplete fields in metaboxes
 		jQuery('.savvy_lookup_ac').each(function(){
@@ -51,12 +56,12 @@ SavvyMapper = SavvyClass.extend({
 					});
 				},
 				onSelect: function( e, term, item ) {
-					_this.replace_map_search_layer(acfield, term);
+					_this._replace_map_search_layer(acfield, term);
 				}
 			});
 
 			acfield.on('change',function(e){
-				_this.replace_map_search_layer(e.target, e.target.value);
+				_this._replace_map_search_layer(e.target, e.target.value);
 			});
 
 			// Don't submit when users hit enter
@@ -70,7 +75,7 @@ SavvyMapper = SavvyClass.extend({
 	},
 
 	// SETTINGS: Add a new API connection
-	add_connection: function(button){
+	_add_connection: function(button){
 		jQuery.get(ajaxurl, {
 			'action'	: 'savvy_get_interface_options_form',
 			'interface' : jQuery(button).data('type')
@@ -80,7 +85,7 @@ SavvyMapper = SavvyClass.extend({
 	},
 
 	// SETTINGS: Add a new mapping
-	add_mapping: function() {
+	_add_mapping: function() {
 		var _this = this;
 		var postType = jQuery('select[name=savvy_post_type]').val();	
 		var connectionId = jQuery('select[name=savvy_connection_id]').val();	
@@ -93,12 +98,12 @@ SavvyMapper = SavvyClass.extend({
 			'connection_label'	: jQuery('select[name=savvy_connection_id] option[value=' + connectionId + ']').html()
 		}).then(function(success){
 			jQuery('#savvy_mapping_settings').append(success);
-			_this.update_mapping_config();
+			_this._update_mapping_config();
 		});
 	},
 
 	// SETTINGS: Update the connection config json string
-	update_connection_config: function(){
+	_update_connection_config: function(){
 		var config = {'connections': []};
 		var oneconfig;
 		jQuery('.instance-config').each(function(i,instance){
@@ -117,7 +122,7 @@ SavvyMapper = SavvyClass.extend({
 	},
 
 	// SETTINGS: Update the mapping config json string
-	update_mapping_config: function(){
+	_update_mapping_config: function(){
 		var config = {'mappings': []};
 		var oneconfig;
 		jQuery('.mapping-config').each(function(i,mapping){
@@ -163,12 +168,65 @@ SavvyMapper = SavvyClass.extend({
 	},
 
 	// Replace the main layer
-	replace_map_search_layer: function( target, newSearch ) {
+	_replace_map_search_layer: function( target, newSearch ) {
 		var map_id = jQuery(target).closest('.savvy_metabox_wrapper').find('.savvy_metabox_map_div').data('map').id;
 		this.maps[ map_id ].set_search_layer( {'lookup_value': newSearch});
+	},
+
+	// add a new filter callback
+	add_filter: function( tag, callback, priority ){
+		this._add_stuff( 'filters', tag, callback, priority);
+	},
+
+	// add a new action callback
+	add_action: function( tag, callback, priority ) {
+		this._add_stuff( 'actions', tag, callback, priority);
+	},
+
+	_add_stuff: function( type, tag, callback, priority ) {
+		priority = priority || 10;
+		if( this[type][tag] === undefined ){
+			this[type][tag] = [];
+		}
+		this[type][tag].push({'callback':callback,'priority':priority});
+
+		this[type][tag].sort(function(a,b){
+			return (a.priority - b.priority);
+		});
+	},
+
+	_do_action: function( tag ) {
+		if (this.actions[tag] === undefined ){
+			return;
+		}
+		
+		var args = Array.prototype.slice.call(arguments);
+		var fun;
+		args.shift();
+		var the_this = args.shift();
+		for ( var f = 0; f < this.actions[tag].length; f++ ){
+			fun = this.actions[tag][f].callback;
+			fun.apply(the_this, args);
+		}
+	},
+
+	_apply_filters: function( tag ) {
+		if (this.filters[tag] === undefined ){
+			return;
+		}
+		
+		var args = Array.prototype.slice.call(arguments);
+		var fun;
+		args.shift();
+		var the_this = args.shift();
+		var filteredval = args[0];
+		for ( var f = 0; f < this.filters[tag].length; f++ ){
+			fun = this.filters[tag][f].callback;
+			filteredval = fun.apply(the_this, args);
+			args[0] = filteredval;
+		}
+
+		return filteredval;
 	}
 });
-
-jQuery(document).ready(function(){
-	SAVVY = new SavvyMapper();
-});
+SAVVY = new SavvyMapper();
