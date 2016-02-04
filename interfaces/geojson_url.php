@@ -64,7 +64,7 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 
 			$mapping = array_merge( $defaults, $mapping );
 
-			$field_names = $this->get_lookup_field_list( $mapping );
+			$field_names = $this->get_attribute_names( $mapping );
 
 			$html = $this->form_make_select( 'Lookup Field', 'lookup_field', $field_names, $field_names, $mapping[ 'lookup_field' ] ) . '<br>' . "\n";
 
