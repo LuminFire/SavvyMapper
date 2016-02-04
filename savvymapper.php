@@ -205,8 +205,16 @@ class SavvyMapper {
 			if ( $attrs['show'] == 'map' ) {
 
 				$mapSetup = $this->make_map_config( $attrs, $contents, $connection, $mapping );
+				$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
 
-				$html .= "<div class='savvy_map_div savvy_page_map_div savvy_map_" . $connection->get_type() . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
+				$classes = array(
+					'savvy_map_div',
+					'savvy_page_map_div',
+					'savvy_map_' . $connection->get_type(),
+					'savvy_map_' . $mapping['mapping_name'],
+					);
+
+				$html .= "<div class='" . implode( ' ', $classes ) .  "' data-mapmeta='" . json_encode( $mapMeta ) . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
 
 				return $html;
 			}
@@ -257,7 +265,6 @@ class SavvyMapper {
 		$attrs = $this->make_attrs( $attrs, $mapping );
 
 		$mapSetup = array(
-			'id'			=> $attrs['id'] ?: $mapping['mapping_id'] . '_' . $post->ID,
 			'show_popups'	=> $attrs['show_popups'],
 			'show_features'	=> $attrs['show_features'],
 			'zoom'			=> $attrs['zoom'],
@@ -341,6 +348,7 @@ class SavvyMapper {
 
 		list($cur_connection, $cur_mapping, $current_settings ) = $this->get_post_info_by_post_id( $post->ID );
 		$mapSetup = $this->make_map_config( array(), array(), $connection, $mapping );
+		$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
 
 		$html = "<div class='savvy_metabox_wrapper' data-mapping_id='" . $mapping['mapping_id'] . "'>";
 
@@ -365,49 +373,18 @@ class SavvyMapper {
 		$html .= '<h3>Shortcode Cheat Sheet</h3>';
 		$html .= '<p>Coming Soon</p>';
 
-		/*
-		$html .= '<h4>Map</h4>';
-		$html .= "<input class='wide' type='text' value='[savvy show=\"map\"]'><br><br>";
-
-		$html .= '<h4>Attributes</h4>';
-		$html .= '<label>Attribute Name</label>: <select class="savvy_shortcode_field">';
-		foreach($lookup_fields as $field){
-			$html .= '<option value="' . $field . '">' . $field . '</option>';
-		}
-		$html .= '</select><br>';
-
-		$html .= '<label>Duplicate value handling</label>: ';
-		$html .= '<select class="savvy_shortcode_multiple">';
-		$html .= '<option value="">Unique Values (default)</option>';
-		$html .= "<option value=' multiple=\"first\"'>First (may be empty)</option>";
-		$html .= "<option value=' multiple=\"all\"'>All (may have duplicates)</option>";
-		$html .= '</select><br>';
-
-
-		$map_display_setup = $this->make_attrs( array(), $mapping );
-		$show_features = ( $map_display_setup[ 'show_features' ] ? ' checked="checked"' : '');
-		$html .= '<label>Show Features</label>: <input type="checkbox"' . $show_features . ' class="savvy_shortcode_features"><br>';
-
-		$show_popups = ( $map_display_setup[ 'show_popups' ] ? ' checked="checked"' : '');
-		$html .= '<label>Show Popups</label>: <input type="checkbox"' . $show_popups . 'class="savvy_shortcode_features"><br>';
-
-		$popup_attr = '';
-		$checkbox_attr = '';
-		if ( empty( $show_popups ) ) {
-			$popup_attr = ' show_popups="0"';
-		}
-		if ( empty( $show_features ) ) {
-			$popup_attr = ' show_features="0"';
-		}
-		$html .= '<div class="hidden" data-name="hidden_shortcodepreview">[savvy attr="<span class="savvy_field_name">' . $lookup_fields[0] . '</span>"<span class="savvy_multiple"></span>]</div>';
-		$html .= "<input class='wide' type='text' data-name='shortcodepreview' value='" . '[savvy attr="' . $lookup_fields[0] . '"]' . "'>";
-		 */
-
 		$html .= '</div>';
 
 		// Col. 2: map div
 		$html .= '<div class="savvymapper_metabox_col">';
-		$html .= "<div class='savvy_metabox_map_div savvy_metabox_map_" . $connection->get_type() . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
+
+		$classes = array(
+			'savvy_metabox_map_div',
+		   	'savvy_metabox_map_' . $connection->get_type(),
+			'savvy_map_' . $mapping['mapping_name'],
+			);
+
+		$html .= "<div class='" . implode( ' ', $classes ) .  "' data-mapmeta='" . json_encode( $mapMeta ) . "'  data-map='" . json_encode( $mapSetup ) . "'></div>";
 		$html .= '</div>';
 
 		$html .= '</div>';
@@ -855,6 +832,29 @@ class SavvyMapper {
 		$connection = $this->get_connections( $mapping[ 'connection_id' ] );
 
 		return array( $connection, $mapping, $current_settings );
+	}
+
+	/**
+	 * Make the metadata for a map which JS will use to help make
+	 * finding a map instance more reliable.
+	 *
+	 * @param array $connection The connection.
+	 * @param array $mapping The mapping. 
+	 *
+	 * @return array
+	 */
+	function make_map_meta( $connection, $mapping, $postId, $archiveId = NULL ) {
+		$meta = array(
+				'connection_type'	=> $connection->get_type(),
+				'connection_name'	=> $connection->config[ 'connection_name' ],
+				'connection_id'		=> $mapping[ 'connection_id' ],
+				'mapping_name'		=> sanitize_title($mapping[ 'mapping_name' ]),
+				'mapping_id'		=> $mapping['mapping_id'],
+				'post_id'			=> $postId,
+				'archive_id'		=> $archiveId,
+				'map_id'			=> $mapping[ 'connection_id' ] . '_' . $mapping['mapping_id'] . '_' . ( !empty( $postId ) ? $postId : ( !empty( $archiveId ) ? $archiveId : '' ) ),
+			);
+		return $meta;
 	}
 }
 SavvyMapper::get_instance();

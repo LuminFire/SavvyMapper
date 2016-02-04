@@ -8,25 +8,48 @@
 */
 var SavvyMap = SavvyClass.extend({
 	// Meta info we use internally. 
+	init: function(div) {
 
-	init: function(div,args) {
-		if(typeof args === 'string'){
-			args = JSON.parse(args);
+		if( this.classname == 'SavvyClass' ) {
+			throw "Classes extending SavvyClass must set a classname";
 		}
-		this.args = args;
-		this.div = jQuery(div);
 
-		this.layers = {}; // A dict of layers we initialize so that people can style and interact with them
-		this.data = {}; // Raw data we want to save for later use, saved here so other scan interact with it
-		this._meta =  {};
+		this.div = jQuery(div);
+		this.args = this.div.data('map');
+		this.meta = this.div.data('mapmeta');
+
+		if(typeof this.args === 'string'){
+			this.args = JSON.parse(this.args);
+		}
+
 		this.map = null; // The leaflet map object
-		this.archive_type = null;
-		this.post_id = null;
+		this.layers = {}; // A dict of layers we initialize so that people can style and interact with them
 
 		this._basicMapSetup();
+		SAVVY.add_map(this);
 	},
 
-	/*
+
+	/**
+	 * Set up the map itself
+	*/
+	_basicMapSetup: function(){
+		// Fetch lat/lng/zoom
+		var lat = this.args[ 'lat' ] || 'default';
+		var lng = this.args[ 'lng' ] || 'default';
+		var zoom = this.args[ 'zoom' ] || 'default';
+		lat = (parseFloat(lat) == lat ? lat : 0);
+		lng = (parseFloat(lng) == lng ? lng : 0);
+		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
+
+		this.map = L.map(this.div[0]).setView([lat,lng],zoom); 
+		this._setupBasemap().addTo(this.map);
+
+		this.set_search_layer();
+	},
+
+
+	/**
 	* Set up the basemap layer. Right now we're just using mapquest, but
 	* this should be expanded later to include other free and commercial tile sets
 	*/
@@ -46,27 +69,24 @@ var SavvyMap = SavvyClass.extend({
 		return this.layers.basemap;
 	},
 
-	_basicMapSetup: function(){
-		// Fetch lat/lng/zoom
-		var lat = this.args[ 'lat' ] || 'default';
-		var lng = this.args[ 'lng' ] || 'default';
-		var zoom = this.args[ 'zoom' ] || 'default';
-		lat = (parseFloat(lat) == lat ? lat : 0);
-		lng = (parseFloat(lng) == lng ? lng : 0);
-		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
-
-
-
-		this.map = L.map(this.div[0]).setView([lat,lng],zoom); 
-		this._setupBasemap().addTo(this.map);
-
-		this.set_search_layer();
-	},
-
+	/**
+	 * Get this map's id
+	 */
 	getId: function(){
-		return this.args.id;
+		return this.meta.map_id;
 	}, 
 
+	/**
+	 * Get this map's type
+	 */
+	getClass: function(){
+		return this.meta.connection_type;
+	},
+
+	/**
+	 * Set up the search layer. This will be found in 
+	 * this.layers.thegeom
+	 */
 	set_search_layer: function( overrides ) {
 		overrides = overrides || {};
 
@@ -91,16 +111,13 @@ var SavvyMap = SavvyClass.extend({
 
 		// setting to false for now
 
-		this.archive_type = this.args[ 'archive_type' ];
-		this.post_id = this.args[ 'post_id' ];
-
-		if(this.args[ 'archive_type' ] !== undefined || this.args[ 'post_id' ] !== undefined){
+		if(this.meta.post_id !== undefined){
 
 			var promise = jQuery.getJSON(ajaxurl,{
 				'action': 'savvy_get_geojson_for_post',
-				'post_id' : this.args.post_id,
+				'post_id' : this.meta.post_id,
 				'overrides' : overrides,
-				'mapping_id' : this.args.mapping_id
+				'mapping_id' : this.meta.mapping_id
 			});
 
 			promise = promise.then(function(success){

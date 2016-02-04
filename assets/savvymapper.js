@@ -1,8 +1,8 @@
 /**
- * This is the main SavvyMapper class. It handles core functionality and assets on all pages. 
- *
- * All classes extend a simple JS inheritance class based on an example by John Resig. 
- */
+* This is the main SavvyMapper class. It handles core functionality and assets on all pages. 
+*
+* All classes extend a simple JS inheritance class based on an example by John Resig. 
+*/
 
 SavvyMapper = SavvyClass.extend({
 
@@ -67,22 +67,6 @@ SavvyMapper = SavvyClass.extend({
 				console.log(e.keyCode);
 			});
 		});
-
-		/*
-		jQuery('.savvy_shortcode_field').on('change',function(e){
-			var theselect = jQuery(e.target);
-			var preparea = theselect.parent().find('div[data-name=hidden_shortcodepreview]');
-			preparea.find('.savvy_field_name').html(theselect.val());
-			theselect.parent().find('input[data-name=shortcodepreview]').val(preparea.text());
-		});
-
-		jQuery('.savvy_shortcode_multiple').on('change',function(e){
-			var theselect = jQuery(e.target);
-			var preparea = theselect.parent().find('div[data-name=hidden_shortcodepreview]');
-			preparea.find('.savvy_multiple').html(theselect.val());
-			theselect.parent().find('input[data-name=shortcodepreview]').val(preparea.text());
-		});
-		*/
 	},
 
 	// SETTINGS: Add a new API connection
@@ -156,6 +140,29 @@ SavvyMapper = SavvyClass.extend({
 		this.maps[ newMap.getId() ] = newMap;
 	},
 
+	getMapsByMeta: function(metaKey,metaValue) {
+		metaValue = metaValue || false;
+		var maps = {};
+		var mval;
+
+		for(var m in this.maps){
+			mval = this.maps[m].meta[metaKey];	
+			if(metaValue === false || mval == metaValue){
+				if(maps[mval] === undefined) {
+					maps[mval] = {};
+				}
+				maps[mval][this.maps[m].getId()] = this.maps[m];
+			}
+		}
+
+		if(metaValue){
+			return maps[metaValue];
+		} else {
+			return maps;
+		}
+	},
+
+	// Replace the main layer
 	replace_map_search_layer: function( target, newSearch ) {
 		var map_id = jQuery(target).closest('.savvy_metabox_wrapper').find('.savvy_metabox_map_div').data('map').id;
 		this.maps[ map_id ].set_search_layer( {'lookup_value': newSearch});

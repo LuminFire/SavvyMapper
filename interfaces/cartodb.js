@@ -12,15 +12,11 @@ jQuery(document).ready(function(){
 
 	// On individual post pages, get the map
 	jQuery('.savvy_map_cartodb,.savvy_metabox_map_cartodb').each(function(){
-		var mapdiv = jQuery(this);
-		var mapconf = mapdiv.data('map');
-		var newMap = new SavvyCartoMap(this,mapconf);
-		SAVVY.add_map(newMap);
+		new SavvyCartoMap(this);
 	});
 });
 
 var SavvyCartoMap = SavvyMap.extend({
-
 	init: function(div,args){
 		this._super(div,args);
 		if( this.args.vizes instanceof Array ){
