@@ -78,7 +78,6 @@ function load_savvy_carto_interface( $interfaces ) {
 			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping[ 'cdb_table' ] ) . '<br>' . "\n";
 			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping[ 'lookup_field' ] ) . '<br>' . "\n";
 			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping[ 'cdb_visualizations' ] ) . '<br>' . "\n";
-			$html .= $this->form_make_checkbox( 'Show Markers', 'cdb_show_markers', $mapping[ 'cdb_show_markers' ] );
 
 			return $html;
 		}

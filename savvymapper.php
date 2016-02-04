@@ -584,7 +584,7 @@ class SavvyMapper {
 		add_settings_section(
 			'savvymapper_plugin_page_section',				// id
 			__( 'SavvyMapper Settings Page', 'wordpress' ), // title
-			array( $this,'getting_started_callback' ),		// callback
+			__return_false,			// callback
 			'savvymapper_plugin_page'						// page
 		);
 		add_settings_field(
@@ -603,7 +603,7 @@ class SavvyMapper {
 		add_settings_section(
 			'savvymapper_mapping_page_section',					// id
 			__( 'SavvyMapper Mapping Settings', 'wordpress' ),  // title
-			array( $this,'getting_started_callback' ),			// callback
+			__return_false,			// callback
 			'savvymapper_mapping_page'							// page
 		);
 		add_settings_field(
@@ -685,13 +685,16 @@ class SavvyMapper {
 		$html .= '<input type="hidden" data-name="mapping_id" value="' . $mapping_id . '">';
 		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '">';
 		$html .= $connection->mapping_div( $mapping );
+
+		$marker_checked = ( ( empty( $mapping[ 'show_marker' ] ) || $mapping[ 'show_marker' ] == 1 ) ? 'checked="checked"' : '' );
+		$html .= '<label>Show features</label>: <input type="checkbox" data-name="show_marker" value="1" ' . $marker_checked . '><br>';
+
+		$popups_checked = ( ( empty( $mapping[ 'show_popups' ] ) || $mapping[ 'show_popups' ] == 1 ) ? 'checked="checked"' : '' );
+		$html .= '<label>Show popups</label>: <input type="checkbox" data-name="show_popups" value="1" ' . $popups_checked . '>';
+
 		$html .= '<hr>';
 		$html .= '</div>';
 		return $html;
-	}
-
-	function getting_started_callback() {
-		return 'getting started callback';
 	}
 
 	function savvymapper_connections_callback() {
