@@ -94,7 +94,6 @@ var SavvyMap = SavvyClass.extend({
 
 
 		// setting to false for now
-		popup = false;
 
 		this.archive_type = this.args[ 'archive_type' ];
 		this.post_id = this.args[ 'post_id' ];

@@ -292,15 +292,6 @@ class SavvyMapper {
 	}
 
 	/**
-	 * Given SQL, fetch the features, set their popup contents and print the GeoJSON
-	 */
-	function send_json( $json ) {
-		header( 'Content-Type: application/json' );
-		print json_encode( $json );
-		exit();
-	}
-
-	/**
 	 * Make metaboxes!
 	 */
 	function add_meta_boxes() {
@@ -793,7 +784,11 @@ class SavvyMapper {
 
 		$json = $connection->get_geojson_for_post( $mapping, $current_settings );
 
-		$this->send_json( $json );
+		$json = $this->make_popups( $json );
+
+		header( 'Content-Type: application/json' );
+		print json_encode( $json );
+		exit();
 	}
 
 	function get_post_info_by_post_id( $post_id ) {
@@ -812,6 +807,12 @@ class SavvyMapper {
 		$mapping = $this->mappings[ $mapping_id ];
 
 		return array( $connection, $mapping, $current_settings );
+	}
+
+	function make_popups( $json ) {
+		foreach( $json[ 'features' ] as &$feature ) {
+			$properties = $feature[ 'properties '];
+		}
 	}
 }
 SavvyMapper::get_instance();
