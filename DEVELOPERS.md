@@ -147,6 +147,211 @@ savvymapper_popup_fields filter above.
 
 ### JavaScript Filters and Actions
 
+The ```SAVVY``` object is the singleton instance the SavvyMapper class.
+
+It has functions /add_filter/ and /add_action/ which work pretty much
+the same way that the WordPress PHP functions do. 
+
+    SAVVY.add_filter('tag_name',callback_function,priority);
+    SAVVY.add_action('tag_name',callback_function,priority);
+
+The main difference is due to how JavaScript's execution context works,
+which changes what /this/ will refer to. They also don't worry about
+how many variables to pass to the callback function since passing too 
+many or too few arguments won't trigger an error in JavaScript.
+
+Action and Filter tag names start with either /savvymap/ or /savvymapper/.
+
+Tag names starting with /savvymap/ will be run in the context of the 
+SavvyMap instance they correspond with. (eg. /this/ will refer to 
+the instance of SavvyCartoMap, which extends SavvyMap).
+
+Tag names starting with /savvymapper/ will be run in the context of the
+SavvyMapper instance. (eg. /this/ will rever to SAVVY). 
+
+
+#### Filters
+
+Example: 
+
+	// Modify the default line and polygon feature styles
+    SAVVY.add_filter('savvymap_feature_style',function(thestyle, feature){
+    	thestyle = {
+    		"color": "#ff7800",
+    		"weight": 2,
+    		"opacity": 0.65
+    	};
+    	return thestyle;
+    },99);
+
+I won't give an example of how to use all of these, just a brief description
+of what they're for and their arguments. 
+
+
+
+ * savvymap_args
+	- args
+
+Modify the arguments for an instance of SavvyMap. These args are used in the 
+map creation. 
+
+Called during initialization before the map has been created.
+
+
+
+ * savvymap_meta
+	- meta
+
+Modify the meta values for an instance of SavvyMap. The meta values are mostly
+for your use so you can determine which mapping is active.
+
+Called during initialization before the map has been created.
+
+
+
+ * savvymap_map_initialized
+    -  map
+
+The ```map``` parameter is the instance of Leaflet for this instance of SavvyMap.
+
+This is called after Leaflet is initialized but before any layers have been added.
+
+
+
+ * savvymap_basemap_url
+    -  basemapurl
+
+Allows you to modify the basemap url.
+
+Called before creating the basemap. 
+
+The basemap will be an instance of	L.TileLayer. If you want to provide your own 
+basemap, return something falsey and use /savvymap_map_initialized/ to set up yours.
+
+
+
+ * savvymap_basemap_config
+    -  basemapconfig
+
+Basemapconfig is an object of settings which will be passed to L.TileLayer
+
+You would probably use this in conjunction with savvymap_basemap_url. 
+
+
+
+ * savvymap_thegeom_features
+	- features
+
+The geojson features fetched from the connection before being used to create 
+the L.geojson layer. 
+
+Filtering server-side is probably more efficient, but you could do it here too.
+
+
+
+ * savvymap_popup_contents
+    -  popupcontents
+    -  feature
+    -  layer
+
+The popup contents can be set or modified by JavaScript here. 
+
+The feature and layer that the popup comes from are also passed in as arguments.
+
+Note: This only fires if args.show_popups is true.
+
+
+
+ * savvymap_feature_point
+    -  pointrep 
+    -  feature
+    -  latlng
+
+If you want to supply your own point representation, instead of the default
+Leaflet marker, use this feature and return whatever you want. 
+
+pointrep will be null by default, but could contain a value if you have
+multiple filters for this tag.
+
+If a non-null value is returned by this filter, the default point representation
+will be used (either a transparent L.circleMarker or a L.marker depending on 
+if arg.show_features is true or false).
+
+
+
+ * savvymap_feature_style
+    -  thestyle
+    -  feature
+
+Set the style for Polygons, Lines, and circleMarker points.
+
+The feature being styled is passed in. 
+
+
+
+ * savvymap_thegeom_config
+    -  geojsonconfig
+
+If you want to modify or completely replace the config passed to L.geoJson for
+the main map layer, you can do so here. Modifying this may prevent other filters
+from being called.
+
+
+ * savvymap_thegeom_bounds
+    -  geombounds
+    -  thegeom
+
+map.fitBounds is called after the main layer is loaded. If you want to change
+what those bounds are, you can modify the bounds here. 
+
+The main layer is passed as a second parameter.
+
+
+#### Actions
+
+ * savvymap_init_done
+
+Called when the map init process is complete, including loading the main layer.
+ 
+
+
+ * savvymap_view_changed
+
+Called after Leaflet is initialized an any time a SavvyMap instance sets the bounds
+or view.
+
+
+
+ * savvymap_basemap_added
+     - basemap
+	 - map
+
+Called after the basemap has been added. The basemap is passed. The basemap layer and 
+the Leaflet map object are passed as parameters.
+
+
+
+ * savvymap_thegeom_added
+     - thegeom
+
+Called after the main layer has been added. The main layer is passed as a parameter.
+
+
+
+ * savvymapper_setup_done
+
+Called after the SAVVY object has finished initialization. 
+
+Some initialization occurs inside a jQuery('document').ready(), so the SAVVY object
+will be available before this is called.
+
+
+ * savvymapper_map_added
+    -  newMap
+
+Called any time a new map is added to SAVVY.
+
+
 
 Styling Attributes and Maps
 ---------------------------
@@ -155,7 +360,6 @@ Styling Attributes and Maps
 #### Attribute classes
 #### Map Classes
 
-### Style callbacks
 
 
 Adding Support for Other Services
@@ -187,32 +391,3 @@ each set of attributes is wrapped in <span class="savvy-attrs">.
         <span class="savvy-attr">Feature #3 value</span>
     </span>
 
-
-
-
-
-### PHP Filters
-
-
-### JS Filters and Actions
-
-
-this.args = this.savvy._apply_filters('savvymap_args',this, this.args);
-this.meta = this.savvy._apply_filters('savvymap_meta',this, this.meta);
-this.map = this.savvy._apply_filters('savvymap_map_initialized',this, this.map);
-basemapurl = this.savvy._apply_filters( 'savvymap_basemap_url', this, basemapurl );
-basemapconfig = this.savvy._apply_filters( 'savvymap_basemap_config', this, basemapconfig );
-success = _this.savvy._apply_filters( 'savvymap_thegeom_features', _this, success );
-popupcontents = _this.savvy._apply_filters( 'savvymap_popup_contents', _this, popupcontents, feature, layer );
-pointrep = _this.savvy._apply_filters( 'savvymap_feature_point', _this, pointrep, feature, latlng );
-thestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, thestyle, feature );
-geojsonconfig = _this.savvy._apply_filters( 'savvymap_thegeom_config', _this, geojsonconfig );
-geombounds = _this.savvy._apply_filters( 'savvymap_thegeom_bounds', _this, geombounds, _this.layers.thegeom );
-_this.savvy._do_action( 'savvymap_init_done', _this);
-this.savvy._do_action( 'savvymap_view_changed', this );
-this.savvy._do_action('savvymap_basemap_added',this,this.layers.basemap);
-_this.savvy._do_action('savvymap_thegeom_added',_this,_this.thegeom);
-_this.savvy._do_action( 'savvymap_view_changed', _this );
-_this.savvy._do_action( 'savvymap_view_changed', _this );
-_this._do_action( 'savvymapper_setup_done', _this );
-this._do_action('savvymapper_map_added', this, newMap);

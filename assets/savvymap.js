@@ -84,10 +84,11 @@ var SavvyMap = SavvyClass.extend({
 		basemapurl = this.savvy._apply_filters( 'savvymap_basemap_url', this, basemapurl );
 		basemapconfig = this.savvy._apply_filters( 'savvymap_basemap_config', this, basemapconfig );
 
-		this.layers.basemap = new L.TileLayer(basemapurl, basemapconfig);
-
-		this.layers.basemap.addTo(this.map);
-		this.savvy._do_action('savvymap_basemap_added',this,this.layers.basemap);
+		if ( basemapurl ) { 
+			this.layers.basemap = new L.TileLayer(basemapurl, basemapconfig);
+			this.layers.basemap.addTo(this.map);
+			this.savvy._do_action('savvymap_basemap_added',this,this.layers.basemap, this.map);
+		}
 	},
 
 	/**
@@ -102,6 +103,13 @@ var SavvyMap = SavvyClass.extend({
 	*/
 	getClass: function(){
 		return this.meta.connection_type;
+	},
+
+	/**
+	* Get this map's slug
+	*/
+	getName: function(){
+		return this.meta.mapping_slug;
 	},
 
 	/**
@@ -160,17 +168,27 @@ var SavvyMap = SavvyClass.extend({
 					}
 				},
 				pointToLayer: function(feature, latlng){
-					var pointrep;
+
+					var pointrep = _this.savvy._apply_filters( 'savvymap_feature_point', _this, null, feature, latlng );
+
+					if(pointrep !== null){
+						return pointrep;
+					}
+
 					if(_this.args.show_features){
 						pointrep = L.marker(latlng);
 					}else{
-						pointrep = L.circleMarker(latlng, {
+
+						var circlestyle = {
 							opacity: 0,
 							fillOpacity: 0
-						});
+						};
+
+						circlestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, circlestyle, feature );
+
+						pointrep = L.circleMarker(latlng, circlestyle);
 					}
 
-					pointrep = _this.savvy._apply_filters( 'savvymap_feature_point', _this, pointrep, feature, latlng );
 					return pointrep;
 				},
 				style: function(feature){

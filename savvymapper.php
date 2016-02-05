@@ -191,12 +191,16 @@ class SavvyMapper {
 
 			sort( $allProp );
 
+			$allProp = apply_filters( 'savvymapper_attr_values', $allProp, $mapping );
+			
 			if ( count( $allProp ) > 0 ) {
 				$propHtml = implode( '</span><span class="savvy-attr">', $allProp );
 				$propHtml = '<span class="savvy-attr">' . $propHtml . '</span>';
 			}
 
-			return '<span class="savvy-attrs">' . $propHtml . '</span>';
+			$finalHtml = '<span class="savvy-attrs">' . $propHtml . '</span>';
+			$finalHtml = apply_filters( 'savvymapper_attr_html', $finalHtml );
+			return $finalHtml;
 
 		} else if ( isset( $attrs['show'] ) ) {
 
@@ -213,7 +217,7 @@ class SavvyMapper {
 					'savvy_map_div',
 					'savvy_page_map_div',
 					'savvy_map_' . $connection->get_type(),
-					'savvy_map_' . $mapping['mapping_name'],
+					'savvy_map_' . $mapping[ 'mapping_slug' ],
 					);
 
 				$html .= "<div class='" . implode( ' ', $classes ) .  "' data-mapmeta='" . json_encode( $mapMeta ) . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
@@ -383,7 +387,7 @@ class SavvyMapper {
 		$classes = array(
 			'savvy_metabox_map_div',
 		   	'savvy_metabox_map_' . $connection->get_type(),
-			'savvy_map_' . $mapping['mapping_name'],
+			'savvy_map_' . $mapping['mapping_slug'],
 			);
 
 		$html .= "<div class='" . implode( ' ', $classes ) .  "' data-mapmeta='" . json_encode( $mapMeta ) . "'  data-map='" . json_encode( $mapSetup ) . "'></div>";
@@ -713,7 +717,7 @@ class SavvyMapper {
 	}
 
 	function savvymapper_mapping_callback() {
-		$settings = get_option( 'savvymapper_mappings', '{}' );
+		$settings = get_option( 'savvymapper_mappings', "{'mapping':[]}" );
 		print '<textarea name="savvymapper_mappings" id="savvymapper_mappings">' . $settings . '</textarea>';
 	}
 
@@ -770,8 +774,9 @@ class SavvyMapper {
 		$mapping = json_decode( $mapping_string, true );
 
 		$this->mappings = array();
-		foreach ( $mapping['mappings'] as $mapping ) {
-			$this->mappings[ $mapping['mapping_id'] ] = $mapping;
+		foreach ( $mapping[ 'mappings' ] as $mapping ) {
+			$mapping[ 'mapping_slug' ] = sanitize_title( $mapping[ 'mapping_name' ] );
+			$this->mappings[ $mapping[ 'mapping_id' ] ] = $mapping;
 		}
 
 		if ( $mapping_id ) {
@@ -855,7 +860,7 @@ class SavvyMapper {
 				'connection_type'	=> $connection->get_type(),
 				'connection_name'	=> $connection->config[ 'connection_name' ],
 				'connection_id'		=> $mapping[ 'connection_id' ],
-				'mapping_name'		=> sanitize_title($mapping[ 'mapping_name' ]),
+				'mapping_slug'		=> $mapping[ 'mapping_slug' ],
 				'mapping_id'		=> $mapping['mapping_id'],
 				'post_id'			=> $postId,
 				'archive_id'		=> $archiveId,
