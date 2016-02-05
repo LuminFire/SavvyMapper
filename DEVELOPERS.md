@@ -41,8 +41,8 @@ a filter or action missing, please let us know what you need.
 ### PHP Filters and Actions
 
  * savvymapper_geojson
-  - $geojson
-  - $mapping
+    - $geojson
+    - $mapping
 
 This filter gives you final control over which features are sent to the user.
 
