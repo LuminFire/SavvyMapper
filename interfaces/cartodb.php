@@ -1,6 +1,6 @@
 <?php
 
-add_filter( 'savvy_load_interfaces','load_savvy_carto_interface' );
+add_filter( 'savvymapper_load_interfaces','load_savvy_carto_interface' );
 function load_savvy_carto_interface( $interfaces ) {
 	class SavvyCartoDB extends SavvyInterface {
 		/**
@@ -140,15 +140,6 @@ function load_savvy_carto_interface( $interfaces ) {
 			$vizes = array_merge( $mapping['cdb_visualizations'], $curent_settings['cdb_visualizations'], $attrs['vizes'] );
 
 			return array( 'vizes' => $vizes );
-		}
-
-		/**
-		 * implements required method
-		 */
-		function get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings ) {
-			$q = 'SELECT ' . $attrs['attr']  . ', the_geom FROM ' . $mapping['cdb_table'] . ' WHERE ' . $mapping['lookup_field'] . " ILIKE '" . $current_settings['lookup_value'] . "'";
-			$features = $this->carto_sql( $q );
-			return $features;
 		}
 
 		/**

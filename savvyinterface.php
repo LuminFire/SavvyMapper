@@ -123,7 +123,9 @@ abstract class SavvyInterface {
 	 *
 	 * @note This is separate from get_geojson_for_post because some optimizations
 	 * can be made by selecting only the columsn needed in this call, while
-	 * get_geojson_for_post probably needs to return all columns
+	 * get_geojson_for_post probably needs to return all columns For now we're just 
+	 * going to fetch the geojson the same way for both calls. We'll see if it's an 
+	 * issue later
 	 *
 	 * @param array  $attrs The shortcode $attrs.
 	 * @param string $contents The contents between the shortcode tags.
@@ -132,7 +134,9 @@ abstract class SavvyInterface {
 	 *
 	 * @return GeoJSON with each feature having the property specified $attrs['attr']
 	 */
-	abstract function get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings );
+	function get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings ) {
+		return $this->get_geojson_for_post( $mapping, $current_settings );
+	}
 
 	/**
 	 * Map initialization is all done in JavaScript.
@@ -178,6 +182,7 @@ abstract class SavvyInterface {
 		if ( $show_popups ) {
 			$json = $this->make_popups( $mapping, $json );
 		}
+
 		return $json;
 	}
 
@@ -419,22 +424,26 @@ abstract class SavvyInterface {
 	 */
 	function make_popups( $mapping, $json ) {
 		foreach( $json[ 'features' ] as &$feature ) {
-			$popup_properties = apply_filters( 'savvymapper_filter_popup_fields', $feature[ 'properties'] , $feature, $mapping );
+			$popup_properties = apply_filters( 'savvymapper_popup_fields', $feature[ 'properties'] , $feature, $mapping );
 
-			$html = '<div class="savvymapper_popup_wrapper"><table class="savvymapper_popup">';
-			foreach($popup_properties as $k => $v){
-				$empty_row = '';
-				if ( empty( $v ) ) {
-					$empty_row = ' class="empty_row"';
+			$html = '';
+			if ( !empty( $popup_properties ) ) {
+				$html .= '<div class="savvymapper_popup_wrapper"><table class="savvymapper_popup">';
+				foreach($popup_properties as $k => $v){
+					$empty_row = '';
+					if ( empty( $v ) ) {
+						$empty_row = ' class="empty_row"';
+					}
+					$html .= '<tr' . $empty_row . '><th>' . $k . '</th><td>' . $v . '</td></tr>';
 				}
-				$html .= '<tr' . $empty_row . '><th>' . $k . '</th><td>' . $v . '</td></tr>';
+				$html .= '</table></div>';
 			}
-			$html .= '</table></div>';
 
-			$popuphtml = apply_filters( 'savvymapper_filter_popup_html', $html, $feature, $mapping );
-			
+			$popuphtml = apply_filters( 'savvymapper_popup_html', $html, $feature, $mapping );
 
-			$feature[ '_popup_contents' ] = $popuphtml;
+			if( !empty( $popuphtml ) ) {
+				$feature[ '_popup_contents' ] = $popuphtml;
+			}
 		}
 
 		return $json;

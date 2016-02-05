@@ -6,7 +6,7 @@
  * Won't work for large files, obviously
  */
 
-add_filter( 'savvy_load_interfaces','load_savvy_geojson_url_interface' );
+add_filter( 'savvymapper_load_interfaces','load_savvy_geojson_url_interface' );
 function load_savvy_geojson_url_interface( $interfaces ) {
 	class SavvyGeoJsonURL extends SavvyInterface {
 		/**
@@ -101,13 +101,6 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		 */
 		function get_map_shortcode_properties( $attrs, $contents, $mapping, $curent_settings ) {
 			return array();
-		}
-
-		/**
-		 * implements required method
-		 */
-		function get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings ) {
-			return $this->get_geojson_for_post( $mapping, $current_settings );
 		}
 
 		/**

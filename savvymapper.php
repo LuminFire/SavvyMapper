@@ -165,6 +165,8 @@ class SavvyMapper {
 			// Attributes are simpler, so we'll just ask for fetures based on a search
 			$json = $connection->get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings );
 
+			$json = apply_filters( 'savvymapper_geojson', $json, $mapping );
+
 			// what happens if multiple features match a query
 			$allProp = array();
 			foreach ( $json['features'] as $feature ) {
@@ -626,7 +628,7 @@ class SavvyMapper {
 
 	function load_interfaces() {
 		require_once( dirname( __FILE__ ) . '/savvyinterface.php' );
-		$this->interface_classes = apply_filters( 'savvy_load_interfaces', $this->interface_classes );
+		$this->interface_classes = apply_filters( 'savvymapper_load_interfaces', $this->interface_classes );
 
 		// Now that we have all our interfaces we can make our connections
 		$this->get_connections();
@@ -800,6 +802,11 @@ class SavvyMapper {
 		$current_settings = array_merge( $current_settings, $overrides );
 
 		$json = $connection->_get_geojson_for_post( $mapping, $current_settings );
+
+		$json = apply_filters( 'savvymapper_geojson', $json, $mapping );
+
+		// Leaflet doesn't like it if there's no zero index
+		$json['features'] = array_values($json['features']);
 
 		header( 'Content-Type: application/json' );
 		print json_encode( $json );

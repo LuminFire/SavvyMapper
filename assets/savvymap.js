@@ -154,7 +154,9 @@ var SavvyMap = SavvyClass.extend({
 							popupcontents = feature._popup_contents;
 						}
 						popupcontents = _this.savvy._apply_filters( 'savvymap_popup_contents', _this, popupcontents, feature, layer );
-						layer.bindPopup( popupcontents );
+						if( popupcontents.length > 0 ){
+							layer.bindPopup( popupcontents );
+						}
 					}
 				},
 				pointToLayer: function(feature, latlng){
