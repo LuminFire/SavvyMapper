@@ -70,9 +70,9 @@ Add or remove features to $geojson and then return it.
 
 
  * savvymapper_popup_fields
-   - $properties
-   - $feature
-   - $mapping
+    - $properties
+    - $feature
+    - $mapping
 
 The default SavvyMapper popup is a table of the feature's properties. This filter 
 gives you control over which properties are shown to the user. 
@@ -102,9 +102,9 @@ mapping object to determine if you want to act on the current popup properties.
 
 
  * savvymapper_popup_html
-   - $html
-   - $feature
-   - $mapping
+    - $html
+    - $feature
+    - $mapping
 
 If you want to completely replace the popup with something other than a table, 
 this is the place to do it. 
@@ -134,18 +134,18 @@ savvymapper_popup_fields filter above.
 
 
  * savvymapper_attr_values 
-   - $allProps
-   - $mapping
-   - $attributeName
+    - $allProps
+    - $mapping
+    - $attributeName
 
 This lets you filter the list of found attribute values. The other parameters
 are the current mapping and the requested attribute name.
 
 
  * savvymapper_attr_html
-   - $finalHtml
-   - $mapping
-   - $attributeName
+    - $finalHtml
+    - $mapping
+    - $attributeName
 
 This lets you filter the final HTML generated for the list of attributes.
 The mapping and attribute name are also passed in.
@@ -367,8 +367,8 @@ Here are some key classes you might be interested in:
  * .savvy-attrs -- Wraps a collection of attributes. Includes a data-attr property with the name of the attribute.
  * .savvy-attr  -- An individual attribute, inside a .savvy-attrs.
  * .savvy_map_div -- The div that Leaflet is initialized in.
-   - .savvy_map_cartodb -- It will also have a class like this, with the connection type at the end.
-   - .savvy_map_sea-polygons -- It will also have a class like this with the mapping slug at the end.
+    - .savvy_map_cartodb -- It will also have a class like this, with the connection type at the end.
+    - .savvy_map_sea-polygons -- It will also have a class like this with the mapping slug at the end.
  * table.savvymapper_popup tr.empty_row -- empty rows are present, but hidden, by default in popups.
  * .savvyampper_popup_wrapper -- This div wraps the popup contents. This has the max-height set to 250px by default.
  * table.savvymapper_popup  -- The default popup contents is a table. Its width is set to 250 by default.
@@ -419,7 +419,7 @@ This is technically a filter, but it would only be used if you were adding new i
 
 
  * savvymapper_load_interfaces
-   - $instances (Array)
+    - $instances (Array)
 
 This filter is called when SavvyMapper is ready to load interfaces. If you implement
 a new interface you should add a filter which will initialize your interface and
