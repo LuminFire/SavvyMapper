@@ -191,15 +191,15 @@ class SavvyMapper {
 
 			sort( $allProp );
 
-			$allProp = apply_filters( 'savvymapper_attr_values', $allProp, $mapping );
+			$allProp = apply_filters( 'savvymapper_attr_values', $allProp, $mapping, $attrs['attr'] );
 			
 			if ( count( $allProp ) > 0 ) {
 				$propHtml = implode( '</span><span class="savvy-attr">', $allProp );
 				$propHtml = '<span class="savvy-attr">' . $propHtml . '</span>';
 			}
 
-			$finalHtml = '<span class="savvy-attrs">' . $propHtml . '</span>';
-			$finalHtml = apply_filters( 'savvymapper_attr_html', $finalHtml );
+			$finalHtml = '<span class="savvy-attrs" data-attr="' . $attrs['attr'] . '">' . $propHtml . '</span>';
+			$finalHtml = apply_filters( 'savvymapper_attr_html', $finalHtml, $mapping, $attrs['attr'] );
 			return $finalHtml;
 
 		} else if ( isset( $attrs['show'] ) ) {
