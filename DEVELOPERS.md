@@ -40,29 +40,6 @@ a filter or action missing, please let us know what you need.
 
 ### PHP Filters and Actions
 
- * savvymapper_load_interfaces
-   - $instances (Array)
-
-This filter is called when SavvyMapper is ready to load interfaces. If you implement
-a new interface you should add a filter which will initialize your interface and
-append it to the list of interfaces before returning the array.
-
-This filter passes a single argument, an array of instances of classes which 
-implement SavvyInterface.
-
-
-    add_filter( 'savvy_load_interfaces','load_savvy_carto_interface' );
-    function load_savvy_carto_interface( $interfaces ) {
-    	class SavvyCartoDB extends SavvyInterface {
-    		... class definition here...
-    	}
-    
-    	$int = new SavvyCartoDB();
-    	$interfaces[ $int->get_type() ] = $int;
-    
-    	return $interfaces;
-    }
-
  * savvymapper_geojson
    - $geojson
    - $mapping
@@ -401,29 +378,76 @@ Here are some key classes you might be interested in:
 Adding Support for Other Services
 ---------------------------------
 
+Support for more interfaces should be fairly simple. There is a
+PHP interface and a JavaScript interface which should be implemented
+in order to achieve compatibility with the SavvyMapper plugin.
+
 ### The SavvyInterface PHP abstract class
+
+savvyinterface.php defines an abstract class SavvyInterface.
+
+The code is well documented and all of the abstract methods
+are grouped together near the top of the file. 
+
+See cartodb.php or geojson_url.php for example implementations.
+
 
 ### The SavvyMap JavaScript parent class
 
 
+You should create a new JavaScript file for your interface
+and in it you should:
+
+ 1. Create a new class using
+ 
+		var myClass = SavvyMap.extend({..your optional functionality here...});
+
+    This class should handle any special arguments and handling or behavior your interface expects. 
+
+ For simple cases, it may simply extend  SavvyMap with an empty object.
+
+ 2. Use ```jQuery('document').ready(function(){});``` to initialize your
+ object once the page is ready.
+
+ 
+See cartodb.js and geojson_url.js for example implementations.
 
 
+### Loading your intance
+
+This is technically a filter, but it would only be used if you were adding new interfaces.
 
 
+ * savvymapper_load_interfaces
+   - $instances (Array)
+
+This filter is called when SavvyMapper is ready to load interfaces. If you implement
+a new interface you should add a filter which will initialize your interface and
+append it to the list of interfaces before returning the array.
+
+This filter passes a single argument, an array of instances of classes which 
+implement SavvyInterface.
 
 
-### The SAVVY Object
+    add_filter( 'savvy_load_interfaces','load_savvy_carto_interface' );
+    function load_savvy_carto_interface( $interfaces ) {
 
-This plugin provides a global ```SAVVY``` object which still needs to be documented here.
+		// Class is only defined inside the function in 
+		// case your theme or plugin is loaded before
+		// SavvyInterface is available.
 
-##### Styling attributes
+    	class SavvyCartoDB extends SavvyInterface {
+    		... class definition here...
+    	}
+    
+		// Initialize your interface
+    	$int = new SavvyCartoDB();
 
-Attributes printed with shortcodes will be wrapped with <span class="savvy-attr"> and
-each set of attributes is wrapped in <span class="savvy-attrs">.
+		// Then add it to $interfaces with its name as the key
+    	$interfaces[ $int->get_type() ] = $int;
+    
+		// Finally, return $interfaces.
+    	return $interfaces;
+    }
 
-    <span class="savvy-attrs">
-        <span class="savvy-attr">Feature #1 value</span>
-        <span class="savvy-attr">Feature #2 value</span>
-        <span class="savvy-attr">Feature #3 value</span>
-    </span>
 

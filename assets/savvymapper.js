@@ -71,7 +71,6 @@ SAVVY = (function(){
 					if( e.keyCode == 13 ) {
 						return false;
 					}
-					console.log(e.keyCode);
 				});
 			});
 		},

@@ -116,29 +116,6 @@ abstract class SavvyInterface {
 	abstract function save_meta( $post_id );
 
 	/**
-	 * Fetch the GeoJSON feature(s) for the current post so we can print their attributes
-	 * for the attribute shortcode.
-	 *
-	 * Returned features should have at least the property specified in $attrs['attr'].
-	 *
-	 * @note This is separate from get_geojson_for_post because some optimizations
-	 * can be made by selecting only the columsn needed in this call, while
-	 * get_geojson_for_post probably needs to return all columns For now we're just 
-	 * going to fetch the geojson the same way for both calls. We'll see if it's an 
-	 * issue later
-	 *
-	 * @param array  $attrs The shortcode $attrs.
-	 * @param string $contents The contents between the shortcode tags.
-	 * @param array  $mapping The current mapping config.
-	 * @param array  $current_settings The settings for this specific post.
-	 *
-	 * @return GeoJSON with each feature having the property specified $attrs['attr']
-	 */
-	function get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings ) {
-		return $this->get_geojson_for_post( $mapping, $current_settings );
-	}
-
-	/**
 	 * Map initialization is all done in JavaScript.
 	 *
 	 * This function allows an interface to supply additional settings which the JavaScript can access.
@@ -194,6 +171,33 @@ abstract class SavvyInterface {
 	 * This is run for all instances of the interface, even empty ones
 	 */
 	abstract function setup_actions();
+
+
+	/**
+	 * Fetch the GeoJSON feature(s) for the current post so we can print their attributes
+	 * for the attribute shortcode.
+	 *
+	 * Returned features should have at least the property specified in $attrs['attr'].
+	 *
+	 * @note This is separate from get_geojson_for_post because some optimizations
+	 * can be made by selecting only the columsn needed in this call, while
+	 * get_geojson_for_post probably needs to return all columns For now we're just 
+	 * going to fetch the geojson the same way for both calls. We'll see if it's an 
+	 * issue later
+	 *
+	 * @param array  $attrs The shortcode $attrs.
+	 * @param string $contents The contents between the shortcode tags.
+	 * @param array  $mapping The current mapping config.
+	 * @param array  $current_settings The settings for this specific post.
+	 *
+	 * @return GeoJSON with each feature having the property specified $attrs['attr']
+	 */
+	function get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings ) {
+		return $this->get_geojson_for_post( $mapping, $current_settings );
+	}
+
+
+
 
 	/**
 	 * Setup actions for a specific connection
