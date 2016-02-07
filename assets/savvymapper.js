@@ -171,7 +171,7 @@ SAVVY = (function(){
 
 		// Replace the main layer
 		_replace_map_search_layer: function( target, newSearch ) {
-			var map_id = jQuery(target).closest('.savvy_metabox_wrapper').find('.savvy_metabox_map_div').data('map').id;
+			var map_id = jQuery(target).closest('.savvy_metabox_wrapper').find('.savvy_metabox_map_div').data('mapmeta').map_id;
 			this.maps[ map_id ].set_search_layer( {'lookup_value': newSearch} );
 		},
 

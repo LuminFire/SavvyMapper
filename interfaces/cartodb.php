@@ -77,7 +77,7 @@ function load_savvy_carto_interface( $interfaces ) {
 
 			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping[ 'cdb_table' ] ) . '<br>' . "\n";
 			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping[ 'lookup_field' ] ) . '<br>' . "\n";
-			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', implode( "\n", $mapping[ 'cdb_visualizations' ] )  ) . '<br>' . "\n";
+			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping[ 'cdb_visualizations' ] ) . '<br>' . "\n";
 
 			return $html;
 		}
@@ -138,6 +138,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			}
 
 			$vizes = array_merge( $mapping['cdb_visualizations'], $curent_settings['cdb_visualizations'], $attrs['vizes'] );
+			$vizes = array_unique($vizes);
 
 			return array( 'vizes' => $vizes );
 		}

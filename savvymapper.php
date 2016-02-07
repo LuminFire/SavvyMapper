@@ -130,6 +130,12 @@ class SavvyMapper {
 	function load_scripts() {
 		$plugin_dir_url = plugin_dir_url( __FILE__ );
 
+
+		wp_enqueue_style( 'cartodbcss','//cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/themes/css/cartodb.css' );
+		// wp_enqueue_script('cartodbjs','//libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
+		// wp_enqueue_script( 'cartodbjs','//cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js' );
+		wp_enqueue_script( 'cartodbjs','//cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.uncompressed.js' );
+
 		wp_enqueue_style( 'savvycss',$plugin_dir_url . 'assets/savvy.css' );
 
 		wp_enqueue_style( 'savvyautocompletecss',$plugin_dir_url . 'assets/jquery.auto-complete.css' );
@@ -210,7 +216,7 @@ class SavvyMapper {
 			// javascript to process
 			if ( $attrs['show'] == 'map' ) {
 
-				$mapSetup = $this->make_map_config( $attrs, $contents, $connection, $mapping );
+				$mapSetup = $this->make_map_config( $attrs, $contents, $connection, $mapping, $current_settings );
 				$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
 
 				$classes = array(
@@ -265,7 +271,7 @@ class SavvyMapper {
 		return $attrs;
 	}
 
-	function make_map_config( $attrs, $contents, $connection, $mapping ) {
+	function make_map_config( $attrs, $contents, $connection, $mapping, $current_settings ) {
 		global $post;
 
 		$attrs = $this->make_attrs( $attrs, $mapping );
@@ -304,9 +310,6 @@ class SavvyMapper {
 		if ( $plugin == $plugin_file ) {
 			$settings = array( 'settings' => '<a href="options-general.php?page=savvymapper">' . __( 'Settings', 'General' ) . '</a>' );
 			$actions = array_merge( $settings, $actions );
-
-			// $site_link = array('support' => '<a href="http://thetechterminus.com" target="_blank">Support</a>');
-			// $actions = array_merge($site_link, $actions);
 		}
 
 		return $actions;
@@ -353,7 +356,7 @@ class SavvyMapper {
 		$mapping = $metabox['args'][1];
 
 		list($cur_connection, $cur_mapping, $current_settings ) = $this->get_post_info_by_post_id( $post->ID );
-		$mapSetup = $this->make_map_config( array(), array(), $connection, $mapping );
+		$mapSetup = $this->make_map_config( array(), array(), $connection, $mapping, $current_settings );
 		$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
 
 		$html = "<div class='savvy_metabox_wrapper' data-mapping_id='" . $mapping['mapping_id'] . "'>";

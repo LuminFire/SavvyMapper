@@ -49,10 +49,12 @@ table.savvy_settings th {
 	padding-top: 0;
 }
 
+/*
 .savvy-attr {
 	font-weight: bold;
 	color: #690000;
 }
+*/
 
 .savvy-attr::after {
 	content: ', ';
