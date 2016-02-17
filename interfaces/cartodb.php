@@ -219,9 +219,9 @@ function load_savvy_carto_interface( $interfaces ) {
 				$querystring['format'] = 'geojson';
 			}
 
-			$url = 'https://' . $un . '.cartodb.com/api/v2/sql?' . http_build_query( $querystring );
+			$url = 'https://' . $un . '.cartodb.com/api/v2/sql';
 
-			$ret = $this->curl_request( $url );
+			$ret = $this->remote_post( $url, array( 'body' => $querystring ) );
 
 			if ( $json ) {
 				return json_decode( $ret, true );

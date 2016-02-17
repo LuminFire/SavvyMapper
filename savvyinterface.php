@@ -213,80 +213,64 @@ abstract class SavvyInterface {
 			}
 		}
 
-	/*
-	 * cURL wrapper which returns request and response headers, curl request meta, post and response body.
+	/**
+	 * Wrapper for wp_remote_post with caching 
 	 *
-	 * @param $url (String) The URL to make the request to
-	 * @param $data (Array) The data to post. If array is empty, GET will be used
-	 * @param $debug (Bool, defaults to FALSE) Should debug info be returned?
+	 * @param string $url The url to post to.
+	 * @param array $args The args for the post.
+	 * @param bool $cache Should cache be enabled for this request.
 	 *
-	 * @return A dict with all the requst info, if debug is TRUE. Otherwise just returns the response body
+	 * return The post body.
 	 */
-	function curl_request( $url, $data = array(), $debug = false ) {
+	function remote_post( $url, $args = array(), $cache = true ) {
+		if ( $cache ) {
+			$queryString = http_build_query( $args) ;
+			$cache_string = $url . $queryString;
+			$cache_hash = sha1( $cache_string );
 
-		/**
-		 * Check the cache
-		 */
-		$queryString =  http_build_query( $data );
-
-		$cache_string = $url . '?' . $queryString;
-		$cache_hash = sha1($cache_string);
-
-		$cached = $this->savvy->get_from_cache( $cache_hash );
-		if ( $cached ) {
-			return $cached;
+			$cached = $this->savvy->get_from_cache( $cache_hash );
+			if ( $cached ) {
+				return $cached;
+			}
 		}
 
-		$post = curl_init();
-		curl_setopt( $post, CURLOPT_URL, $url );
+		$result = wp_remote_post( $url, $args );
 
-		if ( !empty( $data ) ){
-			curl_setopt( $post, CURLOPT_POST, count( $data ) );
-			curl_setopt( $post, CURLOPT_POSTFIELDS, $cache_string );
+		if ( $cache && strpos( $result['response']['code'], '2' ) === 0 ) {
+			$this->savvy->write_to_cache( $cache_hash, $result['body'] );
 		}
 
-		curl_setopt( $post, CURLOPT_RETURNTRANSFER, 1 );
-		curl_setopt( $post, CURLINFO_HEADER_OUT, true );
-		curl_setopt( $post, CURLOPT_VERBOSE, 1 );
-		curl_setopt( $post, CURLOPT_HEADER, 1 );
+		return $result['body'];
+	}
 
-		curl_setopt( $post, CURLOPT_CONNECTTIMEOUT, 5 ); // connect timeout
-		curl_setopt( $post, CURLOPT_TIMEOUT, 60 ); // timeout in seconds
+	/**
+	 * Wrapper for wp_remote_post with caching 
+	 *
+	 * @param string $url The url to post to.
+	 * @param array $args The args for the post.
+	 * @param bool $cache Should cache be enabled for this request.
+	 *
+	 * return The post body.
+	 */
+	function remote_get( $url, $args = array(), $cache = true ) {
+		if ( $cache ) {
+			$queryString = http_build_query( $args) ;
+			$cache_string = $url . $queryString;
+			$cache_hash = sha1( $cache_string );
 
-		// Set the path to any custom cert files
-		// curl_setopt($post, CURLOPT_CAINFO, plugin_dir_path( __FILE__ ).'cacert.pem');
-		$response = curl_exec( $post );
-
-		$header_size = curl_getinfo( $post, CURLINFO_HEADER_SIZE );
-		$header = substr( $response, 0, $header_size );
-		$body = substr( $response, $header_size );
-
-		$info = curl_getinfo( $post );
-
-		$response = array(
-			'request_headers' => (isset( $info['request_header'] ) ? $info['request_header'] : ''),
-			'post_body' => http_build_query( $data ),
-			'response_headers' => $header,
-			'body' => $body,
-			'errno' => curl_errno( $post ),
-			'error' => curl_error( $post ),
-			'curl_info' => $info,
-		);
-
-		curl_close( $post );
-
-		if ( $debug ) {
-			return $response;
-		} else {
-			$this->last_curl = $response;
+			$cached = $this->savvy->get_from_cache( $cache_hash );
+			if ( $cached ) {
+				return $cached;
+			}
 		}
 
-		// only cache on positive response
-		if ( strpos( $response['curl_info']['http_code'], '2') === 0 ) {
-			$this->savvy->write_to_cache( $cache_hash, $response['body'] );
+		$result = wp_remote_get( $url, $args );
+
+		if ( $cache && strpos( $result['response']['code'], '2' ) === 0 ) {
+			$this->savvy->write_to_cache( $cache_hash, $result['body'] );
 		}
 
-		return $response['body'];
+		return $result['body'];
 	}
 
 	/**
@@ -445,6 +429,11 @@ abstract class SavvyInterface {
 	 * @return The modified GeoJSON.
 	 */
 	function make_popups( $mapping, $json ) {
+
+		if ( empty( $json[ 'features' ] ) ) {
+			return $json;
+		}
+
 		foreach( $json[ 'features' ] as &$feature ) {
 			$popup_properties = apply_filters( 'savvymapper_popup_fields', $feature[ 'properties'] , $feature, $mapping );
 

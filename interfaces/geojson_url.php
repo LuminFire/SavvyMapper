@@ -139,7 +139,7 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		}
 
 		function get_geojson_file() {
-			$json_str = $this->curl_request( $this->config[ 'geojson_url' ] );
+			$json_str = $this->remote_get( $this->config[ 'geojson_url' ] );
 			$json = json_decode( $json_str, true );
 
 			return $json;

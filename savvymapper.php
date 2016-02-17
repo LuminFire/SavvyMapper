@@ -562,7 +562,7 @@ class SavvyMapper {
 	 */
 	function options_page() {
 		$html = '<div class="wrap savvymapper_options_wrap">';
-		$html .= '<p>Welcome to SavvyMapper. Add connections to services below.</p>';
+		$html .= '<p>Welcome to SavvyMapper.';
 		$html .= '<h2>SavvyMapper</h2>';
 
 		$html .= '<h3>Settings</h3>';
@@ -573,6 +573,8 @@ class SavvyMapper {
 		$html .= '</div>';
 
 		$html .= '<h3>Connections</h3>';
+		$html .= '<p>Add connections to services here.</p>';
+		$html .= '<p>After creating a connection, you can map data from that connection to post types on the <i>Post Mapping</i> options page.</p>';
 		foreach ( $this->interface_classes as $interface ) {
 			$html .= '<input type="button" onclick="SAVVY._add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
 		}
