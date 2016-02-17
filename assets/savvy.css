@@ -84,7 +84,9 @@ div.savvymapper_metabox_col textarea {
 	resize: both;
 	width: 100%;
 }
-div.savvymapper_mapping_wrap textarea {
+div.savvymapper_mapping_wrap textarea, 
+div.savvymapper_options_wrap textarea
+{
 	resize: both;
 }
 

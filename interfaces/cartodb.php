@@ -47,6 +47,7 @@ function load_savvy_carto_interface( $interfaces ) {
 				'username' => '',
 				'key' => '',
 			), $this->config );
+			$html = '';
 			$html .= $this->form_make_text( 'CartoDB Username','username',$connection_details['username'] );
 			$html .= "<br>\n";
 			$html .= $this->form_make_text( 'CartoDB API Key','key',$connection_details['key'] );
@@ -215,7 +216,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			);
 
 			if ( $json ) {
-				$querystring['format'] = 'GeoJSON';
+				$querystring['format'] = 'geojson';
 			}
 
 			$url = 'https://' . $un . '.cartodb.com/api/v2/sql?' . http_build_query( $querystring );

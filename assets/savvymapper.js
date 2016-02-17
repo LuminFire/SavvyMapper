@@ -25,9 +25,9 @@ SAVVY = (function(){
 		_setup_listeners: function(){
 			var _this = this;
 
-			jQuery('#savvyoptions').on('click','.remove-instance',function(e){
+			jQuery('#savvyconnectionoptions').on('click','.remove-instance',function(e){
 				jQuery(e.target).closest('.instance-config').remove();
-				_this._update_connection_config();
+				_this._update_savvy_config();
 			});
 
 			jQuery('#savvy_mapping_settings').on('click','.remove-instance',function(e){
@@ -35,8 +35,10 @@ SAVVY = (function(){
 				_this._update_mapping_config();
 			});
 
-			jQuery('#savvyoptions').on('change',':input',this._update_connection_config);
+			jQuery('#savvysettings').on('change',':input',this._update_savvy_config);
+			jQuery('#savvyconnectionoptions').on('change',':input',this._update_savvy_config);
 			jQuery('#savvy_mapping_settings').on('change',':input',this._update_mapping_config);
+			jQuery('#savvyclearcache').on('click',this._clear_cache);
 
 			// Set up behavior for autocomplete fields in metaboxes
 			jQuery('.savvy_lookup_ac').each(function(){
@@ -81,7 +83,7 @@ SAVVY = (function(){
 				'action'	: 'savvy_get_interface_options_form',
 				'interface' : jQuery(button).data('type')
 			}).then(function(success){
-				jQuery('#savvyoptions').append(success);
+				jQuery('#savvyconnectionoptions').append(success);
 			});
 		},
 
@@ -104,13 +106,33 @@ SAVVY = (function(){
 		},
 
 		// SETTINGS: Update the connection config json string
-		_update_connection_config: function(){
+		_update_savvy_config: function(){
 			var config = {'connections': []};
+
+			jQuery('#savvysettings :input').each(function(j,input){
+				input = jQuery(input);
+				if( input.data('name') === undefined ) {
+					return;
+				}
+
+				if(input.attr('type') == 'checkbox'){
+					config[ input.data('name') ] = (input.prop('checked') ? 1 : 0);
+				}else{
+					config[ input.data('name') ] = input.val();
+				}
+
+			});
+
 			var oneconfig;
 			jQuery('.instance-config').each(function(i,instance){
 				oneconfig = {};
 				jQuery(instance).find(':input').each(function(j,input){
 					input = jQuery(input);
+
+					if( input.data('name') === undefined ) {
+						return;
+					}
+
 					if(input.attr('type') == 'checkbox'){
 						oneconfig[ input.data('name') ] = (input.prop('checked') ? 1 : 0);
 					}else{
@@ -230,6 +252,14 @@ SAVVY = (function(){
 			}
 
 			return filteredval;
+		},
+
+		_clear_cache: function() {
+			jQuery.get(ajaxurl, {
+				'action'		: 'savvy_clearcache'
+			}).then(function(){
+				alert("SavvyMapper cache cleared!");
+			});
 		}
 	});
 	return new SavvyMapper();

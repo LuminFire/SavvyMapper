@@ -224,10 +224,27 @@ abstract class SavvyInterface {
 	 */
 	function curl_request( $url, $data = array(), $debug = false ) {
 
+		/**
+		 * Check the cache
+		 */
+		$queryString =  http_build_query( $data );
+
+		$cache_string = $url . '?' . $queryString;
+		$cache_hash = sha1($cache_string);
+
+		$cached = $this->savvy->get_from_cache( $cache_hash );
+		if ( $cached ) {
+			return $cached;
+		}
+
 		$post = curl_init();
 		curl_setopt( $post, CURLOPT_URL, $url );
-		curl_setopt( $post, CURLOPT_POST, count( $data ) );
-		curl_setopt( $post, CURLOPT_POSTFIELDS, http_build_query( $data ) );
+
+		if ( !empty( $data ) ){
+			curl_setopt( $post, CURLOPT_POST, count( $data ) );
+			curl_setopt( $post, CURLOPT_POSTFIELDS, $cache_string );
+		}
+
 		curl_setopt( $post, CURLOPT_RETURNTRANSFER, 1 );
 		curl_setopt( $post, CURLINFO_HEADER_OUT, true );
 		curl_setopt( $post, CURLOPT_VERBOSE, 1 );
@@ -262,6 +279,11 @@ abstract class SavvyInterface {
 			return $response;
 		} else {
 			$this->last_curl = $response;
+		}
+
+		// only cache on positive response
+		if ( strpos( $response['curl_info']['http_code'], '2') === 0 ) {
+			$this->savvy->write_to_cache( $cache_hash, $response['body'] );
 		}
 
 		return $response['body'];

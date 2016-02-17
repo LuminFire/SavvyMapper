@@ -96,16 +96,18 @@ class SavvyMapper {
 		add_filter( 'plugin_action_links', array( $this, 'plugin_add_settings_link' ), 10, 5 );
 
 		add_action( 'wp_ajax_savvy_autocomplete', array( $this, 'ajax_autocomplete' ) );
-		add_action( 'wp_ajax_nopriv_savvy_autocomplete', array( $this, 'ajax_autocomplete' ) );
+		// add_action( 'wp_ajax_nopriv_savvy_autocomplete', array( $this, 'ajax_autocomplete' ) );
 
 		add_action( 'wp_ajax_savvy_get_interface_options_form', array( $this, 'get_interface_options_form' ) );
-		add_action( 'wp_ajax_nopriv_savvy_get_interface_options_form', array( $this, 'get_interface_options_form' ) );
+		// add_action( 'wp_ajax_nopriv_savvy_get_interface_options_form', array( $this, 'get_interface_options_form' ) );
 
 		add_action( 'wp_ajax_savvy_get_mapping_options_form', array( $this, 'get_mapping_options_form' ) );
-		add_action( 'wp_ajax_nopriv_savvy_get_mapping_options_form', array( $this, 'get_mapping_options_form' ) );
+		// add_action( 'wp_ajax_nopriv_savvy_get_mapping_options_form', array( $this, 'get_mapping_options_form' ) );
 
 		add_action( 'wp_ajax_savvy_get_geojson_for_post', array( $this, 'get_geojson_for_post' ) );
 		add_action( 'wp_ajax_nopriv_savvy_get_geojson_for_post', array( $this, 'get_geojson_for_post' ) );
+
+		add_action( 'wp_ajax_savvy_clearcache', array( $this, 'clear_cache' ) );
 
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'save_post', array( $this, 'save_meta' ) );
@@ -560,14 +562,23 @@ class SavvyMapper {
 	 */
 	function options_page() {
 		$html = '<div class="wrap savvymapper_options_wrap">';
-		$html .= '<h2>SavvyMapper</h2>';
 		$html .= '<p>Welcome to SavvyMapper. Add connections to services below.</p>';
+		$html .= '<h2>SavvyMapper</h2>';
+
+		$html .= '<h3>Settings</h3>';
+		$html .= '<div id="savvysettings">';
+		$html .= '<p>In order to reduce calls to GIS services and to improve your site\'s speed, SavvyMapper caches results by default. Set to 0 to disable.</p>';
+		$html .= '<label>Cache Timeout (in minutes)</label>: <input data-name="cachetimeout" value="' . $this->get_settings( 'cachetimeout' ) . '"><br>';
+		$html .= '<input type="button" id="savvyclearcache" value="Clear Cache"><br>';
+		$html .= '</div>';
+
+		$html .= '<h3>Connections</h3>';
 		foreach ( $this->interface_classes as $interface ) {
 			$html .= '<input type="button" onclick="SAVVY._add_connection(this);" data-type="' . $interface->get_type() . '" value="Add ' . $interface->get_name() . ' Connection"> ';
 		}
 		$html .= '<hr>';
 
-		$html .= '<div id="savvyoptions">';
+		$html .= '<div id="savvyconnectionoptions">';
 
 		$connections = $this->get_connections();
 		foreach ( $connections as $connection ) {
@@ -601,7 +612,7 @@ class SavvyMapper {
 		add_settings_section(
 			'savvymapper_plugin_page_section',				// id
 			__( 'SavvyMapper Settings Page', 'wordpress' ), // title
-			__return_false,			// callback
+			'__return_false',			// callback
 			'savvymapper_plugin_page'						// page
 		);
 		add_settings_field(
@@ -620,7 +631,7 @@ class SavvyMapper {
 		add_settings_section(
 			'savvymapper_mapping_page_section',					// id
 			__( 'SavvyMapper Mapping Settings', 'wordpress' ),  // title
-			__return_false,			// callback
+			'__return_false',			// callback
 			'savvymapper_mapping_page'							// page
 		);
 		add_settings_field(
@@ -660,6 +671,7 @@ class SavvyMapper {
 	 * @return HTML for a single instance-config block.
 	 */
 	function _get_interface_options_form( $interface ) {
+		$html = '';
 		$html .= '<div class="instance-config">';
 		$html .= '<h3><span class="remove-instance">(X)</span> ' . $interface->get_name() . ' Connection</h3>';
 		$html .= '<label>Connection Name</label> <input type="text" data-name="connection_name" value="' . $interface->get_connection_name() . '"><br>' . "\n";
@@ -750,6 +762,9 @@ class SavvyMapper {
 			$connections_list[ $connection['_id'] ] = new $interfaceClass( $connection );
 		}
 
+		unset( $settings['connections'] );
+		$this->settings = $settings;
+
 		$this->connections = $connections_list;
 
 		if ( $connection_id ) {
@@ -790,6 +805,29 @@ class SavvyMapper {
 	}
 
 	/**
+	 * Get a setting, or all of the settings
+	 *
+	 * @param string $setting_field The specific setting to retrieve.
+	 */
+	function get_settings( $setting_field = NULL) {
+		if ( empty( $this->settings ) ) {
+			$this->get_connections();
+		}
+
+		$defaults = array( 
+			'cachetimeout' => 60
+			);
+
+		$this->settings = array_merge( $defaults, $this->settings );
+
+		if ( !empty( $setting_field ) ) {
+			return $this->settings[ $setting_field ];
+		}
+
+		return $this->settings;
+	}
+
+	/**
 	 * Get the GeoJson for a given post and mapping
 	 */
 	function get_geojson_for_post() {
@@ -814,7 +852,9 @@ class SavvyMapper {
 		$json = apply_filters( 'savvymapper_geojson', $json, $mapping );
 
 		// Leaflet doesn't like it if there's no zero index
-		$json['features'] = array_values($json['features']);
+		if ( !empty( $json['features'] ) ) {
+			$json['features'] = array_values( $json['features'] );
+		}
 
 		header( 'Content-Type: application/json' );
 		print json_encode( $json );
@@ -870,6 +910,54 @@ class SavvyMapper {
 				'map_id'			=> $mapping[ 'connection_id' ] . '_' . $mapping['mapping_id'] . '_' . ( !empty( $postId ) ? $postId : ( !empty( $archiveId ) ? $archiveId : '' ) ),
 			);
 		return $meta;
+	}
+
+	/**
+	 * Try to get something from the cache
+	 *
+	 * @param string $cache_hash The has of the item to retrieve.
+	 *
+	 * @return The cache contents or void.
+	 */
+	function get_from_cache( $cache_hash ) {
+		$upload_dir = wp_upload_dir();
+		wp_mkdir_p( $upload_dir['basedir'] . '/savvymapper/' );
+		$cache_file =  $upload_dir['basedir'] . '/savvymapper/' . $cache_hash . '.savvycache';
+		$min_age = time() - ( $this->get_settings( 'cachetimeout' ) * 60 );
+
+		if ( file_exists( $cache_file ) && filemtime( $cache_file ) > $min_age) { 
+			return file_get_contents( $cache_file );
+		}
+	}
+
+	/**
+	 * Write something to the cache
+	 *
+	 * @param string $cache_hash The hash of the item to cache.
+	 * @param string $contents The contents to write to the cache.
+	 */
+	function write_to_cache( $cache_hash, $contents ) {
+		if( $this->get_settings( 'cachetimeout' ) == 0 ) {
+			return;
+		}
+
+		$upload_dir = wp_upload_dir();
+		wp_mkdir_p( $upload_dir['basedir'] . '/savvymapper/' );
+		$cache_file =  $upload_dir['basedir'] . '/savvymapper/' . $cache_hash . '.savvycache';
+
+		file_put_contents( $cache_file, $contents );
+	}
+
+	/**
+	 * Clear the cache
+	 */
+	function clear_cache() {
+		$upload_dir = wp_upload_dir();
+		$cachefiles = $upload_dir['basedir'] . '/savvymapper/*.savvycache';
+		foreach( glob( $cachefiles ) as $cachefile ) {
+			unlink( $cachefile );	
+		}
+		exit();
 	}
 }
 SavvyMapper::get_instance();
