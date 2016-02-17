@@ -106,6 +106,13 @@ div.savvyampper_popup_wrapper {
 table.savvymapper_popup {
 	width: 250px;
 	overflow: auto;
+	border: 1px solid #cccccc;
+}
+
+table.savvymapper_popup td,
+table.savvymapper_popup th {
+	border: 1px solid #cccccc;
+	padding: 0 4px;
 }
 
 table.savvymapper_popup tr.empty_row {
