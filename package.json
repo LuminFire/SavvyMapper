@@ -4,7 +4,7 @@
 		"jshint": "latest"
 	},
 	"scripts": {
-		"lint": "jshint **.js",
+		"lint": "jshint assets/*.js",
 		"build": "git archive HEAD --prefix=$(basename $(pwd))/ --format=zip --worktree-attributes -o $(basename $(pwd)).zip"
 	}
 }
