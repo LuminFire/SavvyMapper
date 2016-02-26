@@ -1,1 +1,2 @@
-sample_interface/* export-ignore
+sample_interface	export-ignore
+package.json		export-ignore

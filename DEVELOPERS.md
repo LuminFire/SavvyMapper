@@ -10,6 +10,17 @@ SavvyMapper is meant to take care of the tedious work
 of associating GIS data with your WordPress posts so that you
 can focus on the much more fun map maping part of your site!
 
+Building
+--------
+
+Do you just want to build this thing? 
+
+You'll need npm installed. Simply run: 
+
+    npm run build
+
+This will generate a zip file which you can install in WordPress.
+
 
 Terminology
 -----------
