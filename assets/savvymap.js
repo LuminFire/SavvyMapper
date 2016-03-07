@@ -66,7 +66,9 @@ var SavvyMap = SavvyClass.extend({
 		lng = (parseFloat(lng) == lng ? lng : 0);
 		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
 
-		this.map = L.map(this.div[0]).setView([lat,lng],zoom); 
+		var mapconfig = {};
+		mapconfig = this.savvy._apply_filters('savvymap_map_config',this,mapconfig);
+		this.map = L.map(this.div[0],mapconfig).setView([lat,lng],zoom); 
 		this.savvy._do_action( 'savvymap_view_changed', this );
 
 		this.map = this.savvy._apply_filters('savvymap_map_initialized',this, this.map);
@@ -98,7 +100,10 @@ var SavvyMap = SavvyClass.extend({
 		};
 
 		basemapurl = this.savvy._apply_filters( 'savvymap_basemap_url', this, basemapurl );
+		basemapurl = this.savvy._apply_filters( 'savvymap_' + this.meta.post_type + '_basemap_url', this, basemapurl );
+
 		basemapconfig = this.savvy._apply_filters( 'savvymap_basemap_config', this, basemapconfig );
+		basemapconfig = this.savvy._apply_filters( 'savvymap_' + this.meta.post_type + '_basemap_config', this, basemapconfig );
 
 		if ( basemapurl ) { 
 			this.layers.basemap = new L.TileLayer(basemapurl, basemapconfig);
@@ -175,11 +180,22 @@ var SavvyMap = SavvyClass.extend({
 				_this.savvy._do_action( 'savvymap_view_changed', _this );
 			});
 		} else {
-			layerspromise = layerspromis.then(function(){
+			layerspromise = layerspromise.then(function(){
 				_this.map.setView(new L.LatLNg(lat,lng),zoom);
 				_this.savvy._do_action( 'savvymap_view_changed', _this );
 			});
 		}
+
+		// Now resort layer depth
+		layerspromise = layerspromise.then(function(){
+			var curLayer;
+			for(var l = _this.args.layers.length; l > 0; l-- ){
+				curLayer = _this.layers[ _this.args.layers[ l - 1 ][ 'mapping_slug' ] ];
+				if ( curLayer !== undefined ) {
+					curLayer.bringToFront();
+				}
+			}
+		});
 
 		return layerspromise;
 	},
@@ -256,7 +272,6 @@ var SavvyMap = SavvyClass.extend({
 					}
 				},
 				pointToLayer: function(feature, latlng){
-
 					var pointrep = _this.savvy._apply_filters( 'savvymap_feature_point', _this, null, feature, latlng );
 					pointrep = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_point', _this, pointrep, feature, latlng );
 
