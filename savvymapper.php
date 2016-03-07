@@ -183,13 +183,12 @@ class SavvyMapper {
 	function do_shortcodes( $attrs, $contents ) {
 		global $post;
 
-		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post->ID );
-
-		$attrs = $this->make_attrs( $attrs, $mapping );
-
 		$html = '';
 
 		if ( isset( $attrs['attr'] ) ) {
+
+			list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post->ID );
+			$attrs = $this->make_attrs( $attrs, $mapping );
 
 			// Attributes are simpler, so we'll just ask for fetures based on a search
 			$json = $connection->get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings );
@@ -239,15 +238,42 @@ class SavvyMapper {
 			// javascript to process
 			if ( $attrs['show'] == 'map' ) {
 
-				$mapSetup = $this->make_map_config( $attrs, $contents, $connection, $mapping, $current_settings );
-				$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
+				$current_settings_str = get_post_meta( $post->ID, 'savvymapper_post_meta', true);
+				$current_settings_ar = json_decode( $current_settings_str, true );
+
+				$mapSetup = $this->make_attrs($attrs);
+				unset($mapSetup['attr']);
+				unset($mapSetup['multiple']);
+				unset($mapSetup['show']);
+				unset($mapSetup['onarchive']);
+				unset($mapSetup['show_popups']);
+				unset($mapSetup['show_features']);
+
+				$mapMeta = array();
 
 				$classes = array(
 					'savvy_map_div',
 					'savvy_page_map_div',
-					'savvy_map_' . $connection->get_type(),
-					'savvy_map_' . $mapping[ 'mapping_slug' ],
 					);
+
+				foreach ( $current_settings_ar as $idx => $current_settings ) {
+					$mapping = $this->get_mappings( $current_settings[ 'mapping_id' ] );
+					$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+
+					$mapMeta[ 'post_type' ] = $mapping[ 'post_type' ];
+					$mapMeta[ 'post_id' ] = $post->ID;
+					$mapMeta[ 'mapping_ids' ][] = $mapping[ 'mapping_id' ];
+					$mapMeta[ 'mapping_slugs' ][] = $mapping[ ' mapping_slug' ];
+
+					$mapSetup[ 'layers' ][] = $this->make_layer_config( array(), $contents, $connection, $mapping, $current_settings );
+
+					$classes[] = 'savvy_map_' . $connection->get_type();
+					$classes[] = 'savvy_map_' . $mapping[ 'mapping_slug' ];
+				}
+
+				$mapMeta['map_id'] = implode('_',$mapMeta['mapping_ids']);
+
+				$classes = array_unique($classes);
 
 				$html .= "<div class='" . implode( ' ', $classes ) .  "' data-mapmeta='" . json_encode( $mapMeta ) . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
 
@@ -264,7 +290,7 @@ class SavvyMapper {
 	 *
 	 * @return The array of attrs to actually use
 	 */
-	function make_attrs( $attrs, $mapping ) {
+	function make_attrs( $attrs = array(), $mapping = array() ) {
 		// Order of presidence goes
 		// 1. $attrs
 		// 2. $mapping
@@ -281,6 +307,7 @@ class SavvyMapper {
 			'zoom' => 'default',
 			'lat' => 'default',
 			'lng' => 'default',
+			'layers' => array(),
 		);
 		
 		// Get attributes out of $mapping
@@ -294,25 +321,22 @@ class SavvyMapper {
 		return $attrs;
 	}
 
-	function make_map_config( $attrs, $contents, $connection, $mapping, $current_settings ) {
+	function make_layer_config( $attrs, $contents, $connection, $mapping, $current_settings ) {
 		global $post;
 
 		$attrs = $this->make_attrs( $attrs, $mapping );
 
-		$mapSetup = array(
+		$layerSetup = array(
 			'show_popups'	=> $attrs['show_popups'],
 			'show_features'	=> $attrs['show_features'],
-			'zoom'			=> $attrs['zoom'],
-			'lat'			=> $attrs['lat'],
-			'lng'			=> $attrs['lng'],
-			'post_id'		=> $post->ID,
 			'mapping_id'	=> $mapping['mapping_id'],
+			'mapping_slug'	=> $mapping['mapping_slug'],
 		);
 
 		$connectionMapSetup = $connection->get_map_shortcode_properties( $attrs, $contents, $mapping, $current_settings );
-		$mapSetup = array_merge( $mapSetup, $connectionMapSetup );
+		$layerSetup = array_merge( $layerSetup, $connectionMapSetup );
 
-		return $mapSetup;
+		return $layerSetup;
 	}
 
 	/**
@@ -375,13 +399,30 @@ class SavvyMapper {
 		}
 	}
 
+	/**
+	 * Make a single metabox
+	 */
 	function make_meta_box( $post, $metabox ) {
 		$connection = $metabox['args'][0];
 		$mapping = $metabox['args'][1];
 
 		list($cur_connection, $cur_mapping, $current_settings ) = $this->get_post_info_by_post_id( $post->ID, $mapping[ 'mapping_id' ] );
-		$mapSetup = $this->make_map_config( array(), array(), $connection, $mapping, $current_settings );
-		$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
+		$mapSetup = array(
+			'lat' => 'default',
+			'lng' => 'default',
+			'zoom' => 'default',
+			'layers' => array()
+		); 
+
+		$mapSetup[ 'layers' ][] = $this->make_layer_config( array(), array(), $connection, $mapping, $current_settings );
+
+		$mapMeta = array(
+			'post_type' => $post->post_type,
+			'post_id' => $post->ID,
+			'mapping_ids' => array($mapping['mapping_id']),
+			'mapping_slugs' => array($mapping['mapping_slug']),
+			'map_id' => $mapping['mapping_id'],
+			);
 
 		$html = "<div class='savvy_metabox_wrapper' data-mapping_id='" . $mapping['mapping_id'] . "'>";
 
@@ -943,41 +984,24 @@ class SavvyMapper {
 
 		$current_settings_ar = json_decode( $current_settings_str, true );
 
-		foreach( $current_settings_ar as $current_settings ){
-			if( $mapping_id !== 'first' && $current_settings[ 'mapping_id' ] !== $mapping_id ) {
-				$current_settings = array();
-				continue;
-			}
-
+		if( $mapping_id == 'first' ) {
+			$current_settings = array_shift($current_settings_ar);
 			$mapping = $this->get_mappings( $current_settings[ 'mapping_id' ] );
 			$connection = $this->get_connections( $mapping[ 'connection_id' ] );
-			break;
+		} else {
+			foreach( $current_settings_ar as $current_settings ){
+				if( $current_settings[ 'mapping_id' ] !== $mapping_id ) {
+					$current_settings = array();
+					continue;
+				}
+
+				$mapping = $this->get_mappings( $current_settings[ 'mapping_id' ] );
+				$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+				break;
+			}
 		}
 
 		return array( $connection, $mapping, $current_settings );
-	}
-
-	/**
-	 * Make the metadata for a map which JS will use to help make
-	 * finding a map instance more reliable.
-	 *
-	 * @param array $connection The connection.
-	 * @param array $mapping The mapping. 
-	 *
-	 * @return array
-	 */
-	function make_map_meta( $connection, $mapping, $postId, $archiveId = NULL ) {
-		$meta = array(
-				'connection_type'	=> $connection->get_type(),
-				'connection_name'	=> $connection->config[ 'connection_name' ],
-				'connection_id'		=> $mapping[ 'connection_id' ],
-				'mapping_slug'		=> $mapping[ 'mapping_slug' ],
-				'mapping_id'		=> $mapping['mapping_id'],
-				'post_id'			=> $postId,
-				'archive_id'		=> $archiveId,
-				'map_id'			=> $mapping[ 'connection_id' ] . '_' . $mapping['mapping_id'] . '_' . ( !empty( $postId ) ? $postId : ( !empty( $archiveId ) ? $archiveId : '' ) ),
-			);
-		return $meta;
 	}
 
 	/**

@@ -31,10 +31,6 @@ var SavvyMap = SavvyClass.extend({
 		var _this = this;
 		this.savvy = SAVVY;
 
-		if( this.classname == 'SavvyClass' ) {
-			throw "Classes extending SavvyClass must set a classname";
-		}
-
 		this.div = jQuery(div);
 
 		this.meta = this.div.data('mapmeta');
@@ -50,7 +46,7 @@ var SavvyMap = SavvyClass.extend({
 		this.args = this.savvy._apply_filters('savvymap_args',this, this.args);
 		this.meta = this.savvy._apply_filters('savvymap_meta',this, this.meta);
 
-		setuppromise = this._basicMapSetup();
+		var setuppromise = this._basicMapSetup();
 		this.savvy.add_map(this);
 		setuppromise.then(function(){
 			_this.savvy._do_action( 'savvymap_init_done', _this);
@@ -77,7 +73,8 @@ var SavvyMap = SavvyClass.extend({
 
 		this._setupBasemap();
 
-		return this.set_search_layer();
+		var layerspromise = this._setupLayers();
+		return this._setupMap(layerspromise);
 	},
 
 
@@ -130,22 +127,21 @@ var SavvyMap = SavvyClass.extend({
 	getName: function(){
 		return this.meta.mapping_slug;
 	},
-
+	
 	/**
-	* Set up the search layer. This will be found in 
-	* this.layers.thegeom
-	*/
-	set_search_layer: function( overrides ) {
-		overrides = overrides || {};
+	 * Setup the map itself
+	 *
+	 * @param layerspromise A promise that will complete when all layers have been fetched
+	 *
+	 * @return A modified promise which includes a bounds setting function added to the end
+	 */
+	_setupMap: function(layerspromise) {
 
 		// Fetch lat/lng/zoom
 		var lat = this.args[ 'lat' ] || 'default';
 		var lng = this.args[ 'lng' ] || 'default';
 		var zoom = this.args[ 'zoom' ] || 'default';
 		var fitBounds = true;
-
-		// Set popup override
-		overrides.show_popups = overrides.show_popups || this.args.show_popups;
 
 		// then make sure they're sane
 		if(lat !== 'default' || lng !== 'default' || zoom !== 'default'){
@@ -155,31 +151,90 @@ var SavvyMap = SavvyClass.extend({
 		lng = (parseFloat(lng) == lng ? lng : 0);
 		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
 
+		if(fitBounds) {
+			var _this = this;
+			layerspromise = layerspromise.then(function(layersToCheck){
+
+				var bounds;
+				var moreBounds;
+				for( var l = 0; l < layersToCheck.length; l++ ){
+					if( typeof _this.layers[ layersToCheck[l] ].getBounds == 'function' ) {
+						moreBounds = _this.layers[ layersToCheck[l] ].getBounds();
+						moreBounds = _this.savvy._apply_filters( 'savvymap_thegeom_bounds', _this, moreBounds, _this.layers.thegeom );
+						moreBounds = _this.savvy._apply_filters( 'savvymap_' + l + '_bounds', _this, moreBounds, _this.layers.thegeom );
+
+						if( bounds === undefined ) {
+							bounds = moreBounds;
+						} else {
+							bounds.extend(moreBounds);
+						}
+					}	
+				}
+
+				_this.map.fitBounds(bounds);
+				_this.savvy._do_action( 'savvymap_view_changed', _this );
+			});
+		} else {
+			layerspromise = layerspromis.then(function(){
+				_this.map.setView(new L.LatLNg(lat,lng),zoom);
+				_this.savvy._do_action( 'savvymap_view_changed', _this );
+			});
+		}
+
+		return layerspromise;
+	},
+
+	/**
+	* Set up the layers. 
+	*/
+	_setupLayers: function() {
+		var layerpromises = [];
+
+		var promise;
+		var layersToCheck = [];
+		for(var l = 0;l<this.args.layers.length;l++){
+			promise = this._addLayer( this.args.layers[ l ] );	
+			layerpromises.push(promise);
+			layersToCheck.push(this.args.layers[ l ].mapping_slug);
+		}
+
+		var retpromise = jQuery.when.apply(jQuery, layerpromises);
+		retpromise = retpromise.then(function(){
+			return layersToCheck;
+		});
+		return retpromise;
+	},
+
+	/**
+	 * Add a single layer
+	 */
+	_addLayer: function(config) {
 		var _this = this;
 
 		// setting to false for now
 		var promise = jQuery.getJSON(ajaxurl,{
 			'action': 'savvy_get_geojson_for_post',
 			'post_id' : this.meta.post_id,
-			'overrides' : overrides,
-			'mapping_id' : this.meta.mapping_id
+			'mapping_id' : config.mapping_id
 		});
 
 		promise = promise.then(function(success){
-			if(_this.layers.thegeom !== undefined){
-				_this.map.removeLayer( _this.layers.thegeom );
+			if(_this.layers[config.mapping_slug] !== undefined){
+				_this.map.removeLayer( _this.layers[config.mapping_slug] );
 			}
 
-			success = _this.savvy._apply_filters( 'savvymap_thegeom_features', _this, success );
+			success = _this.savvy._apply_filters( 'savvymap_layer_features', _this, success );
+			success = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_features', _this, success );
 
 			var geojsonconfig = {
 				onEachFeature: function (feature, layer) {
-					if(_this.args.show_popups){
+					if(config.show_popups){
 						var popupcontents = '';
 						if( typeof feature._popup_contents == 'string'){
 							popupcontents = feature._popup_contents;
 						}
 						popupcontents = _this.savvy._apply_filters( 'savvymap_popup_contents', _this, popupcontents, feature, layer );
+						popupcontents = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_contents', _this, popupcontents, feature, layer );
 						if( popupcontents.length > 0 ){
 							layer.bindPopup( popupcontents );
 						}
@@ -188,14 +243,13 @@ var SavvyMap = SavvyClass.extend({
 				pointToLayer: function(feature, latlng){
 
 					var pointrep = _this.savvy._apply_filters( 'savvymap_feature_point', _this, null, feature, latlng );
+					pointrep = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_point', _this, pointrep, feature, latlng );
 
 					if(pointrep !== null){
 						return pointrep;
 					}
 
-					if(_this.args.show_features){
-						pointrep = L.marker(latlng);
-					}else{
+					if(config.show_features === 0){
 
 						var circlestyle = {
 							opacity: 0,
@@ -203,15 +257,18 @@ var SavvyMap = SavvyClass.extend({
 						};
 
 						circlestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, circlestyle, feature );
+						circlestyle = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_style', _this, circlestyle, feature );
 
 						pointrep = L.circleMarker(latlng, circlestyle);
+					}else{
+						pointrep = L.marker(latlng);
 					}
 
 					return pointrep;
 				},
 				style: function(feature){
 					var thestyle = {};
-					if(_this.args.show_features === 0) {
+					if(config.show_features === 0) {
 						thestyle = {
 							opacity: 0,
 							fillOpacity: 0
@@ -219,31 +276,18 @@ var SavvyMap = SavvyClass.extend({
 					}
 
 					thestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, thestyle, feature );
+					thestyle = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_style', _this, thestyle, feature );
 					return thestyle;
 				}
 			};
 
-			geojsonconfig = _this.savvy._apply_filters( 'savvymap_thegeom_config', _this, geojsonconfig );
+			geojsonconfig = _this.savvy._apply_filters( 'savvymap_layer_config', _this, geojsonconfig );
+			geojsonconfig = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_config', _this, geojsonconfig );
 
-			_this.layers.thegeom = L.geoJson(success, geojsonconfig).addTo(_this.map);
-			_this.savvy._do_action('savvymap_thegeom_added',_this,_this.thegeom);
+			_this.layers[config.mapping_slug] = L.geoJson(success, geojsonconfig).addTo(_this.map);
+			_this.savvy._do_action('savvymap_layer_added',_this,_this.layers[config.mapping_slug]);
+			_this.savvy._do_action('savvymap_' + config.mapping_slug + '_added',_this,_this.layers[config.mapping_slug]);
 		});
-
-		if(fitBounds) {
-			promise = promise.then(function(){
-				if(_this.layers.thegeom.getLayers().length > 0){
-					var geombounds = _this.layers.thegeom.getBounds();
-					geombounds = _this.savvy._apply_filters( 'savvymap_thegeom_bounds', _this, geombounds, _this.layers.thegeom );
-					_this.map.fitBounds(geombounds);
-					_this.savvy._do_action( 'savvymap_view_changed', _this );
-				}
-			});
-		} else {
-			promise = promise.then(function(){
-				_this.map.setView(new L.LatLNg(lat,lng),zoom);
-				_this.savvy._do_action( 'savvymap_view_changed', _this );
-			});
-		}
 
 		return promise;
 	}
