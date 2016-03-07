@@ -112,7 +112,7 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		/**
 		 * implements required method
 		 */
-		function save_meta( $post_id ) {
+		function save_meta( $post_id, $index ) {
 			return array();
 		}
 

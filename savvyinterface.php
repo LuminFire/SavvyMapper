@@ -126,8 +126,9 @@ abstract class SavvyInterface {
 	 * merge in for this post's meta.
 	 *
 	 * @param string/int $post_id The post that meta is being saved for.
+	 * @param integer $index The mapping instance index
 	 */
-	abstract function save_meta( $post_id );
+	abstract function save_meta( $post_id, $index );
 
 	/**
 	 * Map initialization is all done in JavaScript.
@@ -167,6 +168,14 @@ abstract class SavvyInterface {
 	 */
 	function _get_geojson_for_post( $mapping, $current_settings ) {
 		$json = $this->get_geojson_for_post( $mapping, $current_settings );
+
+		if( !isset( $json[ 'features' ] ) ) {
+			$json[ 'features' ] = Array();
+		}
+
+		if( !isset( $json[ 'type' ] ) ) {
+			$json[ 'type' ] = 'FeatureCollection';
+		}
 
 		$show_popups = ( isset( $current_settings[ 'show_popups' ] ) ?  $current_settings[ 'show_popups' ] : $mapping[ 'show_popups' ] );
 
@@ -382,6 +391,9 @@ abstract class SavvyInterface {
 	 */
 	function form_make_textarea( $label, $param_name, $value = '' ) {
 		$html = '<label>' . $label . '</label>: ';
+		if(is_array($value)){
+			$value = implode("\n",$value);
+		}
 		$html .= '<textarea data-name="' . $param_name . '">' . $value . '</textarea>';
 		return $html;
 	}

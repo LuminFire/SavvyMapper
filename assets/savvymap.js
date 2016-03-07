@@ -158,7 +158,6 @@ var SavvyMap = SavvyClass.extend({
 		var _this = this;
 
 		// setting to false for now
-
 		var promise = jQuery.getJSON(ajaxurl,{
 			'action': 'savvy_get_geojson_for_post',
 			'post_id' : this.meta.post_id,
