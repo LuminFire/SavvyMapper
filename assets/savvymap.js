@@ -160,8 +160,7 @@ var SavvyMap = SavvyClass.extend({
 				for( var l = 0; l < layersToCheck.length; l++ ){
 					if( typeof _this.layers[ layersToCheck[l] ].getBounds == 'function' ) {
 						moreBounds = _this.layers[ layersToCheck[l] ].getBounds();
-						moreBounds = _this.savvy._apply_filters( 'savvymap_thegeom_bounds', _this, moreBounds, _this.layers.thegeom );
-						moreBounds = _this.savvy._apply_filters( 'savvymap_' + l + '_bounds', _this, moreBounds, _this.layers.thegeom );
+						moreBounds = _this.savvy._apply_filters( 'savvymap_' + l + '_bounds', _this, moreBounds, _this.layers[ layersToCheck[l] ]);
 
 						if( bounds === undefined ) {
 							bounds = moreBounds;
@@ -171,6 +170,7 @@ var SavvyMap = SavvyClass.extend({
 					}	
 				}
 
+				bounds = _this.savvy._apply_filters( 'savvymap_map_bounds', _this, bounds);
 				_this.map.fitBounds(bounds);
 				_this.savvy._do_action( 'savvymap_view_changed', _this );
 			});
@@ -205,17 +205,32 @@ var SavvyMap = SavvyClass.extend({
 		return retpromise;
 	},
 
+	// We assume that the first layer is the top layer and the one we want to search on
+	set_search_layer: function(overrides) {
+		overrides = overrides || {};
+		if( this.args.layers.length > 0 ) {
+			var promise = this._addLayer(this.args.layers[0],overrides);
+			var _this = this;
+			promise = promise.then(function(){
+				return [_this.args.layers[0].mapping_slug];
+			});
+			return this._setupMap(promise);
+		}
+	},
+
 	/**
 	 * Add a single layer
 	 */
-	_addLayer: function(config) {
+	_addLayer: function(config, overrides) {
 		var _this = this;
+		overrides = overrides || {};
 
 		// setting to false for now
 		var promise = jQuery.getJSON(ajaxurl,{
 			'action': 'savvy_get_geojson_for_post',
 			'post_id' : this.meta.post_id,
-			'mapping_id' : config.mapping_id
+			'mapping_id' : config.mapping_id,
+			'overrides' : overrides
 		});
 
 		promise = promise.then(function(success){
