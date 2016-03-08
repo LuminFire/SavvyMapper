@@ -241,6 +241,11 @@ class SavvyMapper {
 				$current_settings_str = get_post_meta( $post->ID, 'savvymapper_post_meta', true);
 				$current_settings_ar = json_decode( $current_settings_str, true );
 
+				// Backwards compatibility with 0.0.1 -- remove soon
+				if ( !empty( $current_settings_ar['mapping_id'] ) ) {
+					$current_settings_ar = array( $current_settings_ar );
+				}
+
 				$mapSetup = $this->make_attrs($attrs);
 				unset($mapSetup['attr']);
 				unset($mapSetup['multiple']);
@@ -499,22 +504,19 @@ class SavvyMapper {
 			}
 		}
 
-		// Ask the specific connection to capture anything else
-		// list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post_id, $_POST['savvyampper_mapping_id'] );
-		
 		$post_meta = Array();
-		foreach( $_POST[ 'savvyampper_mapping_id' ]  as $k => $mapping_id ){
-			$mapping = $this->get_mappings( $_POST[ 'savvyampper_mapping_id' ][ $k ] );
+		foreach( $_POST[ 'savvyampper_mapping_id' ]  as $idx => $mapping_id ){
+			$mapping = $this->get_mappings( $_POST[ 'savvyampper_mapping_id' ][ $idx ] );
 			$connection = $this->get_connections( $mapping[ 'connection_id' ] );
 			$current_settings = array();
 
 			// Capture common fields for all interfaces
 			$settings = array(
 				'mapping_id' => $mapping['mapping_id'],
-				'lookup_value' => sanitize_text_field( $_POST[ 'savvymapper_lookup_value' ][ $k ] ),
+				'lookup_value' => sanitize_text_field( $_POST[ 'savvymapper_lookup_value' ][ $idx ] ),
 			);
 
-			$connectionMeta = $connection->save_meta( $post_id, $mapping );
+			$connectionMeta = $connection->save_meta( $post_id, $idx);
 
 			// Merge them
 			$settings = array_merge( $settings, $connectionMeta );
@@ -983,6 +985,11 @@ class SavvyMapper {
 		}
 
 		$current_settings_ar = json_decode( $current_settings_str, true );
+
+		// Backwards compatibility with 0.0.1 -- remove soon
+		if ( !empty( $current_settings_ar['mapping_id'] ) ) {
+			$current_settings_ar = array( $current_settings_ar );
+		}
 
 		if( $mapping_id == 'first' ) {
 			$current_settings = array_shift($current_settings_ar);
