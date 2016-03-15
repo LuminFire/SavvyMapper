@@ -569,7 +569,7 @@ class SavvyMapper {
 	 * Show the mappings and edit them
 	 */
 	function connection_mapping_page() {
-		$html = '<div class="wrap savvymapper_mapping_wrap">';
+		$html = '<div class="wrap savvyoptions_wrap">';
 		$html .= '<h2>SavvyMapper Post Mapping</h2>';
 		$html .= '<p>Configure mapping between your post types and your SavvyMapper connections.</p>';
 
@@ -623,14 +623,14 @@ class SavvyMapper {
 	 * Print the options form
 	 */
 	function options_page() {
-		$html = '<div class="wrap savvymapper_options_wrap">';
+		$html = '<div class="wrap savvyoptions_wrap">';
 		$html .= '<p>Welcome to SavvyMapper.';
 		$html .= '<h2>SavvyMapper</h2>';
 
 		$html .= '<h3>Settings</h3>';
 		$html .= '<div id="savvysettings">';
 		$html .= '<p>In order to reduce calls to GIS services and to improve your site\'s speed, SavvyMapper caches results by default. Set to 0 to disable.</p>';
-		$html .= '<label>Cache Timeout (in minutes)</label>: <input data-name="cachetimeout" value="' . $this->get_settings( 'cachetimeout' ) . '"><br>';
+		$html .= '<label>Cache Timeout<br>(in minutes)</label><input data-name="cachetimeout" value="' . $this->get_settings( 'cachetimeout' ) . '"><br>';
 		$html .= '<input type="button" id="savvyclearcache" value="Clear Cache"><br>';
 		$html .= '</div>';
 
@@ -675,7 +675,7 @@ class SavvyMapper {
 		);													// sanitize_callback
 		add_settings_section(
 			'savvymapper_plugin_page_section',				// id
-			__( 'SavvyMapper Settings Page', 'wordpress' ), // title
+			null, // title
 			'__return_false',			// callback
 			'savvymapper_plugin_page'						// page
 		);
@@ -694,7 +694,7 @@ class SavvyMapper {
 		);
 		add_settings_section(
 			'savvymapper_mapping_page_section',					// id
-			__( 'SavvyMapper Mapping Settings', 'wordpress' ),  // title
+			null,  // title
 			'__return_false',			// callback
 			'savvymapper_mapping_page'							// page
 		);
@@ -737,8 +737,8 @@ class SavvyMapper {
 	function _get_interface_options_form( $interface ) {
 		$html = '';
 		$html .= '<div class="instance-config">';
-		$html .= '<h3><span class="remove-instance">(X)</span> ' . $interface->get_name() . ' Connection</h3>';
-		$html .= '<label>Connection Name</label> <input type="text" data-name="connection_name" value="' . $interface->get_connection_name() . '"><br>' . "\n";
+		$html .= '<h3 class="savvyheader"><span class="savvyhinner"><span class="dashicons dashicons-no remove-instance"></span>Connection to <em>' . $interface->get_name() . '</em></span></h3>';
+		$html .= '<label>Connection Name</label><input type="text" data-name="connection_name" value="' . $interface->get_connection_name() . '"><br>' . "\n";
 		$html .= '<input type="hidden" data-name="interface" value="' . $interface->get_type() . '">' . "\n";
 		$html .= '<input type="hidden" data-name="_id" value="' . $interface->get_id() . '">' . "\n";
 		$html .= $interface->options_div();
@@ -773,25 +773,30 @@ class SavvyMapper {
 		$mapping_id = (empty( $mapping['mapping_id'] ) ? time() : $mapping['mapping_id']);
 
 		$html = '<div class="mapping-config">';
-		$html .= '<h3><span class="remove-instance">(X)</span> ' . $post_type_info->labels->name . ' => ' . $connection->get_connection_name() . '</h3>';
-		$html .= '<label>Mapping Name</label> <input type="text" data-name="mapping_name" value="' . $mapping['mapping_name'] . '"><br>' . "\n";
-		$html .= '<label>Layer Order</label> <input type="text" data-name="layer_order" value="' . $mapping['layer_order'] . '"><br>' . "\n";
+		$html .= '<h3 class="savvyheader"><span class="savvyhinner"><span class="dashicons dashicons-no remove-instance"></span>Mapping from <em>' . $post_type_info->labels->name . '</em> to <em>' . $connection->get_connection_name() . '</em></span></h3>';
+		$html .= '<label>Mapping Name</label><input type="text" data-name="mapping_name" value="' . $mapping['mapping_name'] . '"><br>' . "\n";
+		$html .= '<label>Mapping Slug</label><input type="text" readonly="readonly" value="' . sanitize_title($mapping['mapping_name']) . '"><br>' . "\n";
+		$html .= '<label>Layer Order</label><input type="text" data-name="layer_order" value="' . $mapping['layer_order'] . '"><br>' . "\n";
 		$html .= '<input type="hidden" data-name="connection_id" value="' . $connection->get_id() . '">';
 		$html .= '<input type="hidden" data-name="mapping_id" value="' . $mapping_id . '">';
 		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '">';
 		$html .= $connection->mapping_div( $mapping );
 
 		$marker_checked = ( ! isset( $mapping['show_features'] ) || $mapping['show_features'] != 0  ? 'checked="checked"' : '' );
-		$html .= '<label>Show features</label>: <input type="checkbox" data-name="show_features" value="1" ' . $marker_checked . '><br>';
+		$html .= '<label>Show features</label><input type="checkbox" data-name="show_features" value="1" ' . $marker_checked . '><br>';
 
 		$popups_checked = ( ! isset( $mapping['show_popups'] ) || $mapping['show_popups'] != 0 ? 'checked="checked"' : '' );
-		$html .= '<label>Show popups</label>: <input type="checkbox" data-name="show_popups" value="1" ' . $popups_checked . '>';
+		$html .= '<label>Show popups</label><input type="checkbox" data-name="show_popups" value="1" ' . $popups_checked . '>';
 
 		$html .= '<hr>';
 		$html .= '</div>';
 		return $html;
 	}
 
+	function savvymapper_connections_title_callback() {
+		$args = func_get_args();
+		print '<h2 class="savvymapper_options_title">' . $args[0] . '</h2>';
+	}
 	function savvymapper_connections_callback() {
 		$settings = get_option( 'savvymapper_connections', '{}' );
 		print '<textarea name="savvymapper_connections" id="savvymapper_connections">' . $settings . '</textarea>';

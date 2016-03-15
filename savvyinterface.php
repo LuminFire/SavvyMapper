@@ -357,7 +357,7 @@ abstract class SavvyInterface {
 		if ( $label == '' ) {
 			$html = '';
 		} else {
-			$html = '<label>' . $label . '</label>: ';
+			$html = '<label>' . $label . '</label>';
 		}
 		$html .= '<select data-name="' . $param_name . '">';
 		$html .= '<option value="">--</option>';
@@ -390,7 +390,7 @@ abstract class SavvyInterface {
 	 * @return An html string.
 	 */
 	function form_make_textarea( $label, $param_name, $value = '' ) {
-		$html = '<label>' . $label . '</label>: ';
+		$html = '<label>' . $label . '</label>';
 		if ( is_array( $value ) ) {
 			$value = implode( "\n",$value );
 		}
@@ -408,7 +408,7 @@ abstract class SavvyInterface {
 	 * @return An html string.
 	 */
 	function form_make_checkbox( $label, $param_name, $checked ) {
-		$html = '<label>' . $label . '</label>: ';
+		$html = '<label>' . $label . '</label>';
 		$html .= '<input data-name="' . $param_name . '" type="checkbox" value="1"';
 
 		if ( $checked ) {
@@ -429,7 +429,7 @@ abstract class SavvyInterface {
 	 * @return An html string
 	 */
 	function form_make_text( $label, $param_name, $value ) {
-		$html = '<label>' . $label . '</label>: ';
+		$html = '<label>' . $label . '</label>';
 		$html .= '<input type="text" data-name="' . $param_name . '" value="' . $value . '">';
 		return $html;
 	}
