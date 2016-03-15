@@ -184,3 +184,7 @@ table.savvymapper_popup tr.empty_row {
 	cursor: pointer;
 }
 
+
+.savvyconnectionname {
+	color: #888;
+}

@@ -385,6 +385,9 @@ class SavvyMapper {
 		foreach ( $this->mappings as $mapping ) {
 			if ( $mapping['post_type'] == $post->post_type ) {
 				$connection = $this->connections[ $mapping['connection_id'] ];
+				if ( empty( $connection ) ){
+					continue;
+				}
 				add_meta_box(
 					$mapping['mapping_id'],
 					'<strong>SavvyMapper:</strong> ' . $connection->get_connection_name() . '<span class="dashicons dashicons-arrow-right-alt2"></span>'  . $mapping['mapping_name'],
@@ -769,6 +772,10 @@ class SavvyMapper {
 
 		$connections = $this->get_connections();
 		$connection = $connections[ $mapping['connection_id'] ];
+
+		if ( empty( $connection ) ){
+			return;
+		}
 
 		$mapping_id = (empty( $mapping['mapping_id'] ) ? time() : $mapping['mapping_id']);
 
