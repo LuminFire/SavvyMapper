@@ -161,7 +161,7 @@ SAVVY = (function(){
 						oneconfig[ input.data('name') ] = input.val();
 					}
 				});
-				config['connections'].push(oneconfig);
+				config.connections.push(oneconfig);
 			});
 			jQuery('#savvymapper_connections').val(JSON.stringify(config));
 		},
@@ -180,7 +180,7 @@ SAVVY = (function(){
 						oneconfig[ input.data('name') ] = input.val();
 					}
 				});		
-				config['mappings'].push(oneconfig);
+				config.mappings.push(oneconfig);
 			});
 			jQuery('#savvymapper_mappings').val(JSON.stringify(config));
 		}, 

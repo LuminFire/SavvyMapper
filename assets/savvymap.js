@@ -59,9 +59,9 @@ var SavvyMap = SavvyClass.extend({
 	*/
 	_basicMapSetup: function(){
 		// Fetch lat/lng/zoom
-		var lat = this.args[ 'lat' ] || 'default';
-		var lng = this.args[ 'lng' ] || 'default';
-		var zoom = this.args[ 'zoom' ] || 'default';
+		var lat = this.args.lat || 'default';
+		var lng = this.args.lng || 'default';
+		var zoom = this.args.zoom || 'default';
 		lat = (parseFloat(lat) == lat ? lat : 0);
 		lng = (parseFloat(lng) == lng ? lng : 0);
 		zoom = (parseFloat(zoom) == zoom ? zoom : 0);
@@ -143,9 +143,9 @@ var SavvyMap = SavvyClass.extend({
 	_setupMap: function(layerspromise) {
 
 		// Fetch lat/lng/zoom
-		var lat = this.args[ 'lat' ] || 'default';
-		var lng = this.args[ 'lng' ] || 'default';
-		var zoom = this.args[ 'zoom' ] || 'default';
+		var lat = this.args.lat || 'default';
+		var lng = this.args.lng || 'default';
+		var zoom = this.args.zoom || 'default';
 		var fitBounds = true;
 
 		// then make sure they're sane
@@ -190,7 +190,7 @@ var SavvyMap = SavvyClass.extend({
 		layerspromise = layerspromise.then(function(){
 			var curLayer;
 			for(var l = _this.args.layers.length; l > 0; l-- ){
-				curLayer = _this.layers[ _this.args.layers[ l - 1 ][ 'mapping_slug' ] ];
+				curLayer = _this.layers[ _this.args.layers[ l - 1 ].mapping_slug ];
 				if ( curLayer !== undefined ) {
 					curLayer.bringToFront();
 				}

@@ -6,7 +6,10 @@ MIT Licensed.
 This sets up a method this._super() which can call the parent method (if it exists) from inside the child method. 
 */
 (function(){
-	var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
+	var initializing = false;
+	var testres;
+	testres = /xyz/.test(function(){return xyz;});
+	var fnTest = ( testres ? /\b_super\b/ : /.*/);
 
 	// The base SavvyClass implementation (does nothing)
 	this.SavvyClass = function(){};
