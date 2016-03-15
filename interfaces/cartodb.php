@@ -96,9 +96,9 @@ function load_savvy_carto_interface( $interfaces ) {
 				$cdb_table = array();
 			}
 
-			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping[ 'cdb_table' ] ) . '<br>' . "\n";
-			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping[ 'lookup_field' ] ) . '<br>' . "\n";
-			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping[ 'cdb_visualizations' ] ) . '<br>' . "\n";
+			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping['cdb_table'] ) . '<br>' . "\n";
+			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping['lookup_field'] ) . '<br>' . "\n";
+			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping['cdb_visualizations'] ) . '<br>' . "\n";
 
 			return $html;
 		}
@@ -133,8 +133,8 @@ function load_savvy_carto_interface( $interfaces ) {
 		 * implements required method
 		 */
 		function save_meta( $post_id, $index ) {
-			if ( isset( $_POST[ 'savvymapper_visualizations' ] ) && isset( $_POST[ 'savvymapper_visualizations' ][ $index ] ) ) {
-				$visAr = explode( "\n", $_POST[ 'savvymapper_visualizations' ][ $index ] );
+			if ( isset( $_POST['savvymapper_visualizations'] ) && isset( $_POST['savvymapper_visualizations'][ $index ] ) ) {
+				$visAr = explode( "\n", $_POST['savvymapper_visualizations'][ $index ] );
 				$visAr = array_map( 'trim', $visAr );
 				$visValue = array_filter( $visAr );
 			} else {
@@ -159,7 +159,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			}
 
 			$vizes = array_merge( $mapping['cdb_visualizations'], $curent_settings['cdb_visualizations'], $attrs['vizes'] );
-			$vizes = array_unique($vizes);
+			$vizes = array_unique( $vizes );
 
 			return array( 'vizes' => $vizes );
 		}
@@ -188,7 +188,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		 */
 		function load_scripts() {
 			$plugin_dir_url = plugin_dir_url( __FILE__ );
-			wp_enqueue_script( 'savvycarto',$plugin_dir_url . 'cartodb.js',array( 'jquery','savvymapjs' ) );
+			wp_enqueue_script( 'savvycarto',$plugin_dir_url . 'cartodb.js',array( 'jquery', 'savvymapjs' ) );
 		}
 
 		/**
