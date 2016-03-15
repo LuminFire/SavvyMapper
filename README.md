@@ -78,3 +78,11 @@ Known Bugs
 This plugin loads cartodb.js which includes its own copy of Leaflet. If other 
 plugins are also loading leaflet, there will likely be conflicts. These conflicts
 may manifest themselves in various ways including not finding loaded plugins.
+
+Release Log
+-----------
+
+### 0.1.0 Initial Release
+ * Support for CartoDB
+ * Support for remote GeoJSON files
+ * Support for caching

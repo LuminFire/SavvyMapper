@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * Plugin Name: SavvyMapper Core
  * Author: Michael Moore
  * Author URI: http://cimbura.com
- * Version: 0.0.1
+ * Version: 0.1.0-beta
  */
 
 
