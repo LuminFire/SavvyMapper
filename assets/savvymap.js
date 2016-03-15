@@ -176,7 +176,11 @@ var SavvyMap = SavvyClass.extend({
 				}
 
 				bounds = _this.savvy._apply_filters( 'savvymap_map_bounds', _this, bounds);
-				_this.map.fitBounds(bounds);
+				if(bounds.isValid()){
+					_this.map.fitBounds(bounds);
+				} else {
+					_this.map.setView(new L.LatLng(lat,lng),zoom);
+				}
 				_this.savvy._do_action( 'savvymap_view_changed', _this );
 			});
 		} else {

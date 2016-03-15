@@ -387,7 +387,7 @@ class SavvyMapper {
 				$connection = $this->connections[ $mapping['connection_id'] ];
 				add_meta_box(
 					$mapping['mapping_id'],
-					$connection->get_connection_name() . ' : ' . $mapping['mapping_name'],
+					'<strong>SavvyMapper:</strong> ' . $connection->get_connection_name() . '<span class="dashicons dashicons-arrow-right-alt2"></span>'  . $mapping['mapping_name'],
 					array( $this,'make_meta_box' ),
 					null,
 					'advanced',
