@@ -446,8 +446,8 @@ class SavvyMapper {
 		$html .= '<hr>';
 		$lookup_fields = $connection->get_attribute_names( $mapping );
 
-		$html .= '<h3>Shortcode Cheat Sheet</h3>';
-		$html .= '<p>Coming Soon</p>';
+		// $html .= '<h3>Shortcode Cheat Sheet</h3>';
+		// $html .= '<p>Coming Soon</p>';
 
 		$html .= '</div>';
 
