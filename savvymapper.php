@@ -602,8 +602,8 @@ class SavvyMapper {
 
 		// Show the form to add new mappings
 		$html .= '<div id="savvy_mapping_form">';
-		$html .= '<select name="savvy_post_type">' . implode( "\n", $post_type_options ) . '</select> ';
-		$html .= '<select name="savvy_connection_id">' . implode( "\n", $connection_options ) . '</select> ';
+		$html .= '<label for="savvy_post_type" class="toplabel">Post Type</label><select name="savvy_post_type">' . implode( "\n", $post_type_options ) . '</select> ';
+		$html .= '<label for="savvy_connection_id" class="toplabel">Connection</label><select name="savvy_connection_id">' . implode( "\n", $connection_options ) . '</select> ';
 		$html .= '<input type="button" onclick="SAVVY._add_mapping(this);" value="Add Mapping">';
 		$html .= '</div>';
 

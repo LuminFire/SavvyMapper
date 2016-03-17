@@ -188,3 +188,17 @@ table.savvymapper_popup tr.empty_row {
 .savvyconnectionname {
 	color: #888;
 }
+
+.toplabel {
+	position: absolute;
+	top: 0;
+	font-weight: bold;
+	font-size: 1.2em;
+}
+#savvy_mapping_form {
+	position: relative;
+	padding-top: 1.6em;
+}
+label.toplabel:after {
+	content: '';
+}
