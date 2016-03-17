@@ -43,7 +43,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			$sql = 'SELECT DISTINCT ON (' . $mapping['lookup_field'] . ')  ' . $mapping['lookup_field'] . ' FROM ' . $mapping['cdb_table'];
 
 			if ( ! empty( $term ) ) {
-				$sql .= ' WHERE ' . $mapping['lookup_field'] . " ILIKE '" . $term . "%'";
+				$sql .= ' WHERE CAST(' . $mapping['lookup_field'] . " AS TEXT) ILIKE '" . $term . "%'";
 			}
 
 			$sql .= ' ORDER BY ' . $mapping['lookup_field'];
@@ -96,9 +96,9 @@ function load_savvy_carto_interface( $interfaces ) {
 				$cdb_table = array();
 			}
 
-			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping[ 'cdb_table' ] ) . '<br>' . "\n";
-			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping[ 'lookup_field' ] ) . '<br>' . "\n";
-			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping[ 'cdb_visualizations' ] ) . '<br>' . "\n";
+			$html .= $this->form_make_select( 'CartoDB Table', 'cdb_table', array_keys( $user_tables ), array_keys( $user_tables ), $mapping['cdb_table'] ) . '<br>' . "\n";
+			$html .= $this->form_make_select( 'CartoDB Field', 'lookup_field', $cdb_table, $cdb_table, $mapping['lookup_field'] ) . '<br>' . "\n";
+			$html .= $this->form_make_textarea( 'Visualizations', 'cdb_visualizations', $mapping['cdb_visualizations'] ) . '<br>' . "\n";
 
 			return $html;
 		}
@@ -124,7 +124,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			$visualizations = $current_settings['cdb_visualizations'];
 
 			$html = '<label>Visualizations</label><br>';
-			$html .= '<textarea name="savvymapper_visualizations">' . implode( "\n",$visualizations ). '</textarea>' . "\n";
+			$html .= '<textarea name="savvymapper_visualizations[]">' . implode( "\n",$visualizations ). '</textarea>' . "\n";
 
 			return $html;
 		}
@@ -132,9 +132,9 @@ function load_savvy_carto_interface( $interfaces ) {
 		/**
 		 * implements required method
 		 */
-		function save_meta( $post_id ) {
-			if ( isset( $_POST['savvymapper_visualizations'] ) ) {
-				$visAr = explode( "\n", $_POST['savvymapper_visualizations'] );
+		function save_meta( $post_id, $index ) {
+			if ( isset( $_POST['savvymapper_visualizations'] ) && isset( $_POST['savvymapper_visualizations'][ $index ] ) ) {
+				$visAr = explode( "\n", $_POST['savvymapper_visualizations'][ $index ] );
 				$visAr = array_map( 'trim', $visAr );
 				$visValue = array_filter( $visAr );
 			} else {
@@ -159,7 +159,7 @@ function load_savvy_carto_interface( $interfaces ) {
 			}
 
 			$vizes = array_merge( $mapping['cdb_visualizations'], $curent_settings['cdb_visualizations'], $attrs['vizes'] );
-			$vizes = array_unique($vizes);
+			$vizes = array_unique( $vizes );
 
 			return array( 'vizes' => $vizes );
 		}
@@ -168,7 +168,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		 * implements required method
 		 */
 		function get_geojson_for_post( $mapping, $current_settings ) {
-			$q = 'SELECT * FROM ' . $mapping['cdb_table'] . ' WHERE ' . $mapping['lookup_field'] . " ILIKE '" . $current_settings['lookup_value'] . "'";
+			$q = 'SELECT * FROM ' . $mapping['cdb_table'] . ' WHERE CAST(' . $mapping['lookup_field'] . " AS TEXT) ILIKE '" . $current_settings['lookup_value'] . "'";
 			$features = $this->carto_sql( $q );
 			return $features;
 		}
@@ -188,7 +188,7 @@ function load_savvy_carto_interface( $interfaces ) {
 		 */
 		function load_scripts() {
 			$plugin_dir_url = plugin_dir_url( __FILE__ );
-			wp_enqueue_script( 'savvycarto',$plugin_dir_url . 'cartodb.js',array( 'jquery','savvymapjs' ) );
+			wp_enqueue_script( 'savvycarto',$plugin_dir_url . 'cartodb.js',array( 'jquery', 'savvymapjs' ) );
 		}
 
 		/**

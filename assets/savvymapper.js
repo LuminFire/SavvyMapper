@@ -35,12 +35,15 @@ SAVVY = (function(){
 
 			// Set up listeners for options page
 			var _this = this;
-			jQuery('document').ready(function(){
+			jQuery('document').ready( function(){
 				_this._setup_listeners();
 				_this._do_action( 'savvymapper_setup_done', _this );
-			});
+			} );
 		},
 
+		/**
+		 * Set up listeners and hooks to run when different elements are present
+		 */
 		_setup_listeners: function(){
 			var _this = this;
 
@@ -60,7 +63,7 @@ SAVVY = (function(){
 			jQuery('#savvyclearcache').on('click',this._clear_cache);
 
 			// Set up behavior for autocomplete fields in metaboxes
-			jQuery('.savvy_lookup_ac').each(function(){
+			jQuery('.savvy_lookup_ac').each( function(){
 				var mapping_id = jQuery(this).closest('.savvy_metabox_wrapper').data('mapping_id');
 				var acfield = jQuery(this);
 
@@ -93,7 +96,7 @@ SAVVY = (function(){
 						return false;
 					}
 				});
-			});
+			} );
 		},
 
 		// SETTINGS: Add a new API connection
@@ -158,7 +161,7 @@ SAVVY = (function(){
 						oneconfig[ input.data('name') ] = input.val();
 					}
 				});
-				config['connections'].push(oneconfig);
+				config.connections.push(oneconfig);
 			});
 			jQuery('#savvymapper_connections').val(JSON.stringify(config));
 		},
@@ -177,7 +180,7 @@ SAVVY = (function(){
 						oneconfig[ input.data('name') ] = input.val();
 					}
 				});		
-				config['mappings'].push(oneconfig);
+				config.mappings.push(oneconfig);
 			});
 			jQuery('#savvymapper_mappings').val(JSON.stringify(config));
 		}, 

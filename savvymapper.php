@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * Plugin Name: SavvyMapper Core
  * Author: Michael Moore
  * Author URI: http://cimbura.com
- * Version: 0.0.1
+ * Version: 0.1.0-beta
  */
 
 
@@ -118,13 +118,10 @@ class SavvyMapper {
 
 		add_action( 'wp_ajax_savvy_autocomplete', array( $this, 'ajax_autocomplete' ) );
 		// add_action( 'wp_ajax_nopriv_savvy_autocomplete', array( $this, 'ajax_autocomplete' ) );
-
 		add_action( 'wp_ajax_savvy_get_interface_options_form', array( $this, 'get_interface_options_form' ) );
 		// add_action( 'wp_ajax_nopriv_savvy_get_interface_options_form', array( $this, 'get_interface_options_form' ) );
-
 		add_action( 'wp_ajax_savvy_get_mapping_options_form', array( $this, 'get_mapping_options_form' ) );
 		// add_action( 'wp_ajax_nopriv_savvy_get_mapping_options_form', array( $this, 'get_mapping_options_form' ) );
-
 		add_action( 'wp_ajax_savvy_get_geojson_for_post', array( $this, 'get_geojson_for_post' ) );
 		add_action( 'wp_ajax_nopriv_savvy_get_geojson_for_post', array( $this, 'get_geojson_for_post' ) );
 
@@ -152,7 +149,6 @@ class SavvyMapper {
 	 */
 	function load_scripts() {
 		$plugin_dir_url = plugin_dir_url( __FILE__ );
-
 
 		wp_enqueue_style( 'cartodbcss','//cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/themes/css/cartodb.css' );
 		// wp_enqueue_script('cartodbjs','//libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js');
@@ -183,13 +179,12 @@ class SavvyMapper {
 	function do_shortcodes( $attrs, $contents ) {
 		global $post;
 
-		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post->ID );
-
-		$attrs = $this->make_attrs( $attrs, $mapping );
-
 		$html = '';
 
 		if ( isset( $attrs['attr'] ) ) {
+
+			list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post->ID );
+			$attrs = $this->make_attrs( $attrs, $mapping );
 
 			// Attributes are simpler, so we'll just ask for fetures based on a search
 			$json = $connection->get_attribute_shortcode_geojson( $attrs, $contents, $mapping, $current_settings );
@@ -201,17 +196,16 @@ class SavvyMapper {
 			foreach ( $json['features'] as $feature ) {
 
 				// multiple can be: empty (unique), all (show all) or first (show first)
-
 				// We only collect non-empty properties to display
 				$allProp[] = $feature['properties'][ $attrs['attr'] ];
-				if ( $attrs[ 'multiple' ] == 'first' ) {
+				if ( $attrs['multiple'] == 'first' ) {
 					// If we're asking for a single, just break
 					break;
 				}
 			}
 
 			// If we're unique, do that now
-			if ( $attrs[ 'multiple' ] !== 'all' ) {
+			if ( $attrs['multiple'] !== 'all' ) {
 				$allProp = array_unique( $allProp );
 			}
 
@@ -221,7 +215,7 @@ class SavvyMapper {
 			sort( $allProp );
 
 			$allProp = apply_filters( 'savvymapper_attr_values', $allProp, $mapping, $attrs['attr'] );
-			
+
 			if ( count( $allProp ) > 0 ) {
 				$propHtml = implode( '</span><span class="savvy-attr">', $allProp );
 				$propHtml = '<span class="savvy-attr">' . $propHtml . '</span>';
@@ -239,15 +233,47 @@ class SavvyMapper {
 			// javascript to process
 			if ( $attrs['show'] == 'map' ) {
 
-				$mapSetup = $this->make_map_config( $attrs, $contents, $connection, $mapping, $current_settings );
-				$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
+				$current_settings_str = get_post_meta( $post->ID, 'savvymapper_post_meta', true );
+				$current_settings_ar = json_decode( $current_settings_str, true );
+
+				// Backwards compatibility with 0.0.1 -- remove soon
+				if ( ! empty( $current_settings_ar['mapping_id'] ) ) {
+					$current_settings_ar = array( $current_settings_ar );
+				}
+
+				$mapSetup = $this->make_attrs( $attrs );
+				unset( $mapSetup['attr'] );
+				unset( $mapSetup['multiple'] );
+				unset( $mapSetup['show'] );
+				unset( $mapSetup['onarchive'] );
+				unset( $mapSetup['show_popups'] );
+				unset( $mapSetup['show_features'] );
+
+				$mapMeta = array();
 
 				$classes = array(
 					'savvy_map_div',
 					'savvy_page_map_div',
-					'savvy_map_' . $connection->get_type(),
-					'savvy_map_' . $mapping[ 'mapping_slug' ],
 					);
+
+				foreach ( $current_settings_ar as $idx => $current_settings ) {
+					$mapping = $this->get_mappings( $current_settings['mapping_id'] );
+					$connection = $this->get_connections( $mapping['connection_id'] );
+
+					$mapMeta['post_type'] = $mapping['post_type'];
+					$mapMeta['post_id'] = $post->ID;
+					$mapMeta['mapping_ids'][] = $mapping['mapping_id'];
+					$mapMeta['mapping_slugs'][] = $mapping[' mapping_slug'];
+
+					$mapSetup['layers'][] = $this->make_layer_config( array(), $contents, $connection, $mapping, $current_settings );
+
+					$classes[] = 'savvy_map_' . $connection->get_type();
+					$classes[] = 'savvy_map_' . $mapping['mapping_slug'];
+				}
+
+				$mapMeta['map_id'] = implode( '_',$mapMeta['mapping_ids'] );
+
+				$classes = array_unique( $classes );
 
 				$html .= "<div class='" . implode( ' ', $classes ) .  "' data-mapmeta='" . json_encode( $mapMeta ) . "' data-map='" . json_encode( $mapSetup ) . "'></div>";
 
@@ -264,12 +290,11 @@ class SavvyMapper {
 	 *
 	 * @return The array of attrs to actually use
 	 */
-	function make_attrs( $attrs, $mapping ) {
+	function make_attrs( $attrs = array(), $mapping = array() ) {
 		// Order of presidence goes
 		// 1. $attrs
 		// 2. $mapping
 		// 3. $defaults
-
 		// Default shortcode option that all interfaces need to support
 		$defaults = array(
 			'attr' => null,
@@ -281,38 +306,36 @@ class SavvyMapper {
 			'zoom' => 'default',
 			'lat' => 'default',
 			'lng' => 'default',
+			'layers' => array(),
 		);
-		
+
 		// Get attributes out of $mapping
 		$mapping_defaults = array_intersect_key( $mapping, $defaults );
 		// Now override the hard-coded defaults with the mapping defaults
 		$mapping_defaults = array_merge( $defaults, $mapping_defaults );
 
 		// Finally, override that with the passed in $attrs since the shortcode take higest presidence
-		$attrs = array_merge( $mapping_defaults, $attrs);
+		$attrs = array_merge( $mapping_defaults, $attrs );
 
 		return $attrs;
 	}
 
-	function make_map_config( $attrs, $contents, $connection, $mapping, $current_settings ) {
+	function make_layer_config( $attrs, $contents, $connection, $mapping, $current_settings ) {
 		global $post;
 
 		$attrs = $this->make_attrs( $attrs, $mapping );
 
-		$mapSetup = array(
+		$layerSetup = array(
 			'show_popups'	=> $attrs['show_popups'],
 			'show_features'	=> $attrs['show_features'],
-			'zoom'			=> $attrs['zoom'],
-			'lat'			=> $attrs['lat'],
-			'lng'			=> $attrs['lng'],
-			'post_id'		=> $post->ID,
 			'mapping_id'	=> $mapping['mapping_id'],
+			'mapping_slug'	=> $mapping['mapping_slug'],
 		);
 
 		$connectionMapSetup = $connection->get_map_shortcode_properties( $attrs, $contents, $mapping, $current_settings );
-		$mapSetup = array_merge( $mapSetup, $connectionMapSetup );
+		$layerSetup = array_merge( $layerSetup, $connectionMapSetup );
 
-		return $mapSetup;
+		return $layerSetup;
 	}
 
 	/**
@@ -345,6 +368,7 @@ class SavvyMapper {
 		$mapping = $this->get_mappings( $_GET['mapping_id'] );
 		$connection = $this->get_connections( $mapping['connection_id'] );
 		$suggestions = $connection->autocomplete( $mapping, $_GET['term'] );
+		foreach ( $suggestions as &$v ) { $v = (string) $v; }
 
 		header( 'Content-Type: application/json' );
 		print json_encode( $suggestions );
@@ -361,9 +385,12 @@ class SavvyMapper {
 		foreach ( $this->mappings as $mapping ) {
 			if ( $mapping['post_type'] == $post->post_type ) {
 				$connection = $this->connections[ $mapping['connection_id'] ];
+				if ( empty( $connection ) ){
+					continue;
+				}
 				add_meta_box(
-					$mappings['mapping_id'],
-					$connection->get_connection_name() . ' : ' . $mapping['mapping_name'],
+					$mapping['mapping_id'],
+					'<strong>SavvyMapper:</strong> ' . $connection->get_connection_name() . '<span class="dashicons dashicons-arrow-right-alt2"></span>'  . $mapping['mapping_name'],
 					array( $this,'make_meta_box' ),
 					null,
 					'advanced',
@@ -374,13 +401,30 @@ class SavvyMapper {
 		}
 	}
 
+	/**
+	 * Make a single metabox
+	 */
 	function make_meta_box( $post, $metabox ) {
 		$connection = $metabox['args'][0];
 		$mapping = $metabox['args'][1];
 
-		list($cur_connection, $cur_mapping, $current_settings ) = $this->get_post_info_by_post_id( $post->ID );
-		$mapSetup = $this->make_map_config( array(), array(), $connection, $mapping, $current_settings );
-		$mapMeta = $this->make_map_meta( $connection, $mapping, $post->ID );
+		list($cur_connection, $cur_mapping, $current_settings ) = $this->get_post_info_by_post_id( $post->ID, $mapping['mapping_id'] );
+		$mapSetup = array(
+			'lat' => 'default',
+			'lng' => 'default',
+			'zoom' => 'default',
+			'layers' => array(),
+		);
+
+		$mapSetup['layers'][] = $this->make_layer_config( array(), array(), $connection, $mapping, $current_settings );
+
+		$mapMeta = array(
+			'post_type' => $post->post_type,
+			'post_id' => $post->ID,
+			'mapping_ids' => array( $mapping['mapping_id'] ),
+			'mapping_slugs' => array( $mapping['mapping_slug'] ),
+			'map_id' => $mapping['mapping_id'],
+			);
 
 		$html = "<div class='savvy_metabox_wrapper' data-mapping_id='" . $mapping['mapping_id'] . "'>";
 
@@ -389,10 +433,10 @@ class SavvyMapper {
 		$html .= '<div class="savvymapper_metabox_col">';
 
 		$html .= '<label>Look up value <em>' . $mapping['lookup_field'] . '</em>: </label>';
-		$html .= '<input class="savvy_lookup_ac" name="savvymapper_lookup_value" value="' . $current_settings['lookup_value'] . '">';
+		$html .= '<input class="savvy_lookup_ac" name="savvymapper_lookup_value[]" value="' . $current_settings['lookup_value'] . '">';
 		$html .= '<br>' . "\n";
 
-		$html .= "<input type='hidden' name='savvyampper_mapping_id' value='" . $mapping[ 'mapping_id' ] . "'>";
+		$html .= "<input type='hidden' name='savvyampper_mapping_id[]' value='" . $mapping['mapping_id'] . "'>";
 		$html .= $connection->extra_metabox_fields( $post, $mapping, $current_settings );
 
 		ob_start();
@@ -457,28 +501,28 @@ class SavvyMapper {
 			}
 		}
 
-		// Ask the specific connection to capture anything else
-		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $post_id );
-
-		if ( empty( $connection ) ) {
-			$mapping = $this->get_mappings( $_POST[ 'savvyampper_mapping_id' ] );
-			$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+		$post_meta = array();
+		foreach ( $_POST['savvyampper_mapping_id']  as $idx => $mapping_id ) {
+			$mapping = $this->get_mappings( $_POST['savvyampper_mapping_id'][ $idx ] );
+			$connection = $this->get_connections( $mapping['connection_id'] );
 			$current_settings = array();
+
+			// Capture common fields for all interfaces
+			$settings = array(
+				'mapping_id' => $mapping['mapping_id'],
+				'lookup_value' => sanitize_text_field( $_POST['savvymapper_lookup_value'][ $idx ] ),
+			);
+
+			$connectionMeta = $connection->save_meta( $post_id, $idx );
+
+			// Merge them
+			$settings = array_merge( $settings, $connectionMeta );
+
+			$post_meta[] = $settings;
 		}
 
-		// Capture common fields for all interfaces
-		$settings = array(
-			'mapping_id' => $mapping['mapping_id'],
-			'lookup_value' => sanitize_text_field( $_POST['savvymapper_lookup_value'] ),
-		);
-
-		$connectionMeta = $connection->save_meta( $post_id, $mapping );
-
-		// Merge them
-		$settings = array_merge( $settings, $connectionMeta );
-
 		// serialize settings and update post meta
-		update_post_meta( $post_id,'savvymapper_post_meta',json_encode( $settings ) );
+		update_post_meta( $post_id,'savvymapper_post_meta',json_encode( $post_meta ) );
 	}
 
 
@@ -528,7 +572,7 @@ class SavvyMapper {
 	 * Show the mappings and edit them
 	 */
 	function connection_mapping_page() {
-		$html = '<div class="wrap savvymapper_mapping_wrap">';
+		$html = '<div class="wrap savvyoptions_wrap">';
 		$html .= '<h2>SavvyMapper Post Mapping</h2>';
 		$html .= '<p>Configure mapping between your post types and your SavvyMapper connections.</p>';
 
@@ -558,8 +602,8 @@ class SavvyMapper {
 
 		// Show the form to add new mappings
 		$html .= '<div id="savvy_mapping_form">';
-		$html .= '<select name="savvy_post_type">' . implode( "\n", $post_type_options ) . '</select> ';
-		$html .= '<select name="savvy_connection_id">' . implode( "\n", $connection_options ) . '</select> ';
+		$html .= '<label for="savvy_post_type" class="toplabel">Post Type</label><select name="savvy_post_type">' . implode( "\n", $post_type_options ) . '</select> ';
+		$html .= '<label for="savvy_connection_id" class="toplabel">Connection</label><select name="savvy_connection_id">' . implode( "\n", $connection_options ) . '</select> ';
 		$html .= '<input type="button" onclick="SAVVY._add_mapping(this);" value="Add Mapping">';
 		$html .= '</div>';
 
@@ -582,14 +626,14 @@ class SavvyMapper {
 	 * Print the options form
 	 */
 	function options_page() {
-		$html = '<div class="wrap savvymapper_options_wrap">';
+		$html = '<div class="wrap savvyoptions_wrap">';
 		$html .= '<p>Welcome to SavvyMapper.';
 		$html .= '<h2>SavvyMapper</h2>';
 
 		$html .= '<h3>Settings</h3>';
 		$html .= '<div id="savvysettings">';
 		$html .= '<p>In order to reduce calls to GIS services and to improve your site\'s speed, SavvyMapper caches results by default. Set to 0 to disable.</p>';
-		$html .= '<label>Cache Timeout (in minutes)</label>: <input data-name="cachetimeout" value="' . $this->get_settings( 'cachetimeout' ) . '"><br>';
+		$html .= '<label>Cache Timeout<br>(in minutes)</label><input data-name="cachetimeout" value="' . $this->get_settings( 'cachetimeout' ) . '"><br>';
 		$html .= '<input type="button" id="savvyclearcache" value="Clear Cache"><br>';
 		$html .= '</div>';
 
@@ -634,7 +678,7 @@ class SavvyMapper {
 		);													// sanitize_callback
 		add_settings_section(
 			'savvymapper_plugin_page_section',				// id
-			__( 'SavvyMapper Settings Page', 'wordpress' ), // title
+			null, // title
 			'__return_false',			// callback
 			'savvymapper_plugin_page'						// page
 		);
@@ -653,7 +697,7 @@ class SavvyMapper {
 		);
 		add_settings_section(
 			'savvymapper_mapping_page_section',					// id
-			__( 'SavvyMapper Mapping Settings', 'wordpress' ),  // title
+			null,  // title
 			'__return_false',			// callback
 			'savvymapper_mapping_page'							// page
 		);
@@ -696,8 +740,8 @@ class SavvyMapper {
 	function _get_interface_options_form( $interface ) {
 		$html = '';
 		$html .= '<div class="instance-config">';
-		$html .= '<h3><span class="remove-instance">(X)</span> ' . $interface->get_name() . ' Connection</h3>';
-		$html .= '<label>Connection Name</label> <input type="text" data-name="connection_name" value="' . $interface->get_connection_name() . '"><br>' . "\n";
+		$html .= '<h3 class="savvyheader"><span class="savvyhinner"><span class="dashicons dashicons-no remove-instance"></span>Connection to <em>' . $interface->get_name() . '</em></span></h3>';
+		$html .= '<label>Connection Name</label><input type="text" data-name="connection_name" value="' . $interface->get_connection_name() . '"><br>' . "\n";
 		$html .= '<input type="hidden" data-name="interface" value="' . $interface->get_type() . '">' . "\n";
 		$html .= '<input type="hidden" data-name="_id" value="' . $interface->get_id() . '">' . "\n";
 		$html .= $interface->options_div();
@@ -713,8 +757,9 @@ class SavvyMapper {
 		$connection_id = $_GET['connection_id'];
 
 		$mapping = array(
-			'post_type' => $_GET['post_type'],
+			'post_type'		=> $_GET['post_type'],
 			'connection_id' => $_GET['connection_id'],
+			'layer_order'	=> 0,
 		);
 
 		print $this->_get_mapping_options_form( $mapping );
@@ -728,27 +773,37 @@ class SavvyMapper {
 		$connections = $this->get_connections();
 		$connection = $connections[ $mapping['connection_id'] ];
 
+		if ( empty( $connection ) ){
+			return;
+		}
+
 		$mapping_id = (empty( $mapping['mapping_id'] ) ? time() : $mapping['mapping_id']);
 
 		$html = '<div class="mapping-config">';
-		$html .= '<h3><span class="remove-instance">(X)</span> ' . $post_type_info->labels->name . ' => ' . $connection->get_connection_name() . '</h3>';
-		$html .= '<label>Mapping Name</label> <input type="text" data-name="mapping_name" value="' . $mapping['mapping_name'] . '"><br>' . "\n";
+		$html .= '<h3 class="savvyheader"><span class="savvyhinner"><span class="dashicons dashicons-no remove-instance"></span>Mapping from <em>' . $post_type_info->labels->name . '</em> to <em>' . $connection->get_connection_name() . '</em></span></h3>';
+		$html .= '<label>Mapping Name</label><input type="text" data-name="mapping_name" value="' . $mapping['mapping_name'] . '"><br>' . "\n";
+		$html .= '<label>Mapping Slug</label><input type="text" readonly="readonly" value="' . sanitize_title($mapping['mapping_name']) . '"><br>' . "\n";
+		$html .= '<label>Layer Order</label><input type="text" data-name="layer_order" value="' . $mapping['layer_order'] . '"><br>' . "\n";
 		$html .= '<input type="hidden" data-name="connection_id" value="' . $connection->get_id() . '">';
 		$html .= '<input type="hidden" data-name="mapping_id" value="' . $mapping_id . '">';
 		$html .= '<input type="hidden" data-name="post_type" value="' . $mapping['post_type'] . '">';
 		$html .= $connection->mapping_div( $mapping );
 
-		$marker_checked = ( !isset( $mapping[ 'show_features' ] ) || $mapping[ 'show_features' ]  != 0  ? 'checked="checked"' : '' );
-		$html .= '<label>Show features</label>: <input type="checkbox" data-name="show_features" value="1" ' . $marker_checked . '><br>';
+		$marker_checked = ( ! isset( $mapping['show_features'] ) || $mapping['show_features'] != 0  ? 'checked="checked"' : '' );
+		$html .= '<label>Show features</label><input type="checkbox" data-name="show_features" value="1" ' . $marker_checked . '><br>';
 
-		$popups_checked = ( !isset( $mapping[ 'show_popups' ] ) || $mapping[ 'show_popups' ] != 0 ? 'checked="checked"' : '' );
-		$html .= '<label>Show popups</label>: <input type="checkbox" data-name="show_popups" value="1" ' . $popups_checked . '>';
+		$popups_checked = ( ! isset( $mapping['show_popups'] ) || $mapping['show_popups'] != 0 ? 'checked="checked"' : '' );
+		$html .= '<label>Show popups</label><input type="checkbox" data-name="show_popups" value="1" ' . $popups_checked . '>';
 
 		$html .= '<hr>';
 		$html .= '</div>';
 		return $html;
 	}
 
+	function savvymapper_connections_title_callback() {
+		$args = func_get_args();
+		print '<h2 class="savvymapper_options_title">' . $args[0] . '</h2>';
+	}
 	function savvymapper_connections_callback() {
 		$settings = get_option( 'savvymapper_connections', '{}' );
 		print '<textarea name="savvymapper_connections" id="savvymapper_connections">' . $settings . '</textarea>';
@@ -815,10 +870,13 @@ class SavvyMapper {
 		$mapping = json_decode( $mapping_string, true );
 
 		$this->mappings = array();
-		foreach ( $mapping[ 'mappings' ] as $mapping ) {
-			$mapping[ 'mapping_slug' ] = sanitize_title( $mapping[ 'mapping_name' ] );
-			$this->mappings[ $mapping[ 'mapping_id' ] ] = $mapping;
+		foreach ( $mapping['mappings'] as $mapping ) {
+			$mapping['mapping_slug'] = sanitize_title( $mapping['mapping_name'] );
+			$mapping['layer_order'] = ( ! empty( $mapping['layer_order'] ) ? $mapping['layer_order'] : 0 );
+			$this->mappings[ $mapping['mapping_id'] ] = $mapping;
 		}
+
+		uasort( $this->mappings,array( $this, '_mapping_sort' ) );
 
 		if ( $mapping_id ) {
 			return $this->mappings[ $mapping_id ];
@@ -828,22 +886,46 @@ class SavvyMapper {
 	}
 
 	/**
+	 * Custom sort function for mappings
+	 *
+	 * Sort by:
+	 *	1. post_type
+	 *	2. layer_order, reversed (so that top layers appear on top)
+	 *	3. mapping_id
+	 */
+	function _mapping_sort( $a, $b ) {
+		$post_type_order = strnatcmp( $a['post_type'], $b['post_type'] );
+		if ( $post_type_order !== 0 ) {
+			return $post_type_order;
+		}
+
+		$layer_order_order = $b['layer_order'] - $a['layer_order'];
+
+		if ( $layer_order_order !== 0 ) {
+			return $layer_order_order;
+		}
+
+		$mapping_id_order = $a['mapping_id'] - $b['mapping_id'];
+		return $mapping_id_order;
+	}
+
+	/**
 	 * Get a setting, or all of the settings
 	 *
 	 * @param string $setting_field The specific setting to retrieve.
 	 */
-	function get_settings( $setting_field = NULL) {
+	function get_settings( $setting_field = null ) {
 		if ( empty( $this->settings ) ) {
 			$this->get_connections();
 		}
 
-		$defaults = array( 
-			'cachetimeout' => 60
+		$defaults = array(
+			'cachetimeout' => 60,
 			);
 
 		$this->settings = array_merge( $defaults, $this->settings );
 
-		if ( !empty( $setting_field ) ) {
+		if ( ! empty( $setting_field ) ) {
 			return $this->settings[ $setting_field ];
 		}
 
@@ -855,11 +937,11 @@ class SavvyMapper {
 	 */
 	function get_geojson_for_post() {
 		$postId = $_GET['post_id'];
-		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $postId );
+		list($connection, $mapping, $current_settings) = $this->get_post_info_by_post_id( $postId, $_GET['mapping_id'] );
 
-		if( empty( $connection ) ) {
-			$mapping = $this->get_mappings( $_GET[ 'mapping_id' ] );
-			$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+		if ( empty( $connection ) ) {
+			$mapping = $this->get_mappings( $_GET['mapping_id'] );
+			$connection = $this->get_connections( $mapping['connection_id'] );
 			$current_settings = array();
 		}
 
@@ -875,7 +957,7 @@ class SavvyMapper {
 		$json = apply_filters( 'savvymapper_geojson', $json, $mapping );
 
 		// Leaflet doesn't like it if there's no zero index
-		if ( !empty( $json['features'] ) ) {
+		if ( ! empty( $json['features'] ) ) {
 			$json['features'] = array_values( $json['features'] );
 		}
 
@@ -885,19 +967,22 @@ class SavvyMapper {
 	}
 
 	/**
-	 * A convenience function used to find the connection, mapping and current_settings for 
-	 * the specified post ID.
+	 * A convenience function used to find the connection, mapping and current_settings for
+	 * the specified post ID and mapping_id
 	 *
-	 * @param event_id $post_id The post ID
+	 * @param event_id   $post_id The post ID
+	 * @param mapping_id $mapping_id The mapping
 	 *
 	 * @return An array with $connection, $mapping and $current_settings
+	 *
+	 * @note If $mapping_id == 'first', then the first mapping will be returned.
 	 *
 	 * @note In the event that the current post has no connection/mapping/settings (such as when a post is
 	 * first created or if a mapping is added to a post type after a post has been created)
 	 * then your function will need to handle the null/null/array() that's returned
 	 * and instantiante or find the connection info some other way.
 	 */
-	function get_post_info_by_post_id( $post_id ) {
+	function get_post_info_by_post_id( $post_id, $mapping_id = 'first' ) {
 		// Get the connection and mapping objects for the current post
 		$current_settings_str = get_post_meta( $post_id, 'savvymapper_post_meta', true );
 
@@ -905,34 +990,31 @@ class SavvyMapper {
 			return array( null, null, array() );
 		}
 
-		$current_settings = json_decode( $current_settings_str, true );
-		$mapping = $this->get_mappings( $current_settings[ 'mapping_id' ] );
-		$connection = $this->get_connections( $mapping[ 'connection_id' ] );
+		$current_settings_ar = json_decode( $current_settings_str, true );
+
+		// Backwards compatibility with 0.0.1 -- remove soon
+		if ( ! empty( $current_settings_ar['mapping_id'] ) ) {
+			$current_settings_ar = array( $current_settings_ar );
+		}
+
+		if ( $mapping_id == 'first' ) {
+			$current_settings = array_shift( $current_settings_ar );
+			$mapping = $this->get_mappings( $current_settings['mapping_id'] );
+			$connection = $this->get_connections( $mapping['connection_id'] );
+		} else {
+			foreach ( $current_settings_ar as $current_settings ) {
+				if ( $current_settings['mapping_id'] !== $mapping_id ) {
+					$current_settings = array();
+					continue;
+				}
+
+				$mapping = $this->get_mappings( $current_settings['mapping_id'] );
+				$connection = $this->get_connections( $mapping['connection_id'] );
+				break;
+			}
+		}
 
 		return array( $connection, $mapping, $current_settings );
-	}
-
-	/**
-	 * Make the metadata for a map which JS will use to help make
-	 * finding a map instance more reliable.
-	 *
-	 * @param array $connection The connection.
-	 * @param array $mapping The mapping. 
-	 *
-	 * @return array
-	 */
-	function make_map_meta( $connection, $mapping, $postId, $archiveId = NULL ) {
-		$meta = array(
-				'connection_type'	=> $connection->get_type(),
-				'connection_name'	=> $connection->config[ 'connection_name' ],
-				'connection_id'		=> $mapping[ 'connection_id' ],
-				'mapping_slug'		=> $mapping[ 'mapping_slug' ],
-				'mapping_id'		=> $mapping['mapping_id'],
-				'post_id'			=> $postId,
-				'archive_id'		=> $archiveId,
-				'map_id'			=> $mapping[ 'connection_id' ] . '_' . $mapping['mapping_id'] . '_' . ( !empty( $postId ) ? $postId : ( !empty( $archiveId ) ? $archiveId : '' ) ),
-			);
-		return $meta;
 	}
 
 	/**
@@ -945,10 +1027,10 @@ class SavvyMapper {
 	function get_from_cache( $cache_hash ) {
 		$upload_dir = wp_upload_dir();
 		wp_mkdir_p( $upload_dir['basedir'] . '/savvymapper/' );
-		$cache_file =  $upload_dir['basedir'] . '/savvymapper/' . $cache_hash . '.savvycache';
+		$cache_file = $upload_dir['basedir'] . '/savvymapper/' . $cache_hash . '.savvycache';
 		$min_age = time() - ( $this->get_settings( 'cachetimeout' ) * 60 );
 
-		if ( file_exists( $cache_file ) && filemtime( $cache_file ) > $min_age) { 
+		if ( file_exists( $cache_file ) && filemtime( $cache_file ) > $min_age ) {
 			return file_get_contents( $cache_file );
 		}
 	}
@@ -960,13 +1042,13 @@ class SavvyMapper {
 	 * @param string $contents The contents to write to the cache.
 	 */
 	function write_to_cache( $cache_hash, $contents ) {
-		if( $this->get_settings( 'cachetimeout' ) == 0 ) {
+		if ( $this->get_settings( 'cachetimeout' ) == 0 ) {
 			return;
 		}
 
 		$upload_dir = wp_upload_dir();
 		wp_mkdir_p( $upload_dir['basedir'] . '/savvymapper/' );
-		$cache_file =  $upload_dir['basedir'] . '/savvymapper/' . $cache_hash . '.savvycache';
+		$cache_file = $upload_dir['basedir'] . '/savvymapper/' . $cache_hash . '.savvycache';
 
 		file_put_contents( $cache_file, $contents );
 	}
@@ -977,8 +1059,8 @@ class SavvyMapper {
 	function clear_cache() {
 		$upload_dir = wp_upload_dir();
 		$cachefiles = $upload_dir['basedir'] . '/savvymapper/*.savvycache';
-		foreach( glob( $cachefiles ) as $cachefile ) {
-			unlink( $cachefile );	
+		foreach ( glob( $cachefiles ) as $cachefile ) {
+			unlink( $cachefile );
 		}
 		exit();
 	}

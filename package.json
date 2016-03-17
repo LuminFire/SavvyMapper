@@ -4,7 +4,7 @@
 		"jshint": "latest"
 	},
 	"scripts": {
-		"lint": "jshint assets/*.js",
-		"build": "git archive HEAD --prefix=$(basename $(pwd))/ --format=zip --worktree-attributes -o $(basename $(pwd)).zip"
+		"lint": "jshint assets/savvy*.js; for i in $(find . -name \"*.php\"); do phpcs --standard=WordPress \"$i\";done",
+		"build": "git archive HEAD --prefix=$(basename $(pwd))/ --format=zip --worktree-attributes -o $(basename $(pwd)).zip && echo \"$(basename $(pwd)).zip has been built\""
 	}
 }

@@ -126,8 +126,9 @@ abstract class SavvyInterface {
 	 * merge in for this post's meta.
 	 *
 	 * @param string/int $post_id The post that meta is being saved for.
+	 * @param integer    $index The mapping instance index
 	 */
-	abstract function save_meta( $post_id );
+	abstract function save_meta( $post_id, $index );
 
 	/**
 	 * Map initialization is all done in JavaScript.
@@ -168,7 +169,15 @@ abstract class SavvyInterface {
 	function _get_geojson_for_post( $mapping, $current_settings ) {
 		$json = $this->get_geojson_for_post( $mapping, $current_settings );
 
-		$show_popups = ( isset( $current_settings[ 'show_popups' ] ) ?  $current_settings[ 'show_popups' ] : $mapping[ 'show_popups' ] );
+		if ( ! isset( $json['features'] ) ) {
+			$json['features'] = array();
+		}
+
+		if ( ! isset( $json['type'] ) ) {
+			$json['type'] = 'FeatureCollection';
+		}
+
+		$show_popups = ( isset( $current_settings['show_popups'] ) ?  $current_settings['show_popups'] : $mapping['show_popups'] );
 
 		if ( $show_popups ) {
 			$json = $this->make_popups( $mapping, $json );
@@ -195,8 +204,8 @@ abstract class SavvyInterface {
 	 *
 	 * @note This is separate from get_geojson_for_post because some optimizations
 	 * can be made by selecting only the columsn needed in this call, while
-	 * get_geojson_for_post probably needs to return all columns For now we're just 
-	 * going to fetch the geojson the same way for both calls. We'll see if it's an 
+	 * get_geojson_for_post probably needs to return all columns For now we're just
+	 * going to fetch the geojson the same way for both calls. We'll see if it's an
 	 * issue later
 	 *
 	 * @param array  $attrs The shortcode $attrs.
@@ -223,26 +232,26 @@ abstract class SavvyInterface {
 	/**
 	 * @param array $config This instance's config
 	 */
-		function set_config( $config = array() ) {
-			$this->config = $config;
+	function set_config( $config = array() ) {
+		$this->config = $config;
 
-			if ( ! empty( $config ) ) {
-				$this->connection_setup_actions();
-			}
+		if ( ! empty( $config ) ) {
+			$this->connection_setup_actions();
 		}
+	}
 
 	/**
-	 * Wrapper for wp_remote_post with caching 
+	 * Wrapper for wp_remote_post with caching
 	 *
 	 * @param string $url The url to post to.
-	 * @param array $args The args for the post.
-	 * @param bool $cache Should cache be enabled for this request.
+	 * @param array  $args The args for the post.
+	 * @param bool   $cache Should cache be enabled for this request.
 	 *
-	 * return The post body.
+	 *   return The post body.
 	 */
 	function remote_post( $url, $args = array(), $cache = true ) {
 		if ( $cache ) {
-			$queryString = http_build_query( $args) ;
+			$queryString = http_build_query( $args );
 			$cache_string = $url . $queryString;
 			$cache_hash = sha1( $cache_string );
 
@@ -262,17 +271,17 @@ abstract class SavvyInterface {
 	}
 
 	/**
-	 * Wrapper for wp_remote_post with caching 
+	 * Wrapper for wp_remote_post with caching
 	 *
 	 * @param string $url The url to post to.
-	 * @param array $args The args for the post.
-	 * @param bool $cache Should cache be enabled for this request.
+	 * @param array  $args The args for the post.
+	 * @param bool   $cache Should cache be enabled for this request.
 	 *
-	 * return The post body.
+	 *   return The post body.
 	 */
 	function remote_get( $url, $args = array(), $cache = true ) {
 		if ( $cache ) {
-			$queryString = http_build_query( $args) ;
+			$queryString = http_build_query( $args );
 			$cache_string = $url . $queryString;
 			$cache_hash = sha1( $cache_string );
 
@@ -348,7 +357,7 @@ abstract class SavvyInterface {
 		if ( $label == '' ) {
 			$html = '';
 		} else {
-			$html = '<label>' . $label . '</label>: ';
+			$html = '<label>' . $label . '</label>';
 		}
 		$html .= '<select data-name="' . $param_name . '">';
 		$html .= '<option value="">--</option>';
@@ -381,7 +390,10 @@ abstract class SavvyInterface {
 	 * @return An html string.
 	 */
 	function form_make_textarea( $label, $param_name, $value = '' ) {
-		$html = '<label>' . $label . '</label>: ';
+		$html = '<label>' . $label . '</label>';
+		if ( is_array( $value ) ) {
+			$value = implode( "\n",$value );
+		}
 		$html .= '<textarea data-name="' . $param_name . '">' . $value . '</textarea>';
 		return $html;
 	}
@@ -396,7 +408,7 @@ abstract class SavvyInterface {
 	 * @return An html string.
 	 */
 	function form_make_checkbox( $label, $param_name, $checked ) {
-		$html = '<label>' . $label . '</label>: ';
+		$html = '<label>' . $label . '</label>';
 		$html .= '<input data-name="' . $param_name . '" type="checkbox" value="1"';
 
 		if ( $checked ) {
@@ -417,7 +429,7 @@ abstract class SavvyInterface {
 	 * @return An html string
 	 */
 	function form_make_text( $label, $param_name, $value ) {
-		$html = '<label>' . $label . '</label>: ';
+		$html = '<label>' . $label . '</label>';
 		$html .= '<input type="text" data-name="' . $param_name . '" value="' . $value . '">';
 		return $html;
 	}
@@ -441,24 +453,24 @@ abstract class SavvyInterface {
 	/**
 	 * Make the popups for the geojson
 	 *
-	 * @param array $mapping The current mapping we're working with.
+	 * @param array   $mapping The current mapping we're working with.
 	 * @param geojson $json A GeoJSON FeatureCollection.
 	 *
 	 * @return The modified GeoJSON.
 	 */
 	function make_popups( $mapping, $json ) {
 
-		if ( empty( $json[ 'features' ] ) ) {
+		if ( empty( $json['features'] ) ) {
 			return $json;
 		}
 
-		foreach( $json[ 'features' ] as &$feature ) {
-			$popup_properties = apply_filters( 'savvymapper_popup_fields', $feature[ 'properties'] , $feature, $mapping );
+		foreach ( $json['features'] as &$feature ) {
+			$popup_properties = apply_filters( 'savvymapper_popup_fields', $feature['properties'] , $feature, $mapping );
 
 			$html = '';
-			if ( !empty( $popup_properties ) ) {
+			if ( ! empty( $popup_properties ) ) {
 				$html .= '<div class="savvymapper_popup_wrapper"><table class="savvymapper_popup">';
-				foreach($popup_properties as $k => $v){
+				foreach ( $popup_properties as $k => $v ) {
 					$empty_row = '';
 					if ( empty( $v ) ) {
 						$empty_row = ' class="empty_row"';
@@ -470,8 +482,8 @@ abstract class SavvyInterface {
 
 			$popuphtml = apply_filters( 'savvymapper_popup_html', $html, $feature, $mapping );
 
-			if( !empty( $popuphtml ) ) {
-				$feature[ '_popup_contents' ] = $popuphtml;
+			if ( ! empty( $popuphtml ) ) {
+				$feature['_popup_contents'] = $popuphtml;
 			}
 		}
 

@@ -14,23 +14,52 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ */
 
 /**
  * SavvyMapper CSS
  */
 
-.remove-instance{
-	text-decoration: underline;
-	cursor: pointer;
-}
-
-.remove-instance:hover{
-	text-decoration: none;
-}
 table.savvy_settings th {
 	text-align: left;
 }
+
+.savvyoptions_wrap .form-table {
+	display: none;
+}
+
+.savvyoptions_wrap label {
+	margin-right: 4px;
+	width: 150px;
+	display: inline-block;
+}
+
+.savvyoptions_wrap label:after {
+	content: ':';
+}
+
+.savvyoptions_wrap input,
+.savvyoptions_wrap select
+{
+	min-width: 330px;
+	margin-bottom: 5px;
+}
+
+.savvyoptions_wrap input[type=checkbox],
+.savvyoptions_wrap input[type=submit],
+.savvyoptions_wrap input[type=button] {
+	min-width: auto;
+}
+
+div.savvyoptions_wrap textarea {
+	resize: both;
+	width: 100%;
+	width: calc(100% - 250px);
+	vertical-align: top;
+	display: inline-block;
+	margin-bottom: 5px;
+}
+
 
 .savvy_metabox_map_div, .savvy_lookupbox {
 	min-height: 400px;
@@ -69,10 +98,10 @@ table.savvy_settings th {
 
 /*
 .savvy-attr {
-	font-weight: bold;
-	color: #690000;
+font-weight: bold;
+color: #690000;
 }
-*/
+ */
 
 .savvy-attr::after {
 	content: ', ';
@@ -101,11 +130,6 @@ div.savvymapper_metabox_col >  div {
 div.savvymapper_metabox_col textarea {
 	resize: both;
 	width: 100%;
-}
-div.savvymapper_mapping_wrap textarea, 
-div.savvymapper_options_wrap textarea
-{
-	resize: both;
 }
 
 div.savvy_metabox_wrapper .wide {
@@ -139,4 +163,42 @@ table.savvymapper_popup tr.empty_row {
 
 .entry-content a.leaflet-popup-close-button {
 	border: none;
+}
+
+.savvyhinner {
+	background-color: #f8faee;
+	border: 3px solid #bfbfbf;
+	display: inline-block;
+	padding: 10px 15px 10px 5px;
+	border-radius: 15px;
+}
+
+
+.savvyhinner .dashicons-no {
+	color: #842424;
+}
+
+.savvyhinner .dashicons-no:hover {
+	color: #ff4747;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+
+.savvyconnectionname {
+	color: #888;
+}
+
+.toplabel {
+	position: absolute;
+	top: 0;
+	font-weight: bold;
+	font-size: 1.2em;
+}
+#savvy_mapping_form {
+	position: relative;
+	padding-top: 1.6em;
+}
+label.toplabel:after {
+	content: '';
 }

@@ -49,9 +49,9 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 			// JSON Url, so we need to fetch the whole thing
 			$json = $this->get_geojson_file();
 			$candidates = array();
-			foreach ( $json[ 'features' ] as $feature ){
+			foreach ( $json['features'] as $feature ) {
 				// stripos -- case IN-sensitive compare!
-				$lookupval = $feature[ 'properties' ][ $mapping[ 'lookup_field' ] ];
+				$lookupval = $feature['properties'][ $mapping['lookup_field'] ];
 				if ( stripos( $lookupval, $term ) === 0 ) {
 					$candidates[] = $lookupval;
 				}
@@ -67,7 +67,7 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		 */
 		function options_div() {
 			$connection_details = array_merge( array(
-				'geojson_url' => ''
+				'geojson_url' => '',
 			), $this->config );
 
 			$html = $this->form_make_text( 'GeoJSON URL','geojson_url',$connection_details['geojson_url'] );
@@ -78,15 +78,15 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		 * implements required method
 		 */
 		function mapping_div( $mapping ) {
-			$defaults = array( 
-				'lookup_field' => ''
+			$defaults = array(
+				'lookup_field' => '',
 			);
 
 			$mapping = array_merge( $defaults, $mapping );
 
 			$field_names = $this->get_attribute_names( $mapping );
 
-			$html = $this->form_make_select( 'Lookup Field', 'lookup_field', $field_names, $field_names, $mapping[ 'lookup_field' ] ) . '<br>' . "\n";
+			$html = $this->form_make_select( 'Lookup Field', 'lookup_field', $field_names, $field_names, $mapping['lookup_field'] ) . '<br>' . "\n";
 
 			return $html;
 		}
@@ -97,8 +97,8 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		function get_attribute_names( $mapping ) {
 			$json = $this->get_geojson_file();
 
-			if( !empty( $json[ 'features' ] ) ){
-				return array_keys( $json[ 'features' ][ 0 ][ 'properties' ] );
+			if ( ! empty( $json['features'] ) ) {
+				return array_keys( $json['features'][0]['properties'] );
 			}
 		}
 
@@ -112,7 +112,7 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		/**
 		 * implements required method
 		 */
-		function save_meta( $post_id ) {
+		function save_meta( $post_id, $index ) {
 			return array();
 		}
 
@@ -129,14 +129,13 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 		function get_geojson_for_post( $mapping, $current_settings ) {
 			$json = $this->get_geojson_file();
 
-			$allFeatures = $json[ 'features' ];
-			$json[ 'features' ] = array();
-
+			$allFeatures = $json['features'];
+			$json['features'] = array();
 
 			foreach ( $allFeatures as $feature ) {
-				$lookupval = $feature[ 'properties' ][ $mapping[ 'lookup_field' ] ];
-				if ( stripos( $lookupval, $current_settings[ 'lookup_value' ] ) === 0 ) {
-					$json[ 'features' ][] = $feature;
+				$lookupval = $feature['properties'][ $mapping['lookup_field'] ];
+				if ( stripos( $lookupval, $current_settings['lookup_value'] ) === 0 ) {
+					$json['features'][] = $feature;
 				}
 			}
 
@@ -155,15 +154,19 @@ function load_savvy_geojson_url_interface( $interfaces ) {
 
 		function load_scripts() {
 			$plugin_dir_url = plugin_dir_url( __FILE__ );
-			wp_enqueue_script( 'savvygeojsonurljs',$plugin_dir_url . 'geojson_url.js',array( 'jquery','savvymapjs') );
+			wp_enqueue_script( 'savvygeojsonurljs',$plugin_dir_url . 'geojson_url.js',array( 'jquery', 'savvymapjs' ) );
 		}
 
 		function get_geojson_file() {
-			$json_str = $this->remote_get( $this->config[ 'geojson_url' ] );
+			$json_str = $this->remote_get( $this->config['geojson_url'] );
 			$json = json_decode( $json_str, true );
 
 			return $json;
 		}
+
+		/**
+		 * TODO: Implement function remote_get() with a streaming JSON parser so we can handle large files with low memory
+		 */
 	}
 
 	$int = new SavvyGeoJsonURL();

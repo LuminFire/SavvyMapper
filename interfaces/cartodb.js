@@ -38,9 +38,11 @@ jQuery(document).ready(function(){
 var SavvyCartoMap = SavvyMap.extend({
 	init: function(div,args){
 		this._super(div,args);
-		if( this.args.vizes instanceof Array ){
-			for(var v = 0;v<this.args.vizes.length;v++){
-				this.addVisualization(this.args.vizes[v]);
+		for(var l = 0;l<this.args.layers.length;l++){
+			if( this.args.layers[l].vizes instanceof Array ){
+				for(var v = 0;v<this.args.layers[l].vizes.length;v++){
+					this.addVisualization(this.args.layers[l].vizes[v]);
+				}
 			}
 		}
 	},
