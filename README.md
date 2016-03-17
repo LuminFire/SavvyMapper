@@ -10,7 +10,7 @@ developers who need access to real GIS services and the power of Leaflet.js.
 SavvyMapper creates relationships between WordPress posts (or custom posts)
 and queries against GIS data. 
 
-It provides shortcodes for displaying maps and feature attributes, and assumes
+It provides shortcodes for displaying maps and feature attributes, and 
 gives you easy access to the map and layer objects so you can customize them
 as needed. 
 
