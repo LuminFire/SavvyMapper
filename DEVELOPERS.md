@@ -10,6 +10,13 @@ SavvyMapper is meant to take care of the tedious work
 of associating GIS data with your WordPress posts so that you
 can focus on the much more fun map maping part of your site!
 
+
+Versioning
+----------
+The master branch is the main development branch. Releases are tagged along the way. 
+
+Tags should correspond to the plugin version and the plugin version should use [Semantic Versioning](http://semver.org/)
+
 Building
 --------
 

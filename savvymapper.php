@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * Plugin Name: SavvyMapper Core
  * Author: Michael Moore
  * Author URI: http://cimbura.com
- * Version: 0.1.0-beta
+ * Version: 0.1.1
  */
 
 
@@ -141,7 +141,7 @@ class SavvyMapper {
 	 * Set up the shortcodes
 	 */
 	function setup_shortcodes() {
-		add_shortcode( 'savvy', array( $this, 'do_shortcodes' ) );
+		add_shortcode( 'savvymapper', array( $this, 'do_shortcodes' ) );
 	}
 
 	/**

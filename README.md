@@ -37,7 +37,7 @@ Shortcodes
 
 ### Displaying attributes
 
-[savvy attr="/attribute name/"]
+[savvymapper attr="/attribute name/"]
 
 The Attribute shortcode has the following optional attributes:
 
@@ -48,7 +48,7 @@ The Attribute shortcode has the following optional attributes:
 
 ### Displaying the current post's map
 
-[savvy show="map"]
+[savvymapper show="map"]
 
 The Map shortcode has the following optional attributes: 
 
@@ -64,7 +64,7 @@ The Map shortcode has the following optional attributes:
  * lat = ('default'|latitude), lng = ('default'|longitude)
     * Set the centerpoint of the map
 
-[savvy show="map" show_markers="1" show_popups="0" zoom="6" lat="45" lng="-93"]
+[savvymapper show="map" show_markers="1" show_popups="0" zoom="6" lat="45" lng="-93"]
 
 Filters, actions, etc.
 ----------------------
@@ -81,6 +81,9 @@ may manifest themselves in various ways including not finding loaded plugins.
 
 Release Log
 -----------
+
+### 0.1.1 Beta updates
+ * Changed [savvy] shortcode to [savvymapper]
 
 ### 0.1.0 Initial Release
  * Support for CartoDB
