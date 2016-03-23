@@ -69,7 +69,13 @@ The Map shortcode has the following optional attributes:
 Filters, actions, etc.
 ----------------------
 
-Please see the [developer notes](DEVELOPERS.md).
+Please see the [Filters and Actions Documentation](Filters_and_Actions.md).
+
+
+Styling Attributes and Maps
+---------------------------
+
+Please see the [Styling and Attributes developer documentation](DEVELOPERS.md#styling-attributes-and-maps)
 
 
 Known Bugs

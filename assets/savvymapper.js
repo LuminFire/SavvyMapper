@@ -191,6 +191,7 @@ SAVVY = (function(){
 			this._do_action('savvymapper_map_added', this, newMap);
 		},
 
+		// not sure that this is ever actually called.
 		getMapsByMeta: function(metaKey,metaValue) {
 			metaValue = metaValue || false;
 			var maps = {};

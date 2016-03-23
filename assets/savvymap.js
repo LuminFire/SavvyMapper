@@ -176,7 +176,7 @@ var SavvyMap = SavvyClass.extend({
 				}
 
 				bounds = _this.savvy._apply_filters( 'savvymap_map_bounds', _this, bounds);
-				if(bounds.isValid()){
+				if(typeof bounds.isValid == 'function' && bounds.isValid()){
 					_this.map.fitBounds(bounds);
 				} else {
 					_this.map.setView(new L.LatLng(lat,lng),zoom);
@@ -259,7 +259,7 @@ var SavvyMap = SavvyClass.extend({
 			}
 
 			success = _this.savvy._apply_filters( 'savvymap_layer_features', _this, success );
-			success = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_features', _this, success );
+			success = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_layer_features', _this, success );
 
 			var geojsonconfig = {
 				onEachFeature: function (feature, layer) {
@@ -269,7 +269,7 @@ var SavvyMap = SavvyClass.extend({
 							popupcontents = feature._popup_contents;
 						}
 						popupcontents = _this.savvy._apply_filters( 'savvymap_popup_contents', _this, popupcontents, feature, layer );
-						popupcontents = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_contents', _this, popupcontents, feature, layer );
+						popupcontents = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_popup_contents', _this, popupcontents, feature, layer );
 						if( popupcontents.length > 0 ){
 							layer.bindPopup( popupcontents );
 						}
@@ -277,7 +277,7 @@ var SavvyMap = SavvyClass.extend({
 				},
 				pointToLayer: function(feature, latlng){
 					var pointrep = _this.savvy._apply_filters( 'savvymap_feature_point', _this, null, feature, latlng );
-					pointrep = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_point', _this, pointrep, feature, latlng );
+					pointrep = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_feature_point', _this, pointrep, feature, latlng );
 
 					if(pointrep !== null){
 						return pointrep;
@@ -291,7 +291,7 @@ var SavvyMap = SavvyClass.extend({
 						};
 
 						circlestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, circlestyle, feature );
-						circlestyle = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_style', _this, circlestyle, feature );
+						circlestyle = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_feature_style', _this, circlestyle, feature );
 
 						pointrep = L.circleMarker(latlng, circlestyle);
 					}else{
@@ -310,17 +310,17 @@ var SavvyMap = SavvyClass.extend({
 					}
 
 					thestyle = _this.savvy._apply_filters( 'savvymap_feature_style', _this, thestyle, feature );
-					thestyle = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_style', _this, thestyle, feature );
+					thestyle = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_feature_style', _this, thestyle, feature );
 					return thestyle;
 				}
 			};
 
 			geojsonconfig = _this.savvy._apply_filters( 'savvymap_layer_config', _this, geojsonconfig );
-			geojsonconfig = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_config', _this, geojsonconfig );
+			geojsonconfig = _this.savvy._apply_filters( 'savvymap_' + config.mapping_slug + '_layer_config', _this, geojsonconfig );
 
 			_this.layers[config.mapping_slug] = L.geoJson(success, geojsonconfig).addTo(_this.map);
 			_this.savvy._do_action('savvymap_layer_added',_this,_this.layers[config.mapping_slug]);
-			_this.savvy._do_action('savvymap_' + config.mapping_slug + '_added',_this,_this.layers[config.mapping_slug]);
+			_this.savvy._do_action('savvymap_' + config.mapping_slug + 'layer_added',_this,_this.layers[config.mapping_slug]);
 		});
 
 		return promise;
