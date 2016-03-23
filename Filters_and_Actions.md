@@ -251,8 +251,6 @@ with this filter.
 
 Filtering server-side is probably more efficient, but you could do it here too.
 
-	- geojson -- A GeoJSON object
-
 
  * savvymap_popup_contents
  * savvymap_{mapping_slug}_popup_contents
