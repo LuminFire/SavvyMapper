@@ -101,7 +101,7 @@ and in it you should:
 See cartodb.js and geojson_url.js for example implementations.
 
 
-### Loading your intance
+### Loading your instance
 
 This is technically a filter, but it would only be used if you were adding new interfaces.
 
