@@ -1,6 +1,7 @@
 Documentation
 =============
 
+Visit http://SavvyMapper.com for more info, a mailing list and packaged download.
 
 What is SavvyMapper?
 --------------------
