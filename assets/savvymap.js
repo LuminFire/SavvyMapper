@@ -81,22 +81,16 @@ var SavvyMap = SavvyClass.extend({
 
 
 	/**
-	* Set up the basemap layer. Right now we're just using mapquest, but
+	* Set up the basemap layer. Right now we're just using OSM, but
 	* this should be expanded later to include other free and commercial tile sets
 	*/
 	_setupBasemap: function(){
 		var subDomains;
-		if(window.location.protocol === 'https:'){
-			subDomains = ['otile1-s','otile2-s','otile3-s','otile4-s'];
-		} else{
-			subDomains = ['otile1','otile2','otile3','otile4'];
-		}
 
-		var basemapurl = '//{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png';
+		var basemapurl = '//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 		var basemapconfig = {
 			maxZoom: 18, 
-			attribution: 'Tiles from <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
-			subdomains: subDomains
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		};
 
 		basemapurl = this.savvy._apply_filters( 'savvymap_basemap_url', this, basemapurl );

@@ -834,6 +834,11 @@ class SavvyMapper {
 
 		$settings_connections_string = get_option( 'savvymapper_connections', '{}' );
 		$settings = json_decode( $settings_connections_string, true );
+
+		if ( empty( $settings['connections'] ) ) {
+			$settings['connections'] = array();	
+		}
+
 		$connections_list = array();
 		foreach ( $settings['connections'] as $connection ) {
 			$interfaceClass = get_class( $this->interface_classes[ $connection['interface'] ] );
@@ -868,6 +873,10 @@ class SavvyMapper {
 
 		$mapping_string = get_option( 'savvymapper_mappings', "{'mapping':[]}" );
 		$mapping = json_decode( $mapping_string, true );
+
+		if ( empty( $mapping['mappings'] ) ) {
+			$mapping['mappings'] = array();
+		}
 
 		$this->mappings = array();
 		foreach ( $mapping['mappings'] as $mapping ) {

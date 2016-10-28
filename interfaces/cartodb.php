@@ -123,6 +123,10 @@ function load_savvy_carto_interface( $interfaces ) {
 		function extra_metabox_fields( $post, $mapping, $current_settings = array() ) {
 			$visualizations = $current_settings['cdb_visualizations'];
 
+			if ( empty( $visualizations ) ) {
+				$visualizations = array();
+			}
+
 			$html = '<label>Visualizations</label><br>';
 			$html .= '<textarea name="savvymapper_visualizations[]">' . implode( "\n",$visualizations ). '</textarea>' . "\n";
 
