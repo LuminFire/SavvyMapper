@@ -1,7 +1,9 @@
+⚠️ This plugin is not maintained ⚠️
+
 Documentation
 =============
 
-Visit http://SavvyMapper.com for more info, a mailing list and packaged download.
+Visit [no longer online] for more info, a mailing list and packaged download.
 
 What is SavvyMapper?
 --------------------
